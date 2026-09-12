@@ -6,3 +6,4 @@ results/*_meta.json
 !results/.gitkeep
 memory/*.jsonl
 !memory/.gitkeep
+.DS_Store
