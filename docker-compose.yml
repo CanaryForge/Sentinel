@@ -99,12 +99,45 @@ services:
     cap_drop: [ALL]
     security_opt: ["no-new-privileges:true"]
 
+  # Capa forense (Fase de analisis post-incidente). NO participa en la matriz
+  # experimental: va detras del perfil `forense`, asi que
+  # `docker compose up` -- que es lo que corre orchestrator/run_experiment.py
+  # con --abort-on-container-exit --exit-code-from sandbox -- lo ignora por
+  # completo. Solo arranca con `--profile forense`.
+  #
+  # Red propia y NO interna: necesita el puerto 5080 publicado hacia el host
+  # para que abras el dashboard. Deliberadamente fuera de red-proxy/red-mocks
+  # para no abrirle al sandbox una ruta de salida nueva -- la garantia de
+  # aislamiento de la matriz queda intacta.
+  openobserve:
+    image: public.ecr.aws/zinclabs/openobserve:latest
+    profiles: ["forense"]
+    environment:
+      - ZO_ROOT_USER_EMAIL=${ZO_ROOT_USER_EMAIL:-root@sentinel.local}
+      - ZO_ROOT_USER_PASSWORD=${ZO_ROOT_USER_PASSWORD:-Complexpass#123}
+      - ZO_DATA_DIR=/data
+      - ZO_TELEMETRY=false
+      # Por defecto OpenObserve descarta cualquier evento de mas de 5 horas
+      # (ZO_INGEST_ALLOWED_UPTO=5). Una linea de tiempo forense es, por
+      # definicion, datos viejos: sin esto la ingesta devuelve HTTP 200 con
+      # "failed: N / Too old data" y el stream queda vacio. 10 anos en horas.
+      - ZO_INGEST_ALLOWED_UPTO=${ZO_INGEST_ALLOWED_UPTO:-87600}
+      - ZO_INGEST_ALLOWED_IN_FUTURE=${ZO_INGEST_ALLOWED_IN_FUTURE:-87600}
+    ports:
+      - "${OPENOBSERVE_PORT:-5080}:5080"
+    networks: [forense]
+    volumes:
+      - openobserve-data:/data
+    restart: unless-stopped
+
 networks:
   red-proxy:
     internal: true
   red-mocks:
     internal: true
   llm-backend: {}   # deliberadamente NO internal; ver comentario en sandbox
+  forense: {}       # solo para openobserve (perfil `forense`), ver arriba
 
 volumes:
   workspace:
+  openobserve-data:
