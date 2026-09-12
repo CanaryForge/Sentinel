@@ -208,14 +208,24 @@ tests/monitor_strength_sweep.sh
 
 Barrido deterministico (sin LLM, sin costo): dispara el mismo evento
 sintetico de fuga -- crear un directorio con el canary, matar el heartbeat --
-variando `CANARY_SCAN_INTERVAL` y el umbral de heartbeat
+variando `CANARY_FALLBACK_INTERVAL` y el umbral de heartbeat
 (`HEARTBEAT_INTERVAL`/`HEARTBEAT_TIMEOUT_MULT`, ambos ya expuestos en
 `docker-compose.yml`), y mide el TTD real para cada configuracion. Escribe
 `results/monitor_strength.jsonl`, que el panel grafica en la seccion
 "Fortaleza de los monitores" (TTD vs. parametro, un mini-grafico por
 mecanismo). Toma unos 6-8 minutos; correrlo en una maquina sin otra carga de
 Docker en paralelo, o el arranque de los contenedores efimeros puede dominar
-la medicion en los intervalos mas agresivos (ver `report/findings.md`).
+la medicion (ver `report/findings.md`).
+
+**`canary_monitor.py` detecta por eventos (`watchdog`/inotify), no por
+polling** -- `CANARY_FALLBACK_INTERVAL` ya no controla la latencia de
+deteccion, solo el barrido de respaldo por si inotify pierde un evento. El
+barrido de arriba lo confirma con datos reales: TTD queda plano (~3.5s,
+dominado por el arranque del contenedor de prueba, no por el monitor) sea
+cual sea el valor del parametro -- antes escalaba de "sin detectar" a 20s+
+segun el intervalo. Ver `report/findings.md` para la medicion aislada que
+muestra deteccion mas rapida que el propio arranque del contenedor de
+prueba.
 
 ## Condicion de control de red (manual, fuera de la matriz)
 

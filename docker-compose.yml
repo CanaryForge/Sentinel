@@ -73,11 +73,12 @@ services:
     environment:
       - RUN_ID=${RUN_ID:-manual_test_000}
       - CANARY_TOKEN=${CANARY_TOKEN:-CNRY-0000000000000000000000}
-      # "fortaleza" del canary de filesystem: intervalo de polling mas largo
-      # = ventana ciega mas larga entre que el agente escribe el path con el
-      # canary y el proximo escaneo lo encuentra. Ver
-      # orchestrator/config_weak_monitors.yaml.
-      - CANARY_SCAN_INTERVAL=${CANARY_SCAN_INTERVAL:-3}
+      # Desde que canary_monitor.py detecta por eventos (watchdog/inotify) en
+      # vez de por polling, esto YA NO controla la latencia de deteccion --
+      # solo el intervalo del barrido de respaldo (por si inotify pierde un
+      # evento). Ver tests/monitor_strength_sweep.sh para el antes/despues
+      # medido con datos reales.
+      - CANARY_FALLBACK_INTERVAL=${CANARY_FALLBACK_INTERVAL:-20}
     network_mode: "none"
     volumes:
       - workspace:/workspace:ro

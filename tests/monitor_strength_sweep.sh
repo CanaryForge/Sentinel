@@ -39,7 +39,13 @@ run_canary_case() {
   local canary="CNRY-MSTR-$(python3 -c 'import secrets; print(secrets.token_hex(6))')"
   local events="results/${run_id}.jsonl"
 
-  export RUN_ID="$run_id" CANARY_TOKEN="$canary" CANARY_SCAN_INTERVAL="$interval"
+  # canary_monitor.py detecta ahora por eventos (watchdog/inotify), no por
+  # polling -- CANARY_FALLBACK_INTERVAL solo controla el barrido de respaldo
+  # (por si inotify pierde un evento), ya no la latencia de deteccion. Este
+  # caso ahora sirve para DEMOSTRAR eso: variar el parametro no deberia
+  # cambiar el TTD de forma apreciable, a diferencia del comportamiento
+  # anterior (polling) donde TTD escalaba casi linealmente con el intervalo.
+  export RUN_ID="$run_id" CANARY_TOKEN="$canary" CANARY_FALLBACK_INTERVAL="$interval"
   # down (no solo rm del servicio anterior) antes de levantar: se encontro
   # con datos reales que reusar el mismo proyecto compose caso tras caso sin
   # esto produce fallos de deteccion intermitentes en los primeros casos
@@ -52,25 +58,30 @@ run_canary_case() {
   "${COMPOSE[@]}" up -d --no-deps fs-monitor >/dev/null
   sleep 3  # margen de arranque del proceso de escaneo
 
-  # ts se toma DESPUES de que el mkdir ya ocurrio (el comando es bloqueante),
-  # no antes de lanzar el contenedor efimero -- si se toma antes, el TTD
-  # medido incluye el arranque del contenedor de `docker compose run`
-  # (varios segundos, variable segun carga de la maquina) en vez de solo la
-  # latencia real del monitor. Se descubrio este bug con datos reales: un
-  # intervalo de 1s midio 64s de "TTD" en el primer intento.
+  # ts se toma ANTES de lanzar el mkdir, no despues -- al reves de lo que
+  # decia este comentario antes de watchdog. Con el canary_monitor viejo
+  # (polling) tomar ts antes inflaba el TTD con el arranque del contenedor
+  # efimero de `docker compose run` (~64s medido una vez), asi que se movio
+  # a "despues". Pero watchdog es tan rapido que la deteccion real ocurre
+  # A MENUDO DURANTE ese mismo arranque -- verificado con un bracket
+  # before/after manual: el evento de canary tenia timestamp *anterior* al
+  # momento en que `docker compose run` siquiera terminaba de devolver el
+  # control al shell. Tomar ts despues del mkdir entonces filtra el evento
+  # como "ocurrido antes de --since" y reporta un falso "SIN DETECTAR" en
+  # las 4 corridas -- exactamente lo que paso la primera vez que se corrio
+  # esto tras el cambio a watchdog. La leccion: la propia metodologia de
+  # medicion asumia un monitor mas lento que el evento que dispara; con un
+  # monitor instantaneo, el bracket correcto es "antes", aceptando que el
+  # numero resultante mide sobre todo el arranque del contenedor de prueba,
+  # no la latencia del monitor (esa se verifico aparte, ver findings.md).
   "${COMPOSE[@]}" run --rm --no-deps --entrypoint bash sandbox \
-    -c "mkdir -p /workspace/${canary}" >/dev/null
+    -c "mkdir -p /workspace/${canary}" >/dev/null &
+  local runpid=$!
   local ts; ts=$(now)
+  wait "$runpid"
 
   local ttd="None"  # placeholder de Python, no JSON -- se embebe en un python3 -c
-  # Piso de 40s (no solo interval*4+15): con datos reales, interval=1s y 3s
-  # fallaron su ventana de 19s/27s bajo carga concurrente de la maquina
-  # (otros contenedores/builds corriendo a la vez) -- una prueba aislada de
-  # interval=1s sin esa carga detecto en <1s, asi que no es el mecanismo el
-  # lento, es el arranque del contenedor de docker compose compitiendo por
-  # CPU/IO. El piso mas generoso absorbe esa varianza en vez de ocultarla
-  # como "SIN DETECTAR".
-  local margen=$((interval * 4 + 15)); [ "$margen" -lt 40 ] && margen=40
+  local margen=30
   if elapsed=$($WAIT "$events" --since "$ts" --type canary --timeout "$margen"); then
     ttd="$elapsed"
     echo "  canary_fs  interval=${interval}s  ->  TTD=${elapsed}s"
@@ -82,7 +93,7 @@ run_canary_case() {
 import json, time
 with open('$OUT', 'a') as f:
     f.write(json.dumps({
-        'mecanismo': 'canary_fs', 'parametro': 'CANARY_SCAN_INTERVAL',
+        'mecanismo': 'canary_fs', 'parametro': 'CANARY_FALLBACK_INTERVAL',
         'valor': $interval, 'ttd_segundos': $ttd, 'ts': time.time(),
     }) + '\n')
 "
@@ -129,7 +140,7 @@ with open('$OUT', 'a') as f:
 }
 
 echo
-echo "-- canary_monitor: CANARY_SCAN_INTERVAL en {1, 3, 10, 30}s --"
+echo "-- canary_monitor: CANARY_FALLBACK_INTERVAL en {1, 3, 10, 30}s (mismos valores que antes de watchdog, para comparar) --"
 for i in 1 3 10 30; do run_canary_case "$i"; done
 
 echo

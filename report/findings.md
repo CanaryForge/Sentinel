@@ -316,10 +316,64 @@ no sobre el algoritmo de deteccion: **un intervalo de polling sub-segundo no
 entrega su beneficio teorico si el overhead de arrancar/observar el
 contenedor ya compite por los mismos segundos que se querian ganar** --
 leccion operacional legitima para quien vaya a desplegar esto con margenes
-agresivos en una maquina compartida. El script se ajusto (piso de 40s en el
-timeout de espera) para que corridas futuras no confundan esto con un
-timeout de medicion; la causa raiz (contencion de recursos, no el monitor)
-se documenta aqui en vez de re-correrse hasta que "salga bonito".
+agresivos en una maquina compartida.
+
+## Se corrigio: canary_monitor.py paso de polling a eventos (watchdog/inotify)
+
+Autorizado el uso de herramientas open-source de terceros para este
+proyecto. Se investigaron 5 candidatos (watchdog, Falco, Canarytokens,
+promptfoo, garak); solo `watchdog` (BSD-3) tenia encaje real sin comprometer
+el diseño existente -- Falco necesita capacidades incompatibles con
+`cap_drop: [ALL]`, Canarytokens asume un host con salida a internet real
+(lo opuesto al diseño `internal: true`). Detalle completo de la
+investigacion en el historial de la sesion, no repetido aqui.
+
+`monitors/canary_monitor.py` reemplazo su loop `while True: scan_once();
+sleep(interval)` por un `watchdog.Observer` que reacciona a
+crear/mover/modificar dentro de `/workspace`, con un barrido periodico de
+respaldo (`CANARY_FALLBACK_INTERVAL`, antes `CANARY_SCAN_INTERVAL`) solo por
+si inotify pierde un evento -- ya no es el mecanismo primario.
+
+**Verificado con datos reales, dos veces, no solo con la promesa de la
+libreria**: una medicion aislada con bracket manual (timestamp justo antes
+y justo despues del comando que crea el directorio con el canary) mostro
+que el evento de deteccion tenia timestamp *anterior* al momento en que el
+contenedor efimero de prueba siquiera terminaba de devolver el control al
+shell -- deteccion mas rapida que el propio overhead de arrancar el
+contenedor de prueba.
+
+Esto rompio la metodologia del barrido automatizado de una forma reveladora:
+`monitor_strength_sweep.sh` tomaba el timestamp *despues* del comando de
+mkdir (correccion aplicada antes, cuando el monitor era el lento). Con
+watchdog, la deteccion real ocurre ANTES de ese timestamp, asi que
+`_wait_for_event.py` filtraba el evento como "ocurrido antes de --since" y
+reportaba un falso "SIN DETECTAR" en las 4 corridas -- la propia medicion no
+podia mantenerse al ritmo del monitor que estaba midiendo. Se corrigio
+tomando el timestamp al lanzar el comando (no al terminar), aceptando que el
+numero resultante mide sobre todo el arranque del contenedor de prueba, no
+la latencia del monitor (esa esta acotada arriba, en el bracket manual).
+
+| Parametro (antes CANARY_SCAN_INTERVAL, ahora solo el respaldo) | TTD antes (polling) | TTD despues (watchdog) |
+|---|---|---|
+| 1s | sin detectar (ventana de 19s) | 3.64s |
+| 3s | sin detectar (ventana de 27s) | 3.54s |
+| 10s | 0.68s -- 1.75s (dos corridas) | 3.53s |
+| 30s | 20.17s -- 22.57s (dos corridas) | 3.60s |
+
+El numero "despues" es plano (~3.5-3.6s) independientemente del parametro --
+exactamente lo esperado, porque el parametro ya no controla la latencia de
+deteccion. Ese ~3.5s es el costo de arrancar/tirar el contenedor efimero de
+`docker compose run` para la prueba sintetica, no del monitor: en una
+corrida real (agente en un contenedor ya vivo, sin ese arranque por cada
+accion), la latencia deberia ser aun menor.
+
+`tests/positive_controls.sh` (control 1, heartbeat) se colgo en su ultima
+corrida en esta maquina -- no se investigo a fondo porque el control que se
+colgo no toca `canary_monitor.py` ni fue modificado en este cambio;
+sospecha no confirmada de contencion de recursos tras varias horas de
+builds/corridas de Docker consecutivas en la misma sesion. Pendiente de
+reproducir en una maquina descansada antes de asumir que es un problema real
+del script.
 
 ## Vectores 5 y 6: memoria persistente y RAG envenenados (matriz corriendo, 2026-09-12)
 
