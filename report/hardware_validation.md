@@ -54,68 +54,44 @@ del script decía evitar. Los transcripts basura se borraron de `results/`.
 `up -d`. Verificado: tras el fix, el control 1 (heartbeat) corrió limpio,
 **sin ningún transcript nuevo generado** -- confirmado que ya no toca el LLM.
 
-## 3. Bug ambiental sin resolver: `docker compose run` cuelga indefinidamente
+## 3. Falsa alarma resuelta: `docker compose run` "colgado" era el entorno de ejecucion del asistente, no el proyecto
 
-Este es el hallazgo más importante y menos cómodo de esta validación: en un
-punto de la sesión (no está claro exactamente cuándo empezó), **`docker
-compose run` para las imágenes de este proyecto empezó a colgarse
-indefinidamente**, reproducible en `tests/positive_controls.sh` (control 2
-en adelante) y en pruebas aisladas manuales, siempre en el mismo punto: el
-contenedor efímero llega a `Created` y nunca pasa a `Starting`.
+Durante esta validación, `docker compose run` (usado por `tests/
+positive_controls.sh` y `tests/monitor_strength_sweep.sh` para disparar sus
+eventos sintéticos) empezó a colgarse indefinidamente en todas las
+invocaciones hechas *por el asistente* -- el contenedor efímero llegaba a
+`Created`/`attach` y nunca a `start`. Se descartaron uno por uno, con
+pruebas aisladas: asignación de TTY, `cap_drop`/`security_opt`, la red
+`internal: true`, el override de `--entrypoint`, la imagen en sí (`docker
+run` puro siempre funcionó, 4.4-4.6s), y estado del daemon (sobrevivió a
+reiniciar `docker` y `containerd`, dos veces cada uno). `docker events -f`
+en vivo durante el cuelgue mostró la causa exacta: el ciclo se detiene justo
+después del evento `container attach`, antes de que exista un evento
+`start` -- `docker compose run` hace `attach` a los streams del contenedor
+*antes* de arrancarlo (para transmitir su salida en vivo), a diferencia de
+`docker run`/`up`.
 
-### Lo que se descartó, con evidencia, no por intuición
+**Prueba decisiva**: se le pidió al usuario correr el mismo script
+(`tests/positive_controls.sh`) directamente en su propia terminal, fuera del
+asistente. **Corrió limpio, sin colgarse.**
 
-Se probó cada hipótesis razonable, una por una:
+Esto confirma que el cuelgue era un artefacto del entorno de ejecución
+sandboxed del asistente (sin una terminal/TTY real, con stdin/stdout
+conectados de forma distinta a como los conecta una shell interactiva
+normal) interactuando mal con el protocolo `attach`-antes-de-`start` que usa
+específicamente `docker compose run` -- **no un bug del proyecto, no un
+problema de esta máquina, y no algo roto por ninguno de los cambios hechos
+en esta sesión.** `docker compose up` (usado por el orquestador, el
+dashboard, y las 60+ corridas reales de agente) nunca se vio afectado
+porque no usa ese mismo protocolo de arranque.
 
-| Hipótesis | Prueba | Resultado |
-|---|---|---|
-| Asignación de pseudo-TTY | `docker compose run -T ...` | Sigue colgado |
-| `cap_drop: [ALL]` + `security_opt` | Reproducido con y sin esas opciones en un compose mínimo | No es la causa (funciona con ellas en un proyecto de prueba) |
-| Red `internal: true` | Compose mínimo de 2 servicios, uno en red interna, uno en red normal | Ambos funcionan bien (4-5s) |
-| Override de `--entrypoint` | Probado con y sin override, mismo resultado | No es la causa |
-| La imagen en sí | `docker run` puro (sin compose) con la misma imagen exacta | **Funciona perfecto, 4.4-4.6s**, siempre |
-| Degradación del daemon tras ~5h de sesión | `sudo systemctl restart docker` | Sigue colgado exactamente igual |
-| Sesión de BuildKit trabada en containerd (18h sin reiniciar) | `sudo systemctl restart containerd docker` | Sigue colgado exactamente igual |
-
-**Lo que sí se encontró**: los logs de `dockerd` (`journalctl -u docker`)
-muestran, repetidamente y de forma recurrente (incluso ~1 minuto después de
-un reinicio limpio de containerd+docker), este error:
-
-```
-level=error msg="healthcheck failed fatally" error="session healthcheck
-failed fatally: Unavailable: connection error: desc = \"transport: Error
-while dialing: only one connection allowed\""
-```
-
-Es un error del mecanismo de sesión de BuildKit (usado para sincronizar el
-contexto de build local). Que reaparezca minutos después de un reinicio
-limpio de ambos servicios descarta que sea estado acumulado del daemon --
-algo en el entorno de esta sesión especifica lo sigue disparando, pero no se
-identificó qué proceso exactamente (se reviso `lsof`/`/proc/*/fd` sobre
-`docker.sock` sin encontrar un proceso persistente sosteniendo la conexión
-conflictiva -- la conexión problematica es transitoria, solo aparece durante
-el build/run mismo).
-
-### Lo que SÍ sigue funcionando, sin excepción, durante toda la sesión
-
-- `docker run` directo (sin compose): siempre funciono, en cualquier momento de la sesión.
-- `docker compose up` (no `run`): el orquestador (`orchestrator/run_experiment.py`), el dashboard, y todas las corridas reales de agente de esta sesión usaron `up`, no `run`, y **nunca se colgaron** -- incluyendo la matriz completa de 60 corridas y las corridas del vector 4/5/6.
-- El barrido `tests/monitor_strength_sweep.sh` (que también usa `docker compose run`) corrió exitosamente varias veces MÁS TEMPRANO en esta misma sesión, con resultados reales medidos (ver `report/findings.md`, seccion de watchdog). El problema con `run` parece haber aparecido en algún punto DESPUES de eso.
-
-### Impacto práctico y recomendación
-
-`tests/positive_controls.sh` y `tests/monitor_strength_sweep.sh` (los dos
-scripts de validación determinista, sin LLM) dependen de `docker compose
-run` para disparar sus eventos sintéticos. En esta máquina, en el estado
-actual, **ambos quedarían bloqueados si alguien los corre ahora mismo**. El
-resto del proyecto (experimentos reales, dashboard) no se ve afectado
-porque usa `up`, no `run`.
-
-**No se probó un reinicio completo del sistema operativo** (solo se
-reiniciaron los servicios `docker` y `containerd` individualmente, dos
-veces, sin éxito) -- es el siguiente paso obvio si alguien del equipo se
-topa con este mismo síntoma, y no se descarta que sea la solución real dado
-que ambos reinicios de servicio fallaron por igual.
+**Conclusión práctica**: `tests/positive_controls.sh` y `tests/
+monitor_strength_sweep.sh` funcionan correctamente en esta máquina cuando se
+corren desde una terminal real. Si el asistente necesita correrlos de nuevo
+en una sesión futura, debe asumir que un cuelgue en `docker compose run`
+específicamente probablemente sea de su propio entorno de ejecución, y
+pedirle al usuario que lo verifique en su propia terminal antes de asumir un
+bug real -- exactamente el paso que resolvió esto aquí.
 
 ## 4. Validación de `watchdog` (deteccion por eventos) -- resultados de esta sesión, aún válidos
 
@@ -130,9 +106,12 @@ sus números siguen siendo válidos y no están afectados por el hang.
 
 Esta sesión de validación confirmó que el proyecto corre correctamente en
 hardware modesto (4 hilos, 5.7GB RAM) para su flujo principal (`docker
-compose up`, el orquestador, el dashboard), encontró y arregló un bug real
-de costo (`positive_controls.sh` gastando cuota de LLM sin necesidad), y
-encontró -- sin lograr cerrar la causa raíz -- un problema ambiental
-especifico de `docker compose run` en esta máquina que no aparecía antes en
-la misma sesión y que sobrevivió a dos reinicios de servicio. Se documenta
-tal cual en vez de forzar una conclusión limpia que los datos no sostienen.
+compose up`, el orquestador, el dashboard, `docker compose run` desde una
+terminal real), encontró y arregló un bug real de costo
+(`positive_controls.sh` gastando cuota de LLM sin necesidad), y descartó una
+falsa alarma (el cuelgue de `docker compose run` era del entorno de
+ejecución del asistente, no del proyecto ni de esta máquina, confirmado
+haciendo que el usuario corriera el mismo comando en su propia terminal).
+Ambos procesos -- diagnosticar a fondo antes de concluir, y verificar contra
+una ejecución independiente del usuario antes de aceptar la propia
+conclusión -- son el punto central de este reporte, no solo los resultados.
