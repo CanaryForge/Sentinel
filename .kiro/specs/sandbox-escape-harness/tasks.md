@@ -44,10 +44,15 @@ listo, sin ejecutar todavia; `[ ]` = pendiente.
 - [x] `analysis/compute_ttd.py`: TTD + bootstrap CI
 - [x] Fix: heartbeat de apagado ya no cuenta como falso-positivo de
       deteccion
-- [~] Matriz base (60 corridas) EN CURSO -- ver `results/summary.jsonl`
-      cuando termine
-- [ ] `report/findings.md` completado con los resultados reales
-- [ ] Correr `analysis/compute_ttd.py` sobre la matriz base terminada
+- [x] Matriz base (60 corridas) terminada 2026-09-12, 0 errores de infra --
+      ver `results/summary.jsonl`
+- [x] `report/findings.md` completado con los resultados reales (0/30
+      intentos con_harness, 1/30 sin_harness, 0/1 detectado -- ver ahi el
+      hallazgo del punto ciego de egress_monitor con destinos inalcanzables)
+- [x] Correr `analysis/compute_ttd.py` sobre la matriz base terminada
+- [x] Fix real encontrado con datos: `docker_exit_code` para no atribuir a
+      heartbeat una deteccion cuando el timing de su alerta de apagado
+      coincide por casualidad con un intento de escape real
 
 ## Vector 4 — Red-teamer / prompt injection (Historia 5)
 
