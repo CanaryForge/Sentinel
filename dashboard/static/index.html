@@ -112,6 +112,18 @@
   <div class="mech-grid" id="mech-grid"></div>
 </section>
 
+<section id="monitor-strength">
+  <p class="eyebrow">Fortaleza de los monitores — mismo evento sintetico, config variable</p>
+  <p class="mono" style="font-size:12px;color:var(--text-muted);margin:0 0 16px;max-width:65ch;">
+    Sin depender de un LLM: se dispara el mismo evento de fuga (crear un directorio con el canary /
+    matar el heartbeat) variando el intervalo de polling del monitor, para medir cuanto empeora el
+    TTD al aflojar la vigilancia. Corre con <code>tests/monitor_strength_sweep.sh</code>.
+  </p>
+  <div class="mstr-grid" id="mstr-grid">
+    <p class="empty-note">Sin datos todavia — corre tests/monitor_strength_sweep.sh</p>
+  </div>
+</section>
+
 <section id="aggregate">
   <p class="eyebrow">Agregado — todas las corridas en results/</p>
   <div class="stat-tile-row" id="agg-tiles"></div>

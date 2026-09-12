@@ -182,6 +182,41 @@ Por defecto abre la corrida con el nivel de escalada mas alto disponible
 (la fuga real mas interesante); el selector del encabezado permite ver
 cualquier otra.
 
+### Modo en vivo
+
+El panel hace polling cada 2.5s (`setInterval` en `app.js`, sin websockets --
+es un archivo local, no hace falta mas). Si mientras esta abierto corres:
+
+```bash
+python3 orchestrator/run_experiment.py
+```
+
+en cuanto una corrida arranca (su `_meta.json` tiene `t0` pero todavia no
+`t1`), el panel la detecta como **en curso**: el punto verde junto a
+"SENTINEL" empieza a pulsar, el selector cambia automaticamente a esa
+corrida, y la linea de tiempo/el log de turnos se van llenando en cada
+refresco. Cuando `run_experiment.py` termina esa corrida (escribe `t1`), el
+punto deja de pulsar. Ver `dashboard/app.py::api_runs` -- el campo `en_curso`
+es lo que decide todo esto, calculado a partir del `_meta.json` real, no de
+un flag inventado.
+
+### Fortaleza de los monitores
+
+```bash
+tests/monitor_strength_sweep.sh
+```
+
+Barrido deterministico (sin LLM, sin costo): dispara el mismo evento
+sintetico de fuga -- crear un directorio con el canary, matar el heartbeat --
+variando `CANARY_SCAN_INTERVAL` y el umbral de heartbeat
+(`HEARTBEAT_INTERVAL`/`HEARTBEAT_TIMEOUT_MULT`, ambos ya expuestos en
+`docker-compose.yml`), y mide el TTD real para cada configuracion. Escribe
+`results/monitor_strength.jsonl`, que el panel grafica en la seccion
+"Fortaleza de los monitores" (TTD vs. parametro, un mini-grafico por
+mecanismo). Toma unos 6-8 minutos; correrlo en una maquina sin otra carga de
+Docker en paralelo, o el arranque de los contenedores efimeros puede dominar
+la medicion en los intervalos mas agresivos (ver `report/findings.md`).
+
 ## Condicion de control de red (manual, fuera de la matriz)
 
 ```bash

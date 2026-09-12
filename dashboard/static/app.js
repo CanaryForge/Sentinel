@@ -1,6 +1,7 @@
 const NIVEL_COLORS = ["var(--nivel-0)", "var(--nivel-1)", "var(--nivel-2)", "var(--nivel-3)", "var(--nivel-4)", "var(--nivel-5)", "var(--nivel-6)"];
+const POLL_MS = 2500;
 
-const state = { runs: [], detail: null, aggregate: null };
+const state = { runs: [], detail: null, aggregate: null, selectedRunId: null, userPicked: false };
 
 function fmtSecs(s) {
   if (s === null || s === undefined) return "—";
@@ -54,23 +55,44 @@ async function loadRuns() {
   if (state.runs.length === 0) {
     picker.innerHTML = "<option>sin corridas en results/</option>";
     renderEmpty();
+    setLive(false);
     return;
   }
 
-  // Prioriza mostrar por defecto la corrida mas "interesante": la de mayor
-  // nivel de escalada (idealmente una fuga real detectada).
-  const sorted = [...state.runs].sort((a, b) => (b.nivel_escalada || 0) - (a.nivel_escalada || 0));
-  const preferido = sorted[0].run_id;
+  const enCurso = state.runs.find((r) => r.en_curso);
+  setLive(!!enCurso);
+
+  let preferido;
+  if (enCurso) {
+    // Una corrida activa siempre gana: es lo que "en vivo" significa.
+    preferido = enCurso.run_id;
+  } else if (state.userPicked && state.runs.some((r) => r.run_id === state.selectedRunId)) {
+    // Respeta la seleccion manual del usuario entre refrescos automaticos.
+    preferido = state.selectedRunId;
+  } else {
+    // Por defecto, la corrida mas "interesante": mayor nivel de escalada.
+    const sorted = [...state.runs].sort((a, b) => (b.nivel_escalada || 0) - (a.nivel_escalada || 0));
+    preferido = sorted[0].run_id;
+  }
 
   for (const r of state.runs) {
     const opt = document.createElement("option");
     opt.value = r.run_id;
-    opt.textContent = `${r.run_id}  [nivel ${r.nivel_escalada}]`;
+    opt.textContent = `${r.run_id}  [nivel ${r.nivel_escalada}]${r.en_curso ? "  ● en curso" : ""}`;
     if (r.run_id === preferido) opt.selected = true;
     picker.appendChild(opt);
   }
-  picker.onchange = () => loadRunDetail(picker.value);
+  picker.onchange = () => {
+    state.userPicked = true;
+    state.selectedRunId = picker.value;
+    loadRunDetail(picker.value);
+  };
+  state.selectedRunId = preferido;
   await loadRunDetail(preferido);
+}
+
+function setLive(isLive) {
+  document.getElementById("live-dot").classList.toggle("live", isLive);
 }
 
 function renderEmpty() {
@@ -343,10 +365,90 @@ async function loadAggregate() {
   }
 }
 
-document.getElementById("refresh-btn").addEventListener("click", async () => {
+function drawMiniLineChart({ points, color, xLabelFn, xLog }) {
+  // points: [{x, y}], y === null significa "sin detectar" (timeout del barrido)
+  const W = 320, H = 150, PAD_L = 34, PAD_R = 14, PAD_T = 14, PAD_B = 26;
+  const plotW = W - PAD_L - PAD_R, plotH = H - PAD_T - PAD_B;
+
+  const xs = points.map((p) => p.x);
+  const ys = points.filter((p) => p.y !== null).map((p) => p.y);
+  const maxY = Math.max(...ys, 1) * 1.25;
+  const xScale = xLog
+    ? (x) => PAD_L + (Math.log(x / xs[0]) / Math.log(xs[xs.length - 1] / xs[0])) * plotW
+    : (x) => PAD_L + ((x - xs[0]) / (xs[xs.length - 1] - xs[0])) * plotW;
+  const yScale = (y) => PAD_T + plotH - (y / maxY) * plotH;
+
+  let gridLines = "";
+  const nGrid = 3;
+  for (let i = 0; i <= nGrid; i++) {
+    const y = PAD_T + (plotH / nGrid) * i;
+    const val = maxY - (maxY / nGrid) * i;
+    gridLines += `<line class="grid-line" x1="${PAD_L}" y1="${y}" x2="${W - PAD_R}" y2="${y}"></line>`;
+    gridLines += `<text class="axis-label" x="${PAD_L - 6}" y="${y + 3}" text-anchor="end">${val.toFixed(0)}s</text>`;
+  }
+
+  let path = "";
+  let dots = "";
+  let labels = "";
+  const detectedPts = points.filter((p) => p.y !== null);
+  path = detectedPts.map((p, i) => `${i === 0 ? "M" : "L"}${xScale(p.x).toFixed(1)},${yScale(p.y).toFixed(1)}`).join(" ");
+
+  for (const p of points) {
+    const cx = xScale(p.x);
+    if (p.y === null) {
+      dots += `<text x="${cx}" y="${PAD_T + 10}" text-anchor="middle" class="miss-label">✕</text>`;
+      labels += `<text x="${cx}" y="${PAD_T + 22}" text-anchor="middle" class="miss-label" font-size="8">sin detectar</text>`;
+    } else {
+      const cy = yScale(p.y);
+      dots += `<circle cx="${cx}" cy="${cy}" r="4.5" fill="${color}" stroke="var(--surface)" stroke-width="2"></circle>`;
+      labels += `<text x="${cx}" y="${cy - 10}" text-anchor="middle" class="value-label">${p.y.toFixed(1)}s</text>`;
+    }
+    labels += `<text x="${cx}" y="${H - 8}" text-anchor="middle" class="axis-label">${xLabelFn(p.x)}</text>`;
+  }
+
+  return `<svg viewBox="0 0 ${W} ${H}" role="img">
+    ${gridLines}
+    <path d="${path}" fill="none" stroke="${color}" stroke-width="2"></path>
+    ${dots}${labels}
+  </svg>`;
+}
+
+async function loadMonitorStrength() {
+  const res = await fetch("/api/monitor_strength");
+  const rows = await res.json();
+  const grid = document.getElementById("mstr-grid");
+
+  if (rows.length === 0) {
+    grid.innerHTML = '<p class="empty-note">Sin datos todavia — corre tests/monitor_strength_sweep.sh</p>';
+    return;
+  }
+  grid.innerHTML = "";
+
+  const groups = [
+    { key: "canary_fs", title: "canary_monitor.py (filesystem)", sub: "parametro: CANARY_SCAN_INTERVAL — segundos entre cada escaneo de /workspace", color: "var(--mech-canary-fs)" },
+    { key: "heartbeat", title: "heartbeat_monitor.py", sub: "parametro: intervalo × multiplicador — umbral de silencio antes de alertar", color: "var(--mech-heartbeat)" },
+  ];
+
+  for (const g of groups) {
+    const pts = rows.filter((r) => r.mecanismo === g.key).map((r) => ({ x: r.valor, y: r.ttd_segundos }));
+    if (pts.length === 0) continue;
+    const card = document.createElement("div");
+    card.className = "mstr-card";
+    card.innerHTML = `<h3>${g.title}</h3><div class="mstr-sub">${g.sub}</div>` +
+      drawMiniLineChart({ points: pts, color: g.color, xLabelFn: (x) => `${x}s`, xLog: true });
+    grid.appendChild(card);
+  }
+}
+
+async function tick() {
   await loadRuns();
   await loadAggregate();
-});
+  await loadMonitorStrength();
+}
+
+document.getElementById("refresh-btn").addEventListener("click", tick);
 
 loadRuns();
 loadAggregate();
+loadMonitorStrength();
+setInterval(tick, POLL_MS);

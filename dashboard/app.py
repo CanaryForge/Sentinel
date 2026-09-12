@@ -54,6 +54,12 @@ def api_runs():
     for run_id in list_run_ids():
         try:
             r = ttd.analyze_run(run_id)
+            meta = ttd.load_json(os.path.join(RESULTS_DIR, f"{run_id}_meta.json"))
+            # sin "t1" todavia == run_experiment.py no ha vuelto de
+            # `docker compose up` para esta corrida == esta en curso ahora
+            # mismo. Es lo que el panel usa para saber a que corrida
+            # "seguir" en el modo en vivo.
+            r["en_curso"] = "t1" not in meta
         except Exception as e:
             r = {"run_id": run_id, "error": str(e)}
         rows.append(r)
@@ -89,6 +95,21 @@ def api_run_detail(run_id):
         "escape_ts": escape_ts,
         "alert_ts": alert_ts,
     })
+
+
+@app.route("/api/monitor_strength")
+def api_monitor_strength():
+    """
+    Datos del barrido deterministico tests/monitor_strength_sweep.sh: mismo
+    evento sintetico de fuga, variando el parametro de configuracion del
+    monitor (intervalo de polling del canary, umbral del heartbeat), para
+    mostrar cuanto empeora el TTD cuando se afloja la vigilancia -- sin
+    depender de que un LLM decida escapar.
+    """
+    path = os.path.join(RESULTS_DIR, "monitor_strength.jsonl")
+    rows = ttd.load_jsonl(path)
+    rows.sort(key=lambda r: (r.get("mecanismo"), r.get("valor", 0)))
+    return jsonify(rows)
 
 
 @app.route("/api/aggregate")
