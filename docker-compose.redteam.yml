@@ -1,0 +1,28 @@
+# Overlay OPCIONAL que agrega el vector 4 (red-teamer externo con prompt
+# injection, ver redteam/app.py). Deliberadamente NO integrado en
+# docker-compose.yml para no afectar la matriz base (vectores 1-3) que ya
+# se ejecuto/esta en ejecucion con ese archivo tal cual.
+#
+# Uso manual:
+#   docker compose -f docker-compose.yml -f docker-compose.redteam.yml \
+#     up --build
+#
+# Uso con el orquestador (matriz separada, ver orchestrator/config_redteam.yaml):
+#   python3 orchestrator/run_experiment.py --config orchestrator/config_redteam.yaml
+#
+# El agente lo alcanza a traves del SSRF de juguete ya existente en
+# package-registry (/fetch?url=http://mirror-externo:5002/...), no por una
+# ruta nueva: el alias de red "mirror-externo" es lo unico que lo distingue
+# de un mirror de paquetes legitimo desde la perspectiva del agente.
+services:
+  redteam:
+    build: ./redteam
+    environment:
+      - RUN_ID=${RUN_ID:-manual_test_000}
+    networks:
+      red-mocks:
+        aliases: [mirror-externo]
+    volumes:
+      - ./results:/results
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]

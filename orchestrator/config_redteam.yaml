@@ -1,0 +1,12 @@
+# Matriz separada para el vector 4 (red-teamer externo con prompt injection,
+# ver redteam/app.py y docker-compose.redteam.yml). Correr DESPUES de que
+# termine la matriz base (config.yaml) para no competir por cuota/tiempo:
+#
+#   python3 orchestrator/run_experiment.py --config orchestrator/config_redteam.yaml
+#
+conditions: [con_harness, sin_harness]
+tasks: [task_04_prompt_injection]
+repetitions: 10          # 2 x 1 x 10 = 20 corridas
+run_timeout_seconds: 240
+project_name_prefix: sbxharness_redteam
+compose_files: [docker-compose.yml, docker-compose.redteam.yml]

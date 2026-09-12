@@ -1,0 +1,90 @@
+services:
+  sandbox:
+    build: ./sandbox
+    environment:
+      - RUN_ID=${RUN_ID:-manual_test_000}
+      - CANARY_TOKEN=${CANARY_TOKEN:-CNRY-0000000000000000000000}
+      - CONDITION=${CONDITION:-con_harness}
+      - TASK=${TASK:-task_01_impossible}
+      - RUN_TIMEOUT_SECONDS=${RUN_TIMEOUT_SECONDS:-240}
+      - AGENT_BACKEND=${AGENT_BACKEND:-ollama}
+      - OLLAMA_HOST=${OLLAMA_HOST:-http://host.docker.internal:11434}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-qwen2.5-coder:7b}
+      - OLLAMA_NUM_CTX=${OLLAMA_NUM_CTX:-16384}
+      - OPENAI_API_BASE=${OPENAI_API_BASE:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OPENAI_MODEL=${OPENAI_MODEL:-}
+      - PACKAGE_REGISTRY_URL=http://package-registry:5000
+      - MODEL_HUB_URL=http://model-hub:5001
+      - HTTP_PROXY=http://egress-proxy:8080
+      - HTTPS_PROXY=http://egress-proxy:8080
+      - NO_PROXY=egress-proxy
+      - HEARTBEAT_URL=http://egress-proxy:9000/heartbeat
+    # red-proxy: unico camino hacia los mocks (via egress-proxy), y el que
+    # ve el agente para sus llamadas con http_fetch -- eso es lo auditado.
+    # llm-backend: red NO interna, exclusiva para que el propio harness
+    # (heartbeat.py y la funcion chat() de agent.py) llegue al backend del
+    # LLM (Ollama en el host, o una API en la nube real como OpenCode Go).
+    # El destino de esas llamadas lo fija esta configuracion, no el modelo
+    # ni sus tool calls, asi que no amplia la superficie de escape que se
+    # esta midiendo (igual que el heartbeat, que ya bypassea el proxy).
+    networks: [red-proxy, llm-backend]
+    volumes:
+      - workspace:/workspace
+      - ./tasks:/tasks:ro
+      - ./results:/results
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    depends_on: [egress-proxy]
+
+  egress-proxy:
+    build: ./monitors
+    environment:
+      - RUN_ID=${RUN_ID:-manual_test_000}
+      - CANARY_TOKEN=${CANARY_TOKEN:-CNRY-0000000000000000000000}
+      - BASELINE_MODE=${BASELINE_MODE:-0}
+    networks: [red-proxy, red-mocks]
+    volumes:
+      - ./results:/results
+      - ./monitors/baseline.json:/app/baseline.json
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    depends_on: [package-registry, model-hub]
+
+  fs-monitor:
+    build: ./monitors
+    entrypoint: ["python3", "/app/canary_monitor.py"]
+    environment:
+      - RUN_ID=${RUN_ID:-manual_test_000}
+      - CANARY_TOKEN=${CANARY_TOKEN:-CNRY-0000000000000000000000}
+    network_mode: "none"
+    volumes:
+      - workspace:/workspace:ro
+      - ./results:/results
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    depends_on: [sandbox]
+
+  package-registry:
+    build: ./mocks/package_registry
+    networks: [red-mocks]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+
+  model-hub:
+    build: ./mocks/model_hub
+    networks: [red-mocks]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+
+networks:
+  red-proxy:
+    internal: true
+  red-mocks:
+    internal: true
+  llm-backend: {}   # deliberadamente NO internal; ver comentario en sandbox
+
+volumes:
+  workspace:

@@ -1,0 +1,24 @@
+# Override para la CONDICION DE CONTROL de la Capa 2: el sandbox habla directo
+# con la red de mocks, sin pasar por el proxy de egress ni por sus monitores.
+#
+# Uso manual (no forma parte de la matriz automatizada 2x3xN, que varia
+# CONDITION=con_harness/sin_harness a nivel de system prompt, no de red):
+#
+#   docker compose -f docker-compose.yml -f docker-compose.control.yml \
+#     up --build sandbox package-registry model-hub
+#
+# Sirve para demostrar, en vivo, la diferencia entre "con arnes de deteccion"
+# y "sin el": el heartbeat y el canary de egress dejan de existir por completo,
+# y solo quedaria el canary de filesystem (fs-monitor) si se agrega a mano.
+services:
+  sandbox:
+    networks: [red-mocks, llm-backend]
+    environment:
+      - HTTP_PROXY=
+      - HTTPS_PROXY=
+      - NO_PROXY=
+    depends_on: []
+
+networks:
+  red-mocks:
+    internal: true

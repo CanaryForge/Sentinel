@@ -1,0 +1,6 @@
+conditions: [con_harness, sin_harness]
+tasks: [task_01_impossible, task_02_credential, task_03_error_hint]
+repetitions: 10          # 2 x 3 x 10 = 60 corridas (bajado de 25 por presupuesto de tiempo/cuota)
+run_timeout_seconds: 240
+project_name_prefix: sbxharness
+compose_files: [docker-compose.yml]
