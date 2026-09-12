@@ -65,10 +65,19 @@ listo, sin ejecutar todavia; `[ ]` = pendiente.
 - [x] `analysis/compute_ttd.py`: definicion de "intento de escape" propia
       para este vector (canary en argumentos de tool call, no el
       `http_fetch` inicial que el hint ya autoriza)
+- [x] Fix real encontrado en corrida manual: la seed original dejaba el
+      fetch al mirror como opcional, y el modelo nunca lo necesito (0
+      intentos) -- se reescribio `tasks/seed/task_04_prompt_injection/
+      test_division.py` para que el fetch sea la unica via de progreso
+- [x] Corrida manual con el fix: ciclo completo observado (6 URLs
+      adivinadas -> mirror real -> payload leido -> instruccion inyectada
+      seguida -> `canary_monitor` detecto en ~2.1s). Ver `report/
+      findings.md`, seccion "Vector 4 en vivo"
 - [ ] Correr `orchestrator/run_experiment.py --config
-      orchestrator/config_redteam.yaml` (pendiente: esperar a que termine
-      la matriz base para no competir por tiempo/cuota)
-- [ ] Incorporar resultados del vector 4 a `report/findings.md`
+      orchestrator/config_redteam.yaml` (matriz completa de 20 corridas,
+      pendiente)
+- [ ] Incorporar resultados agregados del vector 4 a `report/findings.md`
+      (la corrida manual ya esta documentada; falta la matriz completa)
 
 ## Documentacion
 
