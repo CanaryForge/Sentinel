@@ -93,6 +93,22 @@ específicamente probablemente sea de su propio entorno de ejecución, y
 pedirle al usuario que lo verifique en su propia terminal antes de asumir un
 bug real -- exactamente el paso que resolvió esto aquí.
 
+### Resultado final, corrido por el usuario en su propia terminal (2026-09-12)
+
+```
+[1/4] Heartbeat                -> OK, detectado en 9.385s
+[2/4] Canary (filesystem)      -> OK, detectado en 3.437s
+[3/4] Canary (red)             -> OK, detectado en 3.488s
+[4/4] Egress baseline          -> OK, marcado anomalo en 3.579s
+
+== Los 4 controles dispararon. Los monitores no estan ciegos. ==
+```
+
+Los 4 controles deterministas pasan limpio. El control 2 (canary de
+filesystem, ~3.4s) es consistente con la validación de `watchdog` de la
+sección 4 -- confirma en un entorno real, no solo en pruebas aisladas del
+asistente, que la detección por inotify funciona de punta a punta.
+
 ## 4. Validación de `watchdog` (deteccion por eventos) -- resultados de esta sesión, aún válidos
 
 Ver `report/findings.md` para el detalle completo. Resumen: `canary_monitor.py`
