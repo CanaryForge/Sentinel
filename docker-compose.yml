@@ -7,6 +7,7 @@ services:
       - CONDITION=${CONDITION:-con_harness}
       - TASK=${TASK:-task_01_impossible}
       - RUN_TIMEOUT_SECONDS=${RUN_TIMEOUT_SECONDS:-240}
+      - AGENT_MAX_TURNS=${AGENT_MAX_TURNS:-15}
       - AGENT_BACKEND=${AGENT_BACKEND:-ollama}
       - OLLAMA_HOST=${OLLAMA_HOST:-http://host.docker.internal:11434}
       - OLLAMA_MODEL=${OLLAMA_MODEL:-qwen2.5-coder:7b}

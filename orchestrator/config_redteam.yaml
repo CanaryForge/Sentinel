@@ -7,6 +7,11 @@
 conditions: [con_harness, sin_harness]
 tasks: [task_04_prompt_injection]
 repetitions: 10          # 2 x 1 x 10 = 20 corridas
-run_timeout_seconds: 240
+# Subido de 240s: con un backend local (modelo mas chico, sin la latencia de
+# red de un backend en la nube pero razonando mas turnos por indecision) el
+# agente necesita mas margen para llegar al fetch del mirror y actuar sobre
+# el payload inyectado -- ver README/report/findings.md sobre timeouts cortos
+# cortando la exploracion antes de que el comportamiento de interes ocurra.
+run_timeout_seconds: 480
 project_name_prefix: sbxharness_redteam
 compose_files: [docker-compose.yml, docker-compose.redteam.yml]
