@@ -339,6 +339,69 @@ Como el exportador emite igual el triple de Timesketch, la decision es
 reversible sin tocar codigo: si en otra maquina sobra RAM, se sube Timesketch
 y se carga el mismo `timeline_combined.jsonl`.
 
+## Pruebas locales (sin gastar LLM ni cuota)
+
+Todo esto corre sin backend de modelo y sin costo. Es el orden en que conviene
+hacerlo en una maquina nueva; cada paso falla ruidosamente si el anterior no
+quedo bien.
+
+```bash
+# 1. El YAML compila (instantaneo)
+docker compose config -q
+
+# 2. La matriz se expande como esperas (instantaneo, ya NO ensucia results/)
+pip install -r orchestrator/requirements.txt
+python3 orchestrator/run_experiment.py --dry-run --limit 5
+
+# 3. Los monitores no estan ciegos (~4 min, construye imagenes, sin LLM)
+tests/positive_controls.sh
+
+# 4. El analisis corre sobre los datos que tengas (instantaneo)
+pip install -r analysis/requirements.txt
+python3 analysis/compute_ttd.py
+
+# 5. La linea de tiempo forense sale completa (instantaneo)
+python3 timeline/export_timeline.py
+
+# 6. Fortaleza de los monitores (~6-8 min, sin LLM, opcional)
+tests/monitor_strength_sweep.sh
+```
+
+El paso 3 es el unico que prueba el sistema de verdad: dispara a mano los
+cuatro eventos que los monitores deben ver y mide cuanto tardan. Salida
+esperada:
+
+```
+[1/4] Heartbeat      OK: detecto el silencio en ~1.8s
+[2/4] Canary (fs)    OK: detecto en filesystem en ~0.5s
+[3/4] Canary (red)   OK: detecto en trafico saliente en ~0.6s
+[4/4] Egress baseline OK: marco el destino como anomalo en ~0.5s
+== Los 4 controles dispararon. Los monitores no estan ciegos. ==
+```
+
+**Si alguno falla, no reportes tasas de deteccion** -- un monitor que nunca
+disparo es indistinguible de uno roto (`report/scope.md`, Escenario C).
+
+⚠ **Windows: finales de linea.** Git for Windows trae `core.autocrlf=true`.
+Sin el `.gitattributes` de este repo, cada `.sh` se reescribe a CRLF al clonar,
+`monitors/entrypoint.sh` queda con shebang `#!/usr/bin/env bash` y el
+contenedor muere con `env: 'bash': No such file or directory`.
+**`egress-proxy` es el unico servicio que arranca por ese script**, asi que no
+levanta y el `egress_monitor` + el `heartbeat_monitor` quedan mudos sin error
+visible -- `fs-monitor` sigue funcionando porque el compose le fija un
+`entrypoint` explicito. Sintoma: 3 de los 4 controles positivos fallan. Si
+clonaste antes del `.gitattributes`:
+
+```bash
+git rm --cached -r . && git reset --hard
+git ls-files --eol monitors/entrypoint.sh   # debe decir w/lf, no w/crlf
+```
+
+⚠ **No borres un stream de OpenObserve para re-ingerir.** Queda bloqueado
+varios minutos (`stream [x] is being deleted`) y rechaza todo con HTTP 400.
+Para una ingesta limpia usa un nombre de stream nuevo:
+`python3 timeline/push_timeline.py --stream sentinel63`.
+
 ## Condicion de control de red (manual, fuera de la matriz)
 
 ```bash
