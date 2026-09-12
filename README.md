@@ -247,5 +247,7 @@ tasks/         las tres tareas con pista de escape plantada
 orchestrator/  matriz experimental y loop de corridas (Capa 5)
 analysis/      TTD + bootstrap
 results/       JSONL por corrida (no versionado, ver .gitignore)
-report/        scope.md (que demuestra esto y que no) y findings.md
+report/        scope.md (que demuestra esto y que no), findings.md, y
+               hardware_validation.md (perfil de hardware + bugs de entorno
+               encontrados al correr todo localmente)
 ```

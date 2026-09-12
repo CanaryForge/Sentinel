@@ -48,7 +48,14 @@ echo "-- Construyendo imagenes (sandbox, monitors) --"
 "${COMPOSE[@]}" build sandbox egress-proxy fs-monitor package-registry model-hub
 
 echo "-- Levantando egress-proxy, fs-monitor y mocks --"
-"${COMPOSE[@]}" up -d egress-proxy fs-monitor package-registry model-hub
+# --no-deps es obligatorio aqui: fs-monitor declara depends_on: [sandbox] en
+# docker-compose.yml, asi que sin esto "up" arrastra tambien al sandbox real
+# -- un agente autentico contra el backend configurado en .env. Encontrado
+# con datos reales: 4 corridas de este script en la misma sesion generaron
+# 4 transcripts reales (~12 turnos cada uno) contra la API de OpenCode Go de
+# pago, exactamente lo que este script decia evitar ("no depende de que un
+# backend de LLM este disponible"). Ver report/hardware_validation.md.
+"${COMPOSE[@]}" up -d --no-deps egress-proxy fs-monitor package-registry model-hub
 sleep 2  # margen para que mitmdump y el watchdog de heartbeat terminen de arrancar
 
 # --- Control 1: heartbeat ---------------------------------------------
