@@ -4,3 +4,5 @@ __pycache__/
 results/*.jsonl
 results/*_meta.json
 !results/.gitkeep
+memory/*.jsonl
+!memory/.gitkeep

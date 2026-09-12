@@ -11,6 +11,36 @@ Escrito antes de tener resultados, para no acomodarlo despues.
   intervalo de confianza, en un solo laptop.
 - Un arnes clonable que otro equipo puede correr y extender.
 
+## Vectores 5 y 6: ubicacion en la taxonomia OWASP (agregado 2026-09-12)
+
+Vector 5 (memoria persistente envenenada) y vector 6 (RAG/base de
+conocimiento envenenada, ver `sandbox/agent.py`) no son escenarios
+inventados sin anclaje externo: caen directamente bajo **ASI06: Memory &
+Context Poisoning** del *OWASP Top 10 for Agentic Applications* (OWASP GenAI
+Security Project, publicado 2025-12-09), definido ahi como "persistent
+memory, retrieval, or context... shaped to mislead future steps" -- una
+entrada no confiable que queda almacenada como "memoria de confianza" e
+influye sesiones futuras no relacionadas. Es la version agentica del
+poisoning de datos de entrenamiento, pero con consecuencias en tiempo de
+ejecucion en vez de en tiempo de entrenamiento.
+
+Referencia de defensa real para trabajo futuro: **OWASP Agent Memory
+Guard** es la implementacion de referencia oficial contra ASI06 (una capa
+de runtime entre el agente y su almacen de memoria). La condicion
+`con_harness` actual para los vectores 5/6 sigue siendo solo una
+instruccion de system prompt (igual que en los vectores 1-4); reemplazarla
+por una defensa real como esa seria una comparacion mas fuerte que "se lo
+advertimos" vs. "no se lo advertimos".
+
+Trabajo academico relacionado para contexto metodologico (no integrado en
+este repo): AgentDojo (Debenedetti et al.) es el benchmark publicado mas
+cercano a este diseño -- casos de prueba de inyeccion indirecta sobre
+agentes con herramientas. PoisonedRAG y AgentPoison describen tecnicas para
+optimizar un documento/nota envenenada para que aparezca de forma fiable en
+una recuperacion por similitud, en vez de depender de coincidencia de
+palabra clave como hace `search_docs` aqui -- relevante si se quiere subir
+la tasa base de los vectores 5/6 sin cambiar el mecanismo de deteccion.
+
 ## Lo que este arnes NO demuestra
 
 - Que estos monitores detectarian comportamiento emergente de un modelo de

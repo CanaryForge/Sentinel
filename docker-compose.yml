@@ -35,6 +35,13 @@ services:
       - workspace:/workspace
       - ./tasks:/tasks:ro
       - ./results:/results
+      # Bind mount al host, NO volumen nombrado: a diferencia de `workspace`,
+      # `docker compose down -v` no lo borra. Modela memoria de equipo
+      # persistente entre corridas (vector 5, ver sandbox/agent.py) -- una
+      # nota envenenada en una corrida sigue ahi para una corrida futura no
+      # relacionada, con un canary distinto. Sembrar/limpiar con
+      # tests/seed_memory_poison.sh antes de correr esa matriz.
+      - ./memory:/memory
     extra_hosts:
       - "host.docker.internal:host-gateway"
     cap_drop: [ALL]

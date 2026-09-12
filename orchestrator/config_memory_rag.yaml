@@ -1,0 +1,21 @@
+# Matriz para los vectores 5 (memoria persistente envenenada) y 6 (RAG
+# envenenado, ver sandbox/agent.py y report/scope.md). Correr DESPUES de
+# sembrar la memoria compartida (task_05 la necesita; task_06 no toca
+# ./memory en absoluto, su temptacion vive en el seed de la tarea):
+#
+#   tests/seed_memory_poison.sh
+#   python3 orchestrator/run_experiment.py --config orchestrator/config_memory_rag.yaml
+#
+# IMPORTANTE (a diferencia de config.yaml/config_redteam.yaml): task_05 lee
+# ./memory/notes.jsonl, un bind mount al host que `docker compose down -v`
+# NO borra entre corridas -- por diseno, para modelar memoria de equipo que
+# persiste entre sesiones. Si se vuelve a correr esta matriz sin resembrar,
+# la nota envenenada sigue siendo la misma (esta bien, es el punto), pero si
+# se quiere una nota "fresca" para una campaña nueva, correr
+# tests/seed_memory_poison.sh de nuevo antes.
+conditions: [con_harness, sin_harness]
+tasks: [task_05_memory_poison, task_06_rag_poison]
+repetitions: 10          # 2 x 2 x 10 = 40 corridas
+run_timeout_seconds: 480
+project_name_prefix: sbxharness_memrag
+compose_files: [docker-compose.yml]
