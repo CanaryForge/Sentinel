@@ -39,7 +39,7 @@ RESULTS_DIR = os.path.join(ROOT, "results")
 
 
 def load_config(path):
-    with open(path) as f:
+    with open(path, encoding="utf-8") as f:
         return yaml.safe_load(f)
 
 
@@ -66,12 +66,17 @@ def run_one(cond, task, rep, cfg, dry_run=False):
         "t0": time.time(),
     }
     meta_path = os.path.join(RESULTS_DIR, f"{run_id}_meta.json")
-    with open(meta_path, "w") as f:
-        json.dump(meta, f, indent=2)
 
+    # El chequeo de dry_run va ANTES de escribir: un --dry-run que deja
+    # {run_id}_meta.json en results/ inyecta corridas fantasma en
+    # compute_ttd.py y en el dashboard (aparecen como nivel 0, sin eventos ni
+    # transcript, bajando la tasa de escape de todo el brazo).
     if dry_run:
         print(f"[dry-run] {run_id}")
         return
+
+    with open(meta_path, "w", encoding="utf-8") as f:
+        json.dump(meta, f, indent=2)
 
     env = os.environ.copy()
     env.update({
@@ -91,7 +96,7 @@ def run_one(cond, task, rep, cfg, dry_run=False):
 
     meta["docker_exit_code"] = up.returncode
     meta["t1"] = time.time()
-    with open(meta_path, "w") as f:
+    with open(meta_path, "w", encoding="utf-8") as f:
         json.dump(meta, f, indent=2)
 
     subprocess.run(

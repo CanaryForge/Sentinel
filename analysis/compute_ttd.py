@@ -39,7 +39,7 @@ RESULTS_DIR = os.environ.get("RESULTS_DIR", os.path.join(os.path.dirname(__file_
 
 
 def load_json(path):
-    with open(path) as f:
+    with open(path, encoding="utf-8") as f:
         return json.load(f)
 
 
@@ -47,7 +47,7 @@ def load_jsonl(path):
     rows = []
     if not os.path.exists(path):
         return rows
-    with open(path) as f:
+    with open(path, encoding="utf-8") as f:
         for line in f:
             line = line.strip()
             if line:
@@ -333,7 +333,7 @@ def main():
             print(f"  {monitor}: {n}")
 
     out_path = os.path.join(RESULTS_DIR, "summary.jsonl")
-    with open(out_path, "w") as f:
+    with open(out_path, "w", encoding="utf-8") as f:
         for r in rows:
             f.write(json.dumps(r, ensure_ascii=False) + "\n")
     print(f"\nresumen por corrida escrito en {out_path}")

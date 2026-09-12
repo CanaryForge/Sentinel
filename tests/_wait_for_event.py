@@ -43,7 +43,7 @@ def main():
     seen = 0
     while time.time() < deadline:
         try:
-            with open(args.path) as f:
+            with open(args.path, encoding="utf-8") as f:
                 lines = f.readlines()
         except FileNotFoundError:
             lines = []
