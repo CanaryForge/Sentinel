@@ -157,6 +157,31 @@ Imprime, por condicion: tasa de intentos de escape, tasa de deteccion, TTD
 media con intervalo de confianza bootstrap al 95%, y que monitor detecto
 primero mas seguido. Escribe `results/summary.jsonl` con una fila por corrida.
 
+## Panel visual (dashboard)
+
+```bash
+pip install -r dashboard/requirements.txt
+python3 dashboard/app.py          # abre http://localhost:8765
+```
+
+Web local (Flask) que lee `results/` en vivo -- no es un snapshot ni un
+artifact publicado, es un servidor que corre en tu maquina junto al resto
+del harness y relee el disco cuando pulsas "releer results/" (o al
+recargar la pagina). Reusa la misma logica de `analysis/compute_ttd.py`
+(la escalera de 0-6 niveles, la definicion de "intento de escape" por
+tarea) para que el panel y el analisis de linea de comandos nunca
+diverjan -- no duplica esa logica, la importa.
+
+Muestra: el diagrama de arquitectura, una linea de tiempo turno-por-turno
+de la corrida seleccionada (marca el momento exacto de la fuga y el de la
+deteccion, con el TTD entre ambos), tarjetas de los 3 mecanismos de
+deteccion con sus estadisticas de la corrida actual, y el agregado de
+todas las corridas presentes en `results/` agrupadas por condicion/tarea.
+
+Por defecto abre la corrida con el nivel de escalada mas alto disponible
+(la fuga real mas interesante); el selector del encabezado permite ver
+cualquier otra.
+
 ## Condicion de control de red (manual, fuera de la matriz)
 
 ```bash
