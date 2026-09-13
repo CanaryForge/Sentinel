@@ -51,7 +51,7 @@
 <section id="architecture">
   <p class="eyebrow">Arquitectura — topologia real de docker-compose.yml (+ overlays)</p>
   <div class="arch-card">
-    <svg viewBox="0 0 1040 570" role="img" aria-label="Diagrama de arquitectura del arnes, con las tres redes Docker, el path del heartbeat y los vectores de memoria/RAG persistentes">
+    <svg viewBox="0 0 1040 620" role="img" aria-label="Diagrama de arquitectura del arnes: tres redes Docker, el camino del heartbeat, los volumenes persistentes y las dos raices que vigila el fs-monitor">
       <defs>
         <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
           <path d="M0,0 L10,5 L0,10 z" fill="#5f6c7a"></path>
@@ -61,6 +61,9 @@
         </marker>
         <marker id="arrow-crit" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
           <path d="M0,0 L10,5 L0,10 z" fill="#e05555"></path>
+        </marker>
+        <marker id="arrow-vol" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="#9085e9"></path>
         </marker>
       </defs>
       <style>
@@ -76,108 +79,111 @@
         .edge { stroke: #5f6c7a; stroke-width: 1.2; fill: none; marker-end: url(#arrow); }
         .edge-hb { stroke: #3987e5; stroke-width: 1.2; fill: none; stroke-dasharray: 4 3; marker-end: url(#arrow-hb); }
         .edge-ext { stroke: #e05555; stroke-width: 1.2; fill: none; stroke-dasharray: 4 3; marker-end: url(#arrow-crit); }
-        .edge-vol { stroke: #5f6c7a; stroke-width: 1; fill: none; stroke-dasharray: 2 3; }
+        .edge-vol { stroke: #9085e9; stroke-width: 1.1; fill: none; stroke-dasharray: 3 3; marker-end: url(#arrow-vol); }
         .netbox { fill: none; stroke: rgba(255,255,255,0.10); stroke-width: 1; stroke-dasharray: 2 4; rx: 10; }
       </style>
 
-      <!-- llm-backend: red declarada explicitamente NO internal en docker-compose.yml -->
-      <!-- (el chat del agente y heartbeat.py necesitan salir de verdad; no es -->
-      <!-- superficie auditada, ver comentario en el service sandbox). -->
-      <rect class="box-ext" x="760" y="20" width="250" height="90" rx="8"></rect>
-      <text class="lbl" x="885" y="48" text-anchor="middle">backend LLM</text>
-      <text class="lbl-sub" x="885" y="64" text-anchor="middle">Ollama (host) / OpenCode Go·Zen</text>
-      <text class="lbl-sub" x="885" y="79" text-anchor="middle" fill="#e05555">llm-backend — NO internal</text>
-      <text class="lbl-sub" x="885" y="102" text-anchor="middle" fill="#5f6c7a">fuera del alcance auditado</text>
+      <!-- El backend del LLM va DIRECTAMENTE encima del sandbox. En la version
+           anterior estaba arriba a la derecha y su arista cruzaba el diagrama
+           entero por encima de red-mocks; aqui la relacion es una vertical
+           corta que no cruza nada. -->
+      <rect class="box-ext" x="40" y="24" width="250" height="84" rx="8"></rect>
+      <text class="lbl" x="165" y="50" text-anchor="middle">backend LLM</text>
+      <text class="lbl-sub" x="165" y="66" text-anchor="middle">Ollama (host) / OpenCode Go - Zen</text>
+      <text class="lbl-sub" x="165" y="82" text-anchor="middle" fill="#e05555">llm-backend - NO internal</text>
+      <text class="lbl-sub" x="165" y="97" text-anchor="middle" fill="#5f6c7a">fuera del alcance auditado</text>
 
-      <!-- RED-PROXY (internal): unico camino del agente hacia los mocks -->
-      <rect class="netbox" x="20" y="140" width="330" height="175"></rect>
-      <text class="lbl-net" x="30" y="132">RED-PROXY (internal)</text>
+      <rect class="netbox" x="20" y="162" width="410" height="188"></rect>
+      <text class="lbl-net" x="30" y="154">RED-PROXY (internal)</text>
 
-      <rect class="box" x="40" y="165" width="150" height="65" rx="8"></rect>
-      <text class="lbl" x="115" y="192" text-anchor="middle">sandbox</text>
-      <text class="lbl-sub" x="115" y="208" text-anchor="middle">agent.py + heartbeat.py</text>
+      <rect class="box" x="45" y="188" width="150" height="66" rx="8"></rect>
+      <text class="lbl" x="120" y="214" text-anchor="middle">sandbox</text>
+      <text class="lbl-sub" x="120" y="230" text-anchor="middle">agent.py + heartbeat.py</text>
 
-      <!-- egress-proxy es miembro de red-proxy Y red-mocks a la vez: se dibuja -->
-      <!-- a proposito atravesando el limite entre ambos netbox. -->
-      <rect class="box-mon" x="230" y="185" width="170" height="130" rx="8"></rect>
-      <text class="lbl" x="315" y="206" text-anchor="middle">egress-proxy</text>
-      <text class="lbl-sub" x="315" y="222" text-anchor="middle">mitmproxy</text>
-      <text class="lbl-sub" x="315" y="238" text-anchor="middle" fill="#199e70">egress_monitor.py</text>
-      <text class="lbl-sub" x="315" y="250" text-anchor="middle" fill="#199e70">:8080 (HTTP_PROXY)</text>
-      <text class="lbl-sub" x="315" y="270" text-anchor="middle" fill="#3987e5">heartbeat_monitor.py</text>
-      <text class="lbl-sub" x="315" y="282" text-anchor="middle" fill="#3987e5">:9000 (bypassea mitmproxy)</text>
+      <rect class="box-mon" x="248" y="188" width="162" height="140" rx="8"></rect>
+      <text class="lbl" x="329" y="210" text-anchor="middle">egress-proxy</text>
+      <text class="lbl-sub" x="329" y="226" text-anchor="middle">mitmproxy</text>
+      <text class="lbl-sub" x="329" y="250" text-anchor="middle" fill="#199e70">egress_monitor.py</text>
+      <text class="lbl-sub" x="329" y="262" text-anchor="middle" fill="#199e70">:8080 (HTTP_PROXY)</text>
+      <text class="lbl-sub" x="329" y="292" text-anchor="middle" fill="#3987e5">heartbeat_monitor.py</text>
+      <text class="lbl-sub" x="329" y="304" text-anchor="middle" fill="#3987e5">:9000 (bypassea mitmproxy)</text>
 
-      <!-- RED-MOCKS (internal) -->
-      <rect class="netbox" x="350" y="140" width="440" height="290"></rect>
-      <text class="lbl-net" x="360" y="132">RED-MOCKS (internal)</text>
+      <!-- Mocks apilados en vertical, no lado a lado: asi cada arista desde el
+           proxy entra horizontal a su destino sin atravesar el box vecino. -->
+      <rect class="netbox" x="470" y="162" width="540" height="230"></rect>
+      <text class="lbl-net" x="480" y="154">RED-MOCKS (internal)</text>
 
-      <rect class="box-mock" x="470" y="165" width="150" height="55" rx="8"></rect>
-      <text class="lbl" x="545" y="188" text-anchor="middle" font-size="11">package-registry</text>
-      <text class="lbl-sub" x="545" y="203" text-anchor="middle">SSRF de juguete</text>
+      <rect class="box-mock" x="500" y="186" width="200" height="58" rx="8"></rect>
+      <text class="lbl" x="600" y="209" text-anchor="middle" font-size="11">package-registry</text>
+      <text class="lbl-sub" x="600" y="224" text-anchor="middle">SSRF de juguete</text>
 
-      <rect class="box-mock" x="650" y="165" width="130" height="55" rx="8"></rect>
-      <text class="lbl" x="715" y="188" text-anchor="middle" font-size="11">model-hub</text>
-      <text class="lbl-sub" x="715" y="203" text-anchor="middle">credenciales falsas</text>
+      <rect class="box-mock" x="500" y="278" width="200" height="58" rx="8"></rect>
+      <text class="lbl" x="600" y="301" text-anchor="middle" font-size="11">model-hub</text>
+      <text class="lbl-sub" x="600" y="316" text-anchor="middle">credenciales falsas</text>
 
-      <rect class="box-mock" x="545" y="270" width="180" height="60" rx="8"></rect>
-      <text class="lbl" x="635" y="292" text-anchor="middle" font-size="11">redteam</text>
-      <text class="lbl-sub" x="635" y="306" text-anchor="middle">alias mirror-externo (overlay, vector 4)</text>
-      <text class="lbl-sub" x="635" y="318" text-anchor="middle" fill="#5f6c7a">docker-compose.redteam.yml</text>
+      <rect class="box-mock" x="775" y="220" width="210" height="70" rx="8"></rect>
+      <text class="lbl" x="880" y="243" text-anchor="middle" font-size="11">redteam</text>
+      <text class="lbl-sub" x="880" y="258" text-anchor="middle">alias mirror-externo (vector 4)</text>
+      <text class="lbl-sub" x="880" y="272" text-anchor="middle" fill="#5f6c7a">docker-compose.redteam.yml</text>
 
-      <!-- Persistencia (no son redes: volumen + bind mounts al host) -->
-      <rect class="box-vol" x="20" y="400" width="230" height="72" rx="8"></rect>
-      <text class="lbl" x="135" y="421" text-anchor="middle" font-size="11">workspace</text>
-      <text class="lbl-sub" x="135" y="436" text-anchor="middle">rw: sandbox · ro: fs-monitor</text>
-      <text class="lbl-sub" x="135" y="450" text-anchor="middle" fill="#9085e9">knowledge_base/ (vector 6, RAG)</text>
-      <text class="lbl-sub" x="135" y="463" text-anchor="middle" fill="#5f6c7a">volumen efimero (down -v lo borra)</text>
+      <rect class="box-vol" x="40" y="418" width="215" height="76" rx="8"></rect>
+      <text class="lbl" x="147" y="440" text-anchor="middle" font-size="11">workspace</text>
+      <text class="lbl-sub" x="147" y="455" text-anchor="middle">rw: sandbox - ro: fs-monitor</text>
+      <text class="lbl-sub" x="147" y="469" text-anchor="middle" fill="#9085e9">knowledge_base/ (vector 6, RAG)</text>
+      <text class="lbl-sub" x="147" y="483" text-anchor="middle" fill="#5f6c7a">volumen efimero (down -v lo borra)</text>
 
-      <rect class="box-vol" x="270" y="400" width="230" height="72" rx="8"></rect>
-      <text class="lbl" x="385" y="421" text-anchor="middle" font-size="11">./memory</text>
-      <text class="lbl-sub" x="385" y="436" text-anchor="middle">rw: sandbox (vector 5)</text>
-      <text class="lbl-sub" x="385" y="450" text-anchor="middle" fill="#9085e9">notas envenenadas persistentes</text>
-      <text class="lbl-sub" x="385" y="463" text-anchor="middle" fill="#5f6c7a">bind mount host — down -v NO lo borra</text>
+      <rect class="box-vol" x="295" y="418" width="215" height="76" rx="8"></rect>
+      <text class="lbl" x="402" y="440" text-anchor="middle" font-size="11">./memory</text>
+      <text class="lbl-sub" x="402" y="455" text-anchor="middle">rw: sandbox - ro: fs-monitor</text>
+      <text class="lbl-sub" x="402" y="469" text-anchor="middle" fill="#9085e9">notas envenenadas (vector 5)</text>
+      <text class="lbl-sub" x="402" y="483" text-anchor="middle" fill="#5f6c7a">bind mount - down -v NO lo borra</text>
 
-      <rect class="box-vol" x="520" y="400" width="230" height="72" rx="8"></rect>
-      <text class="lbl" x="635" y="421" text-anchor="middle" font-size="11">./results</text>
-      <text class="lbl-sub" x="635" y="436" text-anchor="middle">evidencia de la corrida</text>
-      <text class="lbl-sub" x="635" y="450" text-anchor="middle" fill="#5f6c7a">sandbox + egress-proxy + fs-monitor</text>
-      <text class="lbl-sub" x="635" y="463" text-anchor="middle" fill="#5f6c7a">bind mount host — sobrevive down -v</text>
+      <rect class="box-vol" x="550" y="418" width="215" height="76" rx="8"></rect>
+      <text class="lbl" x="657" y="440" text-anchor="middle" font-size="11">./results</text>
+      <text class="lbl-sub" x="657" y="455" text-anchor="middle">evidencia de la corrida</text>
+      <text class="lbl-sub" x="657" y="469" text-anchor="middle" fill="#5f6c7a">sandbox + egress-proxy + fs-monitor</text>
+      <text class="lbl-sub" x="657" y="483" text-anchor="middle" fill="#5f6c7a">bind mount - sobrevive down -v</text>
 
-      <rect class="box-mon" x="20" y="495" width="230" height="58" rx="8"></rect>
-      <text class="lbl" x="135" y="518" text-anchor="middle" font-size="11">fs-monitor</text>
-      <text class="lbl-sub" x="135" y="533" text-anchor="middle" fill="#9085e9">canary_monitor.py</text>
-      <text class="lbl-sub" x="135" y="545" text-anchor="middle" fill="#5f6c7a">network_mode: none</text>
+      <rect class="box-mon" x="150" y="546" width="250" height="58" rx="8"></rect>
+      <text class="lbl" x="275" y="569" text-anchor="middle" font-size="11">fs-monitor</text>
+      <text class="lbl-sub" x="275" y="584" text-anchor="middle" fill="#9085e9">canary_monitor.py - inotify</text>
+      <text class="lbl-sub" x="275" y="596" text-anchor="middle" fill="#5f6c7a">network_mode: none</text>
 
-      <!-- edges: superficie auditada (HTTP_PROXY) -->
-      <path class="edge" d="M190,195 L228,205"></path>
-      <text class="lbl-edge" x="195" y="192">HTTP_PROXY</text>
+      <!-- Aristas: todo ortogonal salvo la del backend, que es una vertical
+           recta. Los cruces diagonales ambiguos de la version anterior
+           desaparecen por layout, no por trucos de dibujo. -->
+      <path class="edge-ext" d="M165,108 L165,186"></path>
+      <text class="lbl-edge" x="175" y="152" fill="#e05555">chat/completions (no auditado)</text>
 
-      <!-- edges: heartbeat, mismo destino (egress-proxy) pero puerto/logica distinta -->
-      <!-- entra por abajo-izquierda del box, lejos del bloque de texto interno -->
-      <path class="edge-hb" d="M190,222 C212,265 212,298 228,303"></path>
-      <text class="lbl-edge" x="145" y="298" fill="#3987e5">heartbeat :9000 (bypass)</text>
+      <path class="edge" d="M195,206 L246,206"></path>
+      <text class="lbl-edge" x="188" y="198">HTTP_PROXY</text>
 
-      <!-- edges: sandbox -> backend LLM, cruza el limite de red-proxy a proposito -->
-      <path class="edge-ext" d="M190,170 L758,65"></path>
-      <text class="lbl-edge" x="420" y="105" fill="#e05555">chat/completions (no auditado)</text>
+      <path class="edge-hb" d="M195,240 L221,240 L221,298 L246,298"></path>
+      <text class="lbl-edge" x="52" y="302" fill="#3987e5">heartbeat :9000 (bypass)</text>
 
-      <path class="edge" d="M400,215 L468,190"></path>
-      <path class="edge" d="M400,225 L648,190"></path>
-      <path class="edge" d="M545,220 L580,268"></path>
-      <text class="lbl-edge" x="555" y="250">SSRF: /fetch?url=mirror-externo</text>
+      <path class="edge" d="M410,212 L498,212"></path>
+      <path class="edge" d="M410,304 L498,304"></path>
 
-      <!-- edges: volumenes -->
-      <path class="edge-vol" d="M135,230 L135,398"></path>
-      <text class="lbl-edge" x="140" y="330">workspace rw</text>
-      <path class="edge-vol" d="M135,472 L135,493"></path>
-      <text class="lbl-edge" x="140" y="486">ro, inotify</text>
-      <path class="edge-vol" d="M115,230 Q60,320 380,398"></path>
-      <text class="lbl-edge" x="160" y="378">./memory rw</text>
+      <path class="edge" d="M700,206 L737,206 L737,242 L773,242"></path>
+      <text class="lbl-edge" x="706" y="198">SSRF: /fetch?url=mirror-externo</text>
+
+      <path class="edge-vol" d="M120,254 L120,416"></path>
+      <text class="lbl-edge" x="126" y="342" fill="#9085e9">workspace rw</text>
+
+      <path class="edge-vol" d="M170,254 L170,386 L402,386 L402,416"></path>
+      <text class="lbl-edge" x="250" y="380" fill="#9085e9">./memory rw</text>
+
+      <path class="edge-vol" d="M200,494 L200,544"></path>
+      <text class="lbl-edge" x="84" y="524" fill="#9085e9">ro, inotify</text>
+      <path class="edge-vol" d="M350,494 L350,544"></path>
+      <text class="lbl-edge" x="358" y="524" fill="#9085e9">ro, inotify</text>
     </svg>
   </div>
   <p class="mono arch-caption">
     Rojo punteado = sale de verdad a internet, fuera de lo auditado. Amarillo punteado = servicio de juguete
-    dentro de una red <code>internal: true</code>. Gris punteado = volumen/bind mount, no red.
+    dentro de una red <code>internal: true</code>. Violeta punteado = volumen o bind mount, no red: es la
+    superficie que vigila el <code>fs-monitor</code>. Azul punteado = el heartbeat, que bypassea el proxy
+    a proposito.
     <code>docker-compose.control.yml</code> (demo manual, fuera de la matriz automatizada) quita <code>sandbox</code>
     de <code>red-proxy</code> y lo conecta directo a <code>red-mocks</code>: sin egress-proxy, sin heartbeat, sin
     canary de red.

@@ -34,13 +34,20 @@
 
   /* rampa secuencial ordinal (niveles 0-6 de escalada), pasos claros =
      mas prominentes sobre este fondo oscuro */
-  --nivel-0: #184f95;
-  --nivel-1: #1c5cab;
-  --nivel-2: #256abf;
-  --nivel-3: #2a78d6;
-  --nivel-4: #3987e5;
-  --nivel-5: #6da7ec;
-  --nivel-6: #b7d3f6;
+  /* Siete pasos de severidad, no siete claridades del mismo azul: la rampa
+     anterior era monocroma y los niveles 1 y 5 -- donde vive el hallazgo del
+     proyecto -- quedaban indistinguibles en la barra apilada. Esta mueve el
+     TONO ademas de la luminosidad (pizarra inerte -> teal -> azul -> violeta
+     -> ambar -> rojo), asi que el orden se lee sin consultar la leyenda y
+     sobrevive a una captura en escala de grises. Los pasos 3, 4 y 6 reusan
+     los acentos que el panel ya usa para heartbeat, canary y critico. */
+  --nivel-0: #45525f;
+  --nivel-1: #2b7086;
+  --nivel-2: #2f84b4;
+  --nivel-3: #3987e5;
+  --nivel-4: #9085e9;
+  --nivel-5: #d9782f;
+  --nivel-6: #e05555;
 
   --radius: 10px;
   --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Consolas, monospace;
@@ -148,6 +155,20 @@ header.topbar {
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
+  /* min-width:0 deja que los hijos se encojan. Sin esto el <select> se
+     dimensiona al texto de su opcion mas larga (un run_id completo mas la
+     etiqueta de estado, ~440px) y empuja el ancho del documento por encima
+     del viewport en movil: la pagina entera scrollea de lado. */
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* El selector de corrida se acota al contenedor y trunca; el nombre completo
+   sigue disponible en el menu desplegado y en el title. */
+.topbar-controls select {
+  max-width: 100%;
+  min-width: 0;
+  text-overflow: ellipsis;
 }
 
 select, button {
@@ -315,7 +336,10 @@ section { margin-bottom: 40px; }
   row-gap: 2px;
   padding: 8px 14px;
   border-bottom: 1px solid var(--border);
-  border-left: 3px solid var(--border-strong);
+  /* Antes habia aqui un border-left de 3px del mismo color en todas las
+     filas: ocupaba peso visual sin codificar nada. La separacion entre filas
+     ya la hace el borde inferior. */
+  border-left: 1px solid transparent;
   cursor: pointer;
 }
 
@@ -604,12 +628,30 @@ section { margin-bottom: 40px; }
 .mech-card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-left: 3px solid var(--mech-color, var(--border-strong));
   border-radius: var(--radius);
   padding: 16px 18px;
 }
 
-.mech-card h3 { font-size: 13.5px; margin-bottom: 6px; }
+/* El color identifica el mecanismo, asi que la informacion se conserva -- pero
+   vive en un punto junto al titulo en vez de en una pestana lateral de 3px.
+   Una sola declaracion de elevacion (el borde de 1px), como el resto de las
+   superficies del panel. */
+.mech-card h3 {
+  font-size: 13.5px;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mech-card h3::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+  background: var(--mech-color, var(--text-muted));
+}
 .mech-card .surface { font-size: 12px; color: var(--text-muted); margin-bottom: 10px; }
 .mech-card p { font-size: 13px; color: var(--text-secondary); margin: 0 0 10px; }
 .mech-card .fact { font-family: var(--font-mono); font-size: 12px; color: var(--text-primary); }
@@ -707,4 +749,14 @@ footer a { color: var(--text-secondary); }
   .turn-row .who { grid-column: 1 / -1; }
   .agg-row { grid-template-columns: 1fr; }
   .agg-row .agg-count { text-align: left; }
+}
+
+/* Pie de una tarjeta de estadistica: el matiz que evita que la cifra se lea
+   como algo que no es. Hereda el tono de la superficie, no gris neutro. */
+.stat-tile .stat-note {
+  margin-top: 6px;
+  font-size: 10.5px;
+  line-height: 1.45;
+  color: var(--text-muted);
+  max-width: 34ch;
 }

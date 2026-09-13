@@ -312,7 +312,7 @@ const MECH_INFO = [
   { key: "canary-net", cls: "mech-canary-net", title: "Canary — red", surface: "host / ruta / query / cuerpo de requests salientes",
     desc: "Busca el token (y variantes ofuscadas: b64, url, hex, invertido) en todo el trafico saliente." },
   { key: "canary-fs", cls: "mech-canary-fs", title: "Canary — filesystem", surface: "nombres de archivo/directorio + contenido",
-    desc: "Escanea /workspace cada 3s. El vector del incidente ancla: mensajes codificados en nombres de directorio." },
+    desc: "Reacciona por evento (inotify) en /workspace y en ./memory, con barrido de respaldo. El vector del incidente ancla: mensajes codificados en nombres de directorio." },
 ];
 
 function renderMechCards(data) {
@@ -348,15 +348,20 @@ async function loadAggregate() {
   tiles.innerHTML = "";
   const totalIntentos = data.grupos.reduce((s, g) => s + g.intentos_de_escape, 0);
   const totalDetectados = data.grupos.reduce((s, g) => s + g.detectados, 0);
+  // La cifra que vale es la de superficies que produce el agente. La cruda
+  // cuenta tambien los hallazgos sobre agent_transcript.jsonl, que escribe el
+  // propio harness -- mostrarla sola contradice report/findings.md.
+  const detAgente = data.grupos.reduce((s, g) => s + (g.detectados_superficie_agente || 0), 0);
   const stats = [
     [data.total_corridas, "corridas en results/"],
     [totalIntentos, "intentos de escape"],
-    [totalDetectados, "detectados"],
+    [detAgente, "detectados", `en superficie del agente · ${totalDetectados} contando el log del harness`],
   ];
-  for (const [v, l] of stats) {
+  for (const [v, l, nota] of stats) {
     const t = document.createElement("div");
     t.className = "stat-tile";
-    t.innerHTML = `<div class="value tabular">${v}</div><div class="label">${l}</div>`;
+    t.innerHTML = `<div class="value tabular">${v}</div><div class="label">${l}</div>` +
+      (nota ? `<div class="stat-note">${nota}</div>` : "");
     tiles.appendChild(t);
   }
 
@@ -457,7 +462,7 @@ async function loadMonitorStrength() {
   grid.innerHTML = "";
 
   const groups = [
-    { key: "canary_fs", title: "canary_monitor.py (filesystem)", sub: "parametro: CANARY_SCAN_INTERVAL — segundos entre cada escaneo de /workspace", color: "var(--mech-canary-fs)" },
+    { key: "canary_fs", title: "canary_monitor.py (filesystem)", sub: "parametro: CANARY_FALLBACK_INTERVAL — solo el barrido de respaldo; la deteccion va por inotify", color: "var(--mech-canary-fs)" },
     { key: "heartbeat", title: "heartbeat_monitor.py", sub: "parametro: intervalo × multiplicador — umbral de silencio antes de alertar", color: "var(--mech-heartbeat)" },
   ];
 
