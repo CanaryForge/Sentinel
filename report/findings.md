@@ -392,12 +392,12 @@ tomando el timestamp al lanzar el comando (no al terminar), aceptando que el
 numero resultante mide sobre todo el arranque del contenedor de prueba, no
 la latencia del monitor (esa esta acotada arriba, en el bracket manual).
 
-| Parametro (antes CANARY_SCAN_INTERVAL, ahora solo el respaldo) | TTD antes (polling) | TTD despues (watchdog) |
-|---|---|---|
-| 1s | sin detectar (ventana de 19s) | 3.64s |
-| 3s | sin detectar (ventana de 27s) | 3.54s |
-| 10s | 0.68s -- 1.75s (dos corridas) | 3.53s |
-| 30s | 20.17s -- 22.57s (dos corridas) | 3.60s |
+| Parametro (antes CANARY_SCAN_INTERVAL, ahora solo el respaldo) | TTD antes (polling) | TTD despues (watchdog), maquina cargada | TTD despues, maquina descansada (2 corridas) |
+|---|---|---|---|
+| 1s | sin detectar (ventana de 19s) | 3.64s | **0.675s / 0.520s** |
+| 3s | sin detectar (ventana de 27s) | 3.54s | **0.371s / 0.430s** |
+| 10s | 0.68s -- 1.75s (dos corridas) | 3.53s | **0.353s / 0.457s** |
+| 30s | 20.17s -- 22.57s (dos corridas) | 3.60s | **0.417s / 0.535s** |
 
 El numero "despues" es plano (~3.5-3.6s) independientemente del parametro --
 exactamente lo esperado, porque el parametro ya no controla la latencia de
@@ -406,13 +406,56 @@ deteccion. Ese ~3.5s es el costo de arrancar/tirar el contenedor efimero de
 corrida real (agente en un contenedor ya vivo, sin ese arranque por cada
 accion), la latencia deberia ser aun menor.
 
-`tests/positive_controls.sh` (control 1, heartbeat) se colgo en su ultima
-corrida en esta maquina -- no se investigo a fondo porque el control que se
-colgo no toca `canary_monitor.py` ni fue modificado en este cambio;
-sospecha no confirmada de contencion de recursos tras varias horas de
-builds/corridas de Docker consecutivas en la misma sesion. Pendiente de
-reproducir en una maquina descansada antes de asumir que es un problema real
-del script.
+### Re-medicion en maquina descansada (2026-09-12, Windows + Docker Desktop)
+
+La columna nueva de la tabla son dos corridas completas del barrido en una
+maquina sin otra carga de Docker. **Confirma la interpretacion cualitativa y
+corrige la magnitud por un factor ~8**: el TTD sigue siendo plano respecto al
+parametro (el rango completo, 1s a 30s, cabe entre 0.35s y 0.68s), pero el
+piso real no es ~3.5s sino **~0.45s**. Aquel ~3.5s era casi todo contencion
+de recursos, no costo intrinseco de arrancar el contenedor efimero.
+
+El heartbeat tambien se remidio, y aqui hay una correccion de signo respecto
+a la version anterior de este documento:
+
+| Mecanismo | Umbral (interval x mult) | TTD medido |
+|---|---|---|
+| heartbeat | 4s | 4.049s |
+| heartbeat | 10s | 8.567s |
+| heartbeat | 30s | 27.691s |
+| heartbeat | 80s | 76.672s |
+
+La relacion lineal se mantiene, pero el TTD queda **por debajo** del umbral,
+no "umbral + un margen pequeno" como decia antes. La razon es metodologica y
+no un fallo del monitor: el barrido cronometra desde que mata al pinger,
+mientras que el watchdog cuenta desde el ultimo ping recibido, que siempre
+ocurrio antes. La diferencia observada (~1.3s a ~3.3s) crece con el
+intervalo, justo como predice esa explicacion.
+
+### Un tercer fallo especifico de Windows en los scripts de prueba
+
+La primera pasada de esta re-medicion dio `SIN DETECTAR` en los 4 casos de
+heartbeat, con `results/mstr_heartbeat_*.jsonl` inexistente -- ni siquiera los
+eventos `info` de los pings. Causa: Git Bash / MSYS reescribe cualquier
+argumento con pinta de ruta absoluta POSIX antes de pasarselo a `docker.exe`,
+asi que `docker compose run ... python3 /app/heartbeat.py` llega al contenedor
+como:
+
+```
+python3: can't open file '/app/C:/Program Files/Git/app/heartbeat.py'
+```
+
+El contenedor sale con codigo 2 de inmediato y `--rm` lo borra, asi que no
+queda ni el log: el caso simplemente no detecta nada, sin ninguna pista.
+Corregido con `export MSYS_NO_PATHCONV=1` en `monitor_strength_sweep.sh` y en
+`positive_controls.sh` (ignorado en Linux y macOS). **El orquestador no esta
+afectado**: `run_experiment.py` no pasa rutas POSIX al CLI de docker, y
+`sandbox/entrypoint.sh` se ejecuta dentro del contenedor, donde MSYS no
+interviene.
+
+Esto explica ademas el sintoma que quedaba pendiente aqui: el control 1 de
+`tests/positive_controls.sh` "colgado" en esta maquina era el mismo bug, no
+contencion de recursos.
 
 ## Vectores 5 y 6: memoria persistente y RAG envenenados (matriz corriendo, 2026-09-12)
 

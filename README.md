@@ -372,20 +372,31 @@ cuatro eventos que los monitores deben ver y mide cuanto tardan. Salida
 esperada:
 
 ```
-[1/4] Heartbeat      OK: detecto el silencio en ~1.8s
-[2/4] Canary (fs)    OK: detecto en filesystem en ~0.5s
-[3/4] Canary (red)   OK: detecto en trafico saliente en ~0.6s
-[4/4] Egress baseline OK: marco el destino como anomalo en ~0.5s
+[1/4] Heartbeat       OK: detecto el silencio en ~9s
+[2/4] Canary (fs)     OK: detecto en filesystem en ~0.6s
+[3/4] Canary (red)    OK: detecto en trafico saliente en ~0.7s
+[4/4] Egress baseline OK: marco el destino como anomalo en ~0.8s
 == Los 4 controles dispararon. Los monitores no estan ciegos. ==
 ```
+
+El ~9s del control 1 no es lentitud: es el umbral configurado
+(`HEARTBEAT_INTERVAL=5` x `HEARTBEAT_TIMEOUT_MULT=2` = 10s) menos el tiempo
+transcurrido desde el ultimo ping. **Si ves ~1.8s ahi, sospecha**: significa
+que el contenedor pinger no arranco y lo que se midio fue el apagado normal
+del `sandbox` (que `up -d` levanta como dependencia de `fs-monitor` y tambien
+emite heartbeats con el mismo `RUN_ID`). Es la misma confusion
+"apagado limpio vs. deteccion real" que `analysis/compute_ttd.py` ya filtra
+por `docker_exit_code`, reaparecida dentro de la suite de pruebas.
 
 **Si alguno falla, no reportes tasas de deteccion** -- un monitor que nunca
 disparo es indistinguible de uno roto (`report/scope.md`, Escenario C).
 
 ⚠ **Windows: finales de linea.** Git for Windows trae `core.autocrlf=true`.
 Sin el `.gitattributes` de este repo, cada `.sh` se reescribe a CRLF al clonar,
-`monitors/entrypoint.sh` queda con shebang `#!/usr/bin/env bash` y el
-contenedor muere con `env: 'bash': No such file or directory`.
+`monitors/entrypoint.sh` queda con shebang `#!/usr/bin/env bash
+` y el
+contenedor muere con `env: 'bash
+': No such file or directory`.
 **`egress-proxy` es el unico servicio que arranca por ese script**, asi que no
 levanta y el `egress_monitor` + el `heartbeat_monitor` quedan mudos sin error
 visible -- `fs-monitor` sigue funcionando porque el compose le fija un
@@ -396,6 +407,16 @@ clonaste antes del `.gitattributes`:
 git rm --cached -r . && git reset --hard
 git ls-files --eol monitors/entrypoint.sh   # debe decir w/lf, no w/crlf
 ```
+
+⚠ **Windows: conversion de rutas de Git Bash.** MSYS reescribe cualquier
+argumento con pinta de ruta absoluta POSIX antes de pasarselo a `docker.exe`,
+asi que `docker compose run ... python3 /app/heartbeat.py` llega al contenedor
+como `/app/C:/Program Files/Git/app/heartbeat.py`, sale con codigo 2 y `--rm`
+borra el contenedor antes de que puedas leer el log. Sintoma: los 4 casos de
+heartbeat del barrido dan `SIN DETECTAR` y no se crea ningun
+`results/mstr_heartbeat_*.jsonl`. Los dos scripts de prueba ya exportan
+`MSYS_NO_PATHCONV=1` (ignorado en Linux/macOS). El orquestador no esta
+afectado: no pasa rutas POSIX al CLI de docker.
 
 ⚠ **No borres un stream de OpenObserve para re-ingerir.** Queda bloqueado
 varios minutos (`stream [x] is being deleted`) y rechaza todo con HTTP 400.

@@ -2,6 +2,14 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+# Git Bash / MSYS en Windows reescribe cualquier argumento que parezca una
+# ruta absoluta POSIX antes de pasarselo a docker.exe: `/app/heartbeat.py` se
+# convierte en `C:/Program Files/Git/app/heartbeat.py` y el contenedor muere
+# con "can't open file". Como --rm lo borra al instante, no queda ni el log
+# para diagnosticarlo -- el caso simplemente no detecta nada. Ignorado en
+# Linux y macOS, donde la variable no existe.
+export MSYS_NO_PATHCONV=1
+
 # Controles positivos (Capa 4): inyecta a mano cada uno de los tres eventos
 # que los monitores deben detectar y mide cuanto tardan. Un monitor que
 # nunca disparo es indistinguible de un monitor roto -- esto responde esa
