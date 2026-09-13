@@ -10,10 +10,10 @@
 :root{
   --primary-300:#e1cfa2; --primary-400:#e4bd5e; --primary-500:#b8860b;
   --primary-600:#9a6f05; --primary-700:#7a5803; --primary-800:#593f01; --primary-900:#382902;
-  --neutral-400:#a7a59f; --neutral-500:#817d74; --neutral-600:#615e56; --neutral-700:#47443e;
+  --neutral-400:#a7a59f; --text-faint:#918d84; --neutral-500:#817d74; --neutral-600:#615e56; --neutral-700:#47443e;
   --bg:#11100e; --surface:#1b1a18; --elevated:#2e2d28;
   --border:#2e2d28; --border-subtle:#47443e;
-  --text:#f9f9f8; --text-2:#d5d4d2; --text-muted:#817d74;
+  --text:#f9f9f8; --text-2:#d5d4d2; --text-muted:#a7a59f;
   --error-500:#de2e21; --error-400:#d97069;
   --info-500:#2c7cdd; --success-500:#24bc5c;
   --display:"Cormorant Garamond",Georgia,serif;
@@ -23,35 +23,35 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--text);font-family:var(--body);font-weight:400;
-  font-size:14.5px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
 
 .topbar{height:68px;border-bottom:1px solid var(--border);display:flex;align-items:center;
   padding:0 48px;gap:20px;position:sticky;top:0;background:#11100eee;backdrop-filter:blur(8px);z-index:20}
 .brand{display:flex;align-items:center;gap:12px}
-.brand svg{width:28px;height:28px}
+.brand img{width:32px;height:32px;object-fit:contain}
 .brand b{font-family:var(--display);font-size:22px;font-weight:600}
 .topbar nav{display:flex;gap:4px;margin-left:24px}
-.topbar nav a{font-size:13px;color:var(--text-muted);text-decoration:none;padding:8px 14px;
+.topbar nav a{font-size:15px;color:var(--text-muted);text-decoration:none;padding:8px 14px;
   border-radius:var(--r);transition:color .15s,background .15s}
 .topbar nav a:hover{color:var(--text-2);background:var(--surface)}
 .topbar nav a[aria-current]{color:var(--primary-400);background:var(--primary-900)}
-.topbar .meta{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--neutral-600)}
+.topbar .meta{margin-left:auto;font-family:var(--mono);font-size:13.5px;color:var(--text-faint)}
 
 .intro{padding:64px 48px 48px;max-width:1320px}
 .intro h1{font-family:var(--display);font-size:46px;font-weight:400;line-height:1.12;
   max-width:22ch;letter-spacing:-.01em}
 .intro h1 b{font-weight:600;color:var(--primary-400)}
-.intro p{margin-top:18px;max-width:64ch;color:var(--text-2);font-size:15.5px}
+.intro p{margin-top:18px;max-width:64ch;color:var(--text-2);font-size:17px}
 .intro .counts{display:flex;gap:40px;margin-top:32px;padding-top:24px;
   border-top:1px solid var(--border)}
-.intro .counts div{font-family:var(--mono);font-size:11.5px;color:var(--neutral-500)}
+.intro .counts div{font-family:var(--mono);font-size:13.5px;color:var(--text-muted)}
 .intro .counts b{display:block;font-family:var(--display);font-size:36px;font-weight:400;
   color:var(--text);line-height:1;margin-bottom:6px;font-variant-numeric:tabular-nums}
 .intro .counts b.gold{color:var(--primary-400)}
 
 /* ---- the spine ---- */
 .spine{padding:0 48px 120px;max-width:1320px;position:relative}
-.stage{display:grid;grid-template-columns:118px 40px minmax(0,1fr) minmax(0,360px);
+.stage{display:grid;grid-template-columns:132px 40px minmax(0,1fr) minmax(0,390px);
   gap:28px;align-items:start;position:relative;padding-bottom:8px}
 
 /* the rule itself, drawn as a border on the rail cell */
@@ -67,65 +67,61 @@ body{background:var(--bg);color:var(--text);font-family:var(--body);font-weight:
 .stage[data-weight="high"] .rail::before{background:linear-gradient(#2e2d28,#7a5803)}
 
 .tick{text-align:right;padding-top:2px}
-.tick .lv{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
-  color:var(--neutral-600)}
+.tick .lv{font-family:var(--mono);font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--text-faint)}
 .tick .n{font-family:var(--display);font-size:42px;font-weight:400;line-height:1;
   font-variant-numeric:tabular-nums;margin-top:4px}
 .tick .n.gold{color:var(--primary-400)}
-.tick .n.zero{color:var(--neutral-700)}
-.tick .pct{font-family:var(--mono);font-size:10.5px;color:var(--neutral-600);margin-top:5px}
+.tick .n.zero{color:var(--text-faint)}
+.tick .pct{font-family:var(--mono);font-size:13px;color:var(--text-faint);margin-top:5px}
 
 .body-cell{padding-bottom:36px;min-width:0}
 .body-cell h3{font-family:var(--display);font-size:26px;font-weight:500;letter-spacing:-.005em}
-.body-cell .sig{font-family:var(--mono);font-size:11px;color:var(--primary-600);
+.body-cell .sig{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--primary-400);
   letter-spacing:.06em;margin-top:3px}
-.body-cell p{margin-top:10px;color:var(--text-2);font-size:14px;max-width:62ch}
+.body-cell p{margin-top:10px;color:var(--text-2);font-size:15.5px;max-width:62ch}
 .body-cell .share{height:5px;background:var(--elevated);border-radius:var(--r);margin-top:16px;
   overflow:hidden;max-width:420px}
 .body-cell .share i{display:block;height:100%;background:var(--primary-600)}
 .stage[data-weight="high"] .share i{background:var(--primary-500)}
 .stage[data-weight="zero"] .body-cell h3,
-.stage[data-weight="zero"] .body-cell p{color:var(--neutral-600)}
+.stage[data-weight="zero"] .body-cell p{color:var(--text-faint)}
 
 /* ---- annotations hang off the spine, not every stage has one ---- */
 .annot{border:1px solid var(--border);border-radius:var(--r);background:var(--surface);
   padding:18px 20px;margin-top:2px}
 .annot h4{font-family:var(--display);font-size:18px;font-weight:600;margin-bottom:4px}
-.annot .tagline{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
-  color:var(--neutral-600);margin-bottom:12px}
-.annot p{font-size:13px;color:var(--text-muted);line-height:1.6}
+.annot .tagline{font-family:var(--mono);font-size:12.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--text-faint);margin-bottom:12px}
+.annot p{font-size:15px;color:var(--text-muted);line-height:1.6}
 .annot p b{color:var(--primary-300);font-weight:600}
 .annot.alarm{border-color:var(--error-500);background:#440d0818}
 .annot.alarm p b{color:var(--error-400)}
 
 .arow{display:flex;justify-content:space-between;align-items:center;padding:7px 0;
-  border-top:1px solid var(--border);font-size:12.5px;color:var(--text-2)}
+  border-top:1px solid var(--border);font-size:14.5px;color:var(--text-2)}
 .arow:first-of-type{border-top:none}
-.arow b{font-family:var(--mono);font-size:12.5px;font-variant-numeric:tabular-nums;font-weight:700}
+.arow b{font-family:var(--mono);font-size:15px;font-variant-numeric:tabular-nums;font-weight:700;color:var(--text)}
 .arow b.gold{color:var(--primary-400)}
-.arow b.dim{color:var(--neutral-600)}
+.arow b.dim{color:var(--text-muted)}
 .arow b.hot{color:var(--error-400)}
-.arow .d{font-family:var(--mono);font-size:11.5px}
+.arow .d{font-family:var(--mono);font-size:14.5px;font-weight:700;color:var(--text-2)}
 
-.oo{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:11px;
+.oo{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:13.5px;
   color:var(--primary-400);text-decoration:none;padding:7px 12px;margin-top:14px;
   border:1px solid var(--primary-700);border-radius:var(--r);transition:background .15s}
 .oo:hover{background:var(--primary-900)}
 .oo:active{transform:translateY(1px)}
 
 .tail{margin:0 48px;max-width:1320px;border-top:1px solid var(--border);padding:28px 0 80px;
-  font-family:var(--mono);font-size:11px;color:var(--neutral-600);line-height:1.9;max-width:80ch}
+  font-family:var(--mono);font-size:13.5px;color:var(--text-faint);line-height:1.9;max-width:80ch}
 </style>
 </head>
 <body>
 
 <header class="topbar">
   <div class="brand">
-    <svg viewBox="0 0 64 64" aria-hidden="true">
-      <path fill="#e4bd5e" d="M44 12c4 0 7 2.6 8.4 5.6L48 19l4.6 1.2C51.4 25 47 28 41.6 28H36l-2.6 5H30l8-21c1.2-.6 3-0 6 0z"/>
-      <circle cx="45.5" cy="18" r="1.6" fill="#11100e"/>
-      <path fill="#b8860b" d="M10 34h44c0 5-4 8.5-9 9.4V52h4v4H21v-4h4v-8.6C18 42 13 39 10 34z"/>
-    </svg>
+    <img src="logo.png" alt="Sentinel">
     <b>Sentinel</b>
   </div>
   <nav>

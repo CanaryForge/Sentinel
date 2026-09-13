@@ -10,11 +10,11 @@
 :root{
   --primary-300:#e1cfa2; --primary-400:#e4bd5e; --primary-500:#b8860b;
   --primary-600:#9a6f05; --primary-700:#7a5803; --primary-900:#382902;
-  --neutral-400:#a7a59f; --neutral-500:#817d74; --neutral-600:#615e56;
+  --neutral-400:#a7a59f; --text-faint:#918d84; --neutral-500:#817d74; --neutral-600:#615e56;
   --neutral-700:#47443e;
   --bg:#11100e; --surface:#1b1a18; --elevated:#2e2d28;
   --border:#2e2d28; --border-subtle:#47443e;
-  --text:#f9f9f8; --text-2:#d5d4d2; --text-muted:#817d74;
+  --text:#f9f9f8; --text-2:#d5d4d2; --text-muted:#a7a59f;
   --error-500:#de2e21; --error-400:#d97069;
   --success-500:#24bc5c; --info-500:#2c7cdd;
   --display:"Cormorant Garamond",Georgia,serif;
@@ -24,24 +24,24 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--text);font-family:var(--body);font-weight:300;
-  font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  font-size:16.5px;line-height:1.6;-webkit-font-smoothing:antialiased}
 a{color:inherit}
 
 /* ---- shell: wide left rail, content column, no cards ---- */
 .shell{display:grid;grid-template-columns:220px minmax(0,1fr);min-height:100vh}
 .rail{border-right:1px solid var(--border);padding:32px 24px;position:sticky;top:0;height:100vh}
 .brand{display:flex;align-items:center;gap:12px;margin-bottom:48px}
-.brand svg{width:32px;height:32px;flex:none}
+.brand img{width:34px;height:34px;flex:none;object-fit:contain}
 .brand-name{font-family:var(--display);font-size:24px;font-weight:500;letter-spacing:.01em}
-.brand-sub{font-family:var(--mono);font-size:10px;color:var(--text-muted);
+.brand-sub{font-family:var(--mono);font-size:12.5px;color:var(--text-muted);
   letter-spacing:.12em;text-transform:uppercase;margin-top:2px}
 .rail nav{display:flex;flex-direction:column;gap:2px}
-.rail nav a{font-size:13px;color:var(--text-muted);text-decoration:none;padding:7px 10px;
+.rail nav a{font-size:15px;color:var(--text-muted);text-decoration:none;padding:7px 10px;
   border-left:2px solid transparent;transition:color .18s,border-color .18s}
 .rail nav a:hover{color:var(--text-2)}
 .rail nav a[aria-current]{color:var(--text);border-left-color:var(--primary-500)}
 .rail-foot{position:absolute;bottom:32px;left:24px;right:24px;
-  font-family:var(--mono);font-size:10px;color:var(--neutral-600);line-height:1.7}
+  font-family:var(--mono);font-size:12.5px;color:var(--text-faint);line-height:1.7}
 
 .col{padding:64px 72px 120px;max-width:1180px}
 
@@ -50,8 +50,8 @@ a{color:inherit}
 .masthead h1{font-family:var(--display);font-size:56px;font-weight:400;line-height:1.08;
   letter-spacing:-.01em;max-width:20ch}
 .masthead h1 em{font-style:italic;color:var(--primary-400);line-height:1.12;padding-bottom:2px}
-.masthead p{margin-top:20px;max-width:62ch;color:var(--text-2);font-size:16px}
-.kicker{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+.masthead p{margin-top:20px;max-width:62ch;color:var(--text-2);font-size:17px}
+.kicker{font-family:var(--mono);font-size:13.5px;letter-spacing:.16em;text-transform:uppercase;
   color:var(--primary-500);margin-bottom:20px}
 
 /* ---- figures: huge serif numerals on hairlines, no boxes ---- */
@@ -62,37 +62,37 @@ a{color:inherit}
 .fig .n{font-family:var(--display);font-size:72px;font-weight:300;line-height:.92;
   letter-spacing:-.02em;font-variant-numeric:tabular-nums}
 .fig .n.gold{color:var(--primary-400)}
-.fig .k{font-size:13px;color:var(--text-2);margin-top:12px;max-width:22ch}
-.fig .note{font-family:var(--mono);font-size:10.5px;color:var(--neutral-600);margin-top:6px}
+.fig .k{font-size:15px;color:var(--text-2);margin-top:12px;max-width:22ch}
+.fig .note{font-family:var(--mono);font-size:13px;color:var(--text-faint);margin-top:6px}
 
 /* ---- section rhythm ---- */
 section{margin-bottom:88px}
 .sec-head{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin-bottom:32px;
   padding-bottom:16px;border-bottom:1px solid var(--border)}
 .sec-head h2{font-family:var(--display);font-size:34px;font-weight:400;letter-spacing:-.005em}
-.sec-head p{color:var(--text-muted);font-size:14px;max-width:68ch}
+.sec-head p{color:var(--text-muted);font-size:15.5px;max-width:68ch}
 
 /* ---- finding: pull-quote style lead, data beneath ---- */
 .finding{border-left:2px solid var(--primary-600);padding-left:28px;margin-bottom:36px}
 .finding .lead{font-family:var(--display);font-size:25px;font-weight:400;line-height:1.35;
   max-width:44ch;color:var(--text)}
 .finding .lead b{font-weight:600;color:var(--primary-300)}
-.finding .body{margin-top:14px;color:var(--text-2);font-size:14.5px;max-width:66ch}
+.finding .body{margin-top:14px;color:var(--text-2);font-size:16px;max-width:66ch}
 
 /* ---- ladder: hairline stacked bars, gold is the leak level ---- */
 .ladder{display:flex;flex-direction:column}
-.lrow{display:grid;grid-template-columns:260px 1fr 84px;gap:24px;align-items:center;
+.lrow{display:grid;grid-template-columns:290px 1fr 96px;gap:24px;align-items:center;
   padding:16px 0;border-bottom:1px solid var(--border)}
 .lrow:first-child{border-top:1px solid var(--border)}
-.lname{font-family:var(--mono);font-size:11.5px;color:var(--text-2);line-height:1.5}
-.lname span{display:block;color:var(--neutral-500);font-size:10.5px}
+.lname{font-family:var(--mono);font-size:13.5px;color:var(--text-2);line-height:1.5}
+.lname span{display:block;color:var(--text-muted);font-size:13px}
 .lbar{display:flex;height:16px;border-radius:var(--r);overflow:hidden;background:var(--surface)}
 .lbar i{display:block;height:100%}
-.lttd{font-family:var(--mono);font-size:12px;text-align:right;color:var(--text-2);
+.lttd{font-family:var(--mono);font-size:14px;text-align:right;color:var(--text-2);
   font-variant-numeric:tabular-nums}
-.lttd span{display:block;font-size:10px;color:var(--neutral-600)}
-.legend{display:flex;flex-wrap:wrap;gap:18px;margin-top:20px;font-family:var(--mono);font-size:10.5px;
-  color:var(--neutral-500)}
+.lttd span{display:block;font-size:12.5px;color:var(--text-faint)}
+.legend{display:flex;flex-wrap:wrap;gap:18px;margin-top:20px;font-family:var(--mono);font-size:13px;
+  color:var(--text-muted)}
 .legend i{display:inline-block;width:9px;height:9px;border-radius:1px;margin-right:6px;
   vertical-align:middle}
 
@@ -101,44 +101,44 @@ section{margin-bottom:88px}
 .srow{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:baseline;
   padding:14px 0;border-bottom:1px solid var(--border)}
 .srow:first-child{border-top:1px solid var(--border)}
-.slabel{font-size:14px;color:var(--text-2)}
+.slabel{font-size:15.5px;color:var(--text-2)}
 .sval{font-family:var(--display);font-size:30px;font-weight:400;font-variant-numeric:tabular-nums;
   line-height:1}
 .sval.gold{color:var(--primary-400)}
-.sval.dim{color:var(--neutral-500)}
+.sval.dim{color:var(--text-muted)}
 .aside h3{font-family:var(--display);font-size:19px;font-weight:500;margin-bottom:10px}
-.aside p{font-size:13.5px;color:var(--text-muted);line-height:1.65}
+.aside p{font-size:15.5px;color:var(--text-muted);line-height:1.65}
 .aside .warn{border-left:2px solid var(--error-500);padding-left:16px;margin-top:20px}
 .aside .warn strong{color:var(--error-400);font-weight:500}
 
 /* ---- routing: plain rows, status by type not by dot ---- */
-.route{display:grid;grid-template-columns:1fr 90px 90px 150px;gap:16px;padding:14px 0;
-  border-bottom:1px solid var(--border);align-items:center;font-size:13.5px}
+.route{display:grid;grid-template-columns:1fr 100px 100px 168px;gap:16px;padding:14px 0;
+  border-bottom:1px solid var(--border);align-items:center;font-size:15.5px}
 .route:first-of-type{border-top:1px solid var(--border)}
-.route .d{font-family:var(--mono);font-size:12.5px}
-.route .num{font-family:var(--mono);font-size:12.5px;text-align:right;
+.route .d{font-family:var(--mono);font-size:14.5px}
+.route .num{font-family:var(--mono);font-size:14.5px;text-align:right;
   font-variant-numeric:tabular-nums;color:var(--text-2)}
 .route .num.hot{color:var(--error-400)}
-.tag{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+.tag{font-family:var(--mono);font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;
   padding:3px 9px;border-radius:var(--r);border:1px solid var(--border-subtle);
   color:var(--neutral-400);justify-self:start}
 .tag.undeclared{border-color:var(--error-500);color:var(--error-400)}
-.rhead{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
-  color:var(--neutral-600);padding-bottom:8px}
+.rhead{font-family:var(--mono);font-size:12.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--text-faint);padding-bottom:8px}
 
 /* ---- tools ---- */
 .tools{display:grid;grid-template-columns:1fr 1fr;gap:56px}
-.trow{display:grid;grid-template-columns:132px 1fr 48px;gap:14px;align-items:center;padding:7px 0}
-.tname{font-family:var(--mono);font-size:12px;color:var(--text-2)}
+.trow{display:grid;grid-template-columns:150px 1fr 62px;gap:16px;align-items:center;padding:7px 0}
+.tname{font-family:var(--mono);font-size:14.5px;font-weight:700;color:var(--text)}
 .tname.bad{color:var(--error-400)}
 .ttrack{height:6px;background:var(--surface);border-radius:var(--r);overflow:hidden}
 .ttrack i{display:block;height:100%;background:var(--primary-600)}
 .ttrack i.bad{background:var(--error-500)}
-.tnum{font-family:var(--mono);font-size:11.5px;text-align:right;color:var(--neutral-500);
+.tnum{font-family:var(--mono);font-size:14.5px;font-weight:700;text-align:right;color:var(--text-2);
   font-variant-numeric:tabular-nums}
 
 /* ---- deep link out to OpenObserve ---- */
-.oo{display:inline-flex;align-items:center;gap:9px;font-family:var(--mono);font-size:11.5px;
+.oo{display:inline-flex;align-items:center;gap:9px;font-family:var(--mono);font-size:13.5px;
   letter-spacing:.04em;color:var(--primary-400);text-decoration:none;padding:9px 16px;
   border:1px solid var(--primary-700);border-radius:var(--r);
   background:linear-gradient(135deg,#b8860b15,#7a580308);transition:border-color .18s,color .18s}
@@ -146,7 +146,7 @@ section{margin-bottom:88px}
 .oo:active{transform:translateY(1px)}
 .oo-row{display:flex;gap:12px;margin-top:28px;flex-wrap:wrap}
 
-.footnote{font-family:var(--mono);font-size:11px;color:var(--neutral-600);line-height:1.8;
+.footnote{font-family:var(--mono);font-size:13.5px;color:var(--text-faint);line-height:1.8;
   border-top:1px solid var(--border);padding-top:24px;max-width:76ch}
 </style>
 </head>
@@ -155,11 +155,7 @@ section{margin-bottom:88px}
 
   <aside class="rail">
     <div class="brand">
-      <svg viewBox="0 0 64 64" aria-hidden="true">
-        <path fill="#e4bd5e" d="M44 12c4 0 7 2.6 8.4 5.6L48 19l4.6 1.2C51.4 25 47 28 41.6 28H36l-2.6 5H30l8-21c1.2-.6 3-0 6 0z"/>
-        <circle cx="45.5" cy="18" r="1.6" fill="#11100e"/>
-        <path fill="#b8860b" d="M10 34h44c0 5-4 8.5-9 9.4V52h4v4H21v-4h4v-8.6C18 42 13 39 10 34z"/>
-      </svg>
+      <img src="logo.png" alt="Sentinel">
       <div>
         <div class="brand-name">Sentinel</div>
         <div class="brand-sub">CanaryForge</div>
@@ -248,7 +244,7 @@ section{margin-bottom:88px}
         </div>
         <div class="aside">
           <h3>Read the file-content number twice</h3>
-          <p>Of those 81 content hits, 40 landed on <span style="font-family:var(--mono);font-size:12px">agent_transcript.jsonl</span>,
+          <p>Of those 81 content hits, 40 landed on <span style="font-family:var(--mono);font-size:14px">agent_transcript.jsonl</span>,
              which is the log the harness writes itself. The monitor was detecting its own
              paperwork.</p>
           <div class="warn">
@@ -291,9 +287,9 @@ section{margin-bottom:88px}
           <div class="aside" style="margin-bottom:28px">
             <h3>Tools the model invented</h3>
             <p>Three names were called that do not exist in
-               <span style="font-family:var(--mono);font-size:12px">sandbox/agent.py</span>.
+               <span style="font-family:var(--mono);font-size:14px">sandbox/agent.py</span>.
                The dispatcher resolves them to an error string and the agent carries on.
-               <span style="font-family:var(--mono);font-size:12px;color:var(--error-400)">mkdir</span>
+               <span style="font-family:var(--mono);font-size:14px;color:var(--error-400)">mkdir</span>
                was called 67 times. That is not noise, it is a capability the model assumed it had.</p>
           </div>
           <div class="aside">
@@ -363,8 +359,8 @@ document.getElementById("toolbars").innerHTML = Object.entries(S.tools.counts)
   }).join("");
 
 document.getElementById("trans").innerHTML = S.tools.leakTransitions.map(([t,n]) =>
-  `<div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:11.5px;
-     padding:5px 0;color:var(--text-2)"><span>${t}</span><span style="color:var(--neutral-500)">${n}</span></div>`
+  `<div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:13.5px;
+     padding:5px 0;color:var(--text-2)"><span>${t}</span><span style="color:var(--text-muted)">${n}</span></div>`
 ).join("");
 
 // deep links

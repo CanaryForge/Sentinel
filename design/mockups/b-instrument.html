@@ -10,10 +10,10 @@
 :root{
   --primary-300:#e1cfa2; --primary-400:#e4bd5e; --primary-500:#b8860b;
   --primary-600:#9a6f05; --primary-700:#7a5803; --primary-800:#593f01; --primary-900:#382902;
-  --neutral-400:#a7a59f; --neutral-500:#817d74; --neutral-600:#615e56; --neutral-700:#47443e;
+  --neutral-400:#a7a59f; --text-faint:#918d84; --neutral-500:#817d74; --neutral-600:#615e56; --neutral-700:#47443e;
   --bg:#11100e; --surface:#1b1a18; --elevated:#2e2d28;
   --border:#2e2d28; --border-subtle:#47443e;
-  --text:#f9f9f8; --text-2:#d5d4d2; --text-muted:#817d74;
+  --text:#f9f9f8; --text-2:#d5d4d2; --text-muted:#a7a59f;
   --error-500:#de2e21; --error-400:#d97069; --error-900:#440d08;
   --success-500:#24bc5c; --info-500:#2c7cdd; --info-400:#6a9bd7;
   --display:"Cormorant Garamond",Georgia,serif;
@@ -24,21 +24,21 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--text);font-family:var(--body);font-weight:400;
-  font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  font-size:15.5px;line-height:1.55;-webkit-font-smoothing:antialiased}
 
 /* ---- top bar, single line, 64px ---- */
 .topbar{height:64px;border-bottom:1px solid var(--border);display:flex;align-items:center;
   gap:var(--s8);padding:0 var(--s8);position:sticky;top:0;background:var(--bg);z-index:10}
 .brand{display:flex;align-items:center;gap:var(--s3)}
-.brand svg{width:26px;height:26px}
+.brand img{width:30px;height:30px;object-fit:contain}
 .brand b{font-family:var(--display);font-size:21px;font-weight:600;letter-spacing:.01em}
 .tabs{display:flex;gap:var(--s1);margin-left:var(--s6)}
-.tabs a{font-family:var(--mono);font-size:11.5px;letter-spacing:.05em;color:var(--text-muted);
+.tabs a{font-family:var(--body);font-weight:500;font-size:14.5px;white-space:nowrap;letter-spacing:.01em;color:var(--text-muted);
   text-decoration:none;padding:7px var(--s3);border-radius:var(--r);transition:background .15s,color .15s}
 .tabs a:hover{color:var(--text-2);background:var(--surface)}
 .tabs a[aria-current]{color:var(--bg);background:var(--primary-500);font-weight:700}
-.topbar .right{margin-left:auto;display:flex;align-items:center;gap:var(--s4);
-  font-family:var(--mono);font-size:11px;color:var(--neutral-500)}
+.topbar .right{margin-left:auto;display:flex;align-items:center;gap:var(--s4);white-space:nowrap;
+  font-family:var(--mono);font-size:13.5px;color:var(--text-muted)}
 
 /* ---- dense grid ---- */
 .wrap{padding:var(--s8);display:grid;gap:var(--s6);max-width:1680px}
@@ -52,7 +52,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--body);font-weight:
 .panel > header{display:flex;align-items:baseline;justify-content:space-between;
   margin-bottom:var(--s4);padding-bottom:var(--s3);border-bottom:1px solid var(--border)}
 .panel h2{font-family:var(--display);font-size:21px;font-weight:600;letter-spacing:.005em}
-.panel .hint{font-family:var(--mono);font-size:10.5px;color:var(--neutral-600);letter-spacing:.04em}
+.panel .hint{font-family:var(--mono);font-size:13px;color:var(--text-faint);letter-spacing:.04em}
 
 /* ---- readouts: mono numerals, gold is the number that matters ---- */
 .readout{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
@@ -62,21 +62,21 @@ body{background:var(--bg);color:var(--text);font-family:var(--body);font-weight:
 .readout.key{border-color:var(--primary-700);
   background:linear-gradient(135deg,#b8860b15,#7a580308)}
 .readout.key .n{color:var(--primary-400)}
-.readout .k{font-size:12.5px;color:var(--text-2);margin-top:var(--s2)}
-.readout .sub{font-family:var(--mono);font-size:10.5px;color:var(--neutral-600);margin-top:var(--s1)}
+.readout .k{font-size:14.5px;color:var(--text-2);margin-top:var(--s2)}
+.readout .sub{font-family:var(--mono);font-size:13px;color:var(--text-faint);margin-top:var(--s1)}
 .readout .meter{height:3px;background:var(--elevated);border-radius:var(--r);
   margin-top:var(--s3);overflow:hidden}
 .readout .meter i{display:block;height:100%;background:var(--primary-500)}
 
 /* ---- matrix table, gold as data ink ---- */
-table{width:100%;border-collapse:collapse;font-size:13px}
-th{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
-  color:var(--neutral-600);text-align:left;padding:0 var(--s3) var(--s2) 0;font-weight:400}
+table{width:100%;border-collapse:collapse;font-size:15px}
+th{font-family:var(--mono);font-size:12.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--text-faint);text-align:left;padding:0 var(--s3) var(--s2) 0;font-weight:400}
 th.r,td.r{text-align:right}
 td{padding:var(--s3) var(--s3) var(--s3) 0;border-top:1px solid var(--border);vertical-align:middle}
-td.id{font-family:var(--mono);font-size:11.5px;color:var(--text-2);white-space:nowrap}
-td.id span{color:var(--neutral-500)}
-td.num{font-family:var(--mono);font-size:12.5px;font-variant-numeric:tabular-nums;color:var(--text-2)}
+td.id{font-family:var(--mono);font-size:13.5px;color:var(--text-2);white-space:nowrap}
+td.id span{color:var(--text-muted)}
+td.num{font-family:var(--mono);font-size:14.5px;font-variant-numeric:tabular-nums;color:var(--text-2)}
 td.num.gold{color:var(--primary-400);font-weight:700}
 tr:hover td{background:#ffffff05}
 
@@ -88,46 +88,46 @@ tr:hover td{background:#ffffff05}
 /* ---- surface bars ---- */
 .sbar{margin-bottom:var(--s4)}
 .sbar .top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
-.sbar .lab{font-size:13px;color:var(--text-2)}
-.sbar .val{font-family:var(--mono);font-size:14px;font-weight:700;font-variant-numeric:tabular-nums}
+.sbar .lab{font-size:15px;color:var(--text-2)}
+.sbar .val{font-family:var(--mono);font-size:15.5px;font-weight:700;font-variant-numeric:tabular-nums}
 .sbar .val.gold{color:var(--primary-400)}
 .sbar .track{height:10px;background:var(--elevated);border-radius:2px;overflow:hidden}
 .sbar .track i{display:block;height:100%;background:var(--primary-600)}
 .sbar .track i.gold{background:var(--primary-500)}
 .sbar .track i.dim{background:var(--neutral-700)}
-.sbar .foot{font-family:var(--mono);font-size:10.5px;color:var(--neutral-600);margin-top:5px}
+.sbar .foot{font-family:var(--mono);font-size:13px;color:var(--text-faint);margin-top:5px}
 
 /* ---- split readout for the harness-artifact caveat ---- */
 .splitbar{display:flex;height:34px;border-radius:var(--r);overflow:hidden;margin-top:var(--s3)}
 .splitbar div{display:flex;align-items:center;justify-content:center;font-family:var(--mono);
-  font-size:11.5px;font-weight:700}
+  font-size:13.5px;font-weight:700}
 .splitbar .self{background:var(--neutral-700);color:var(--text-2)}
 .splitbar .agent{background:var(--primary-500);color:var(--bg)}
 
 /* ---- routing rows ---- */
-.rt{display:grid;grid-template-columns:1fr 64px 64px 104px;gap:var(--s3);align-items:center;
+.rt{display:grid;grid-template-columns:1fr 76px 76px 124px;gap:var(--s3);align-items:center;
   padding:var(--s3) 0;border-top:1px solid var(--border)}
-.rt .d{font-family:var(--mono);font-size:12px}
-.rt .n{font-family:var(--mono);font-size:12px;text-align:right;font-variant-numeric:tabular-nums;
+.rt .d{font-family:var(--mono);font-size:14px}
+.rt .n{font-family:var(--mono);font-size:14px;text-align:right;font-variant-numeric:tabular-nums;
   color:var(--text-2)}
 .rt .n.hot{color:var(--error-400);font-weight:700}
-.chip{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;
+.chip{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;
   padding:3px 8px;border-radius:var(--r);border:1px solid var(--border-subtle);
   color:var(--neutral-400);justify-self:start}
 .chip.bad{border-color:var(--error-500);color:var(--error-400);background:#440d0833}
 
 /* ---- tool bars ---- */
-.tb{display:grid;grid-template-columns:110px 1fr 44px;gap:var(--s3);align-items:center;
+.tb{display:grid;grid-template-columns:140px 1fr 58px;gap:var(--s3);align-items:center;
   padding:5px 0}
-.tb .nm{font-family:var(--mono);font-size:11.5px;color:var(--text-2)}
+.tb .nm{font-family:var(--mono);font-size:14.5px;font-weight:700;color:var(--text)}
 .tb .nm.bad{color:var(--error-400)}
 .tb .tk{height:8px;background:var(--elevated);border-radius:2px;overflow:hidden}
 .tb .tk i{display:block;height:100%;background:var(--primary-600)}
 .tb .tk i.bad{background:var(--error-500)}
-.tb .v{font-family:var(--mono);font-size:11px;text-align:right;color:var(--neutral-500);
+.tb .v{font-family:var(--mono);font-size:14.5px;font-weight:700;text-align:right;color:var(--text-2);
   font-variant-numeric:tabular-nums}
 
-.trans{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11.5px;
+.trans{display:flex;justify-content:space-between;gap:12px;font-family:var(--mono);font-size:14px;
   padding:6px 0;border-top:1px solid var(--border);color:var(--text-2)}
 .trans span:last-child{color:var(--primary-400);font-weight:700}
 
@@ -135,12 +135,12 @@ tr:hover td{background:#ffffff05}
 .callout{border-left:3px solid var(--primary-500);padding:var(--s3) var(--s4);
   background:linear-gradient(135deg,#b8860b15,#7a580308);border-radius:0 var(--r) var(--r) 0;
   margin-top:var(--s4)}
-.callout p{font-size:13px;color:var(--text-2);max-width:70ch}
+.callout p{font-size:15px;color:var(--text-2);max-width:70ch}
 .callout b{color:var(--primary-300);font-weight:600}
 .callout.danger{border-left-color:var(--error-500);background:#440d0822}
 .callout.danger b{color:var(--error-400)}
 
-.oo{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;
+.oo{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:13.5px;
   letter-spacing:.04em;color:var(--primary-400);text-decoration:none;padding:8px 14px;
   border:1px solid var(--primary-700);border-radius:var(--r);transition:background .15s,color .15s}
 .oo:hover{background:var(--primary-900);color:var(--primary-300)}
@@ -152,11 +152,7 @@ tr:hover td{background:#ffffff05}
 
 <header class="topbar">
   <div class="brand">
-    <svg viewBox="0 0 64 64" aria-hidden="true">
-      <path fill="#e4bd5e" d="M44 12c4 0 7 2.6 8.4 5.6L48 19l4.6 1.2C51.4 25 47 28 41.6 28H36l-2.6 5H30l8-21c1.2-.6 3-0 6 0z"/>
-      <circle cx="45.5" cy="18" r="1.6" fill="#11100e"/>
-      <path fill="#b8860b" d="M10 34h44c0 5-4 8.5-9 9.4V52h4v4H21v-4h4v-8.6C18 42 13 39 10 34z"/>
-    </svg>
+    <img src="logo.png" alt="Sentinel">
     <b>Sentinel</b>
   </div>
   <nav class="tabs">
@@ -206,7 +202,7 @@ tr:hover td{background:#ffffff05}
       <tbody id="matrix"></tbody>
     </table>
     <div id="legend" style="display:flex;flex-wrap:wrap;gap:16px;margin-top:16px;
-      font-family:var(--mono);font-size:10px;color:var(--neutral-500)"></div>
+      font-family:var(--mono);font-size:12.5px;color:var(--text-muted)"></div>
     <div class="oorow">
       <a class="oo" id="oo-esc" href="#">Escapes in OpenObserve</a>
       <a class="oo" id="oo-det" href="#">Detections in OpenObserve</a>
