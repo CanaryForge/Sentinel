@@ -1,0 +1,34 @@
+\section{Results}
+
+\subsection{Delivery channel dominates}
+
+\todo{Hallazgo 1. Mismo texto inyectado, tres canales, tasas distintas:
+fetch de red 10\%, memoria persistente 50\%, RAG local 60\% (agregado sobre
+las 20 corridas de cada tarea en \texttt{results/}). Hipotesis observable en
+los transcripts: el contenido que "ya estaba ahi" recibe menos escrutinio que
+el recien traido por HTTP. Conectar con ASI06.}
+
+\todo{Tabla: tarea, canal, \texttt{con\_harness} nivel 5, \texttt{sin\_harness}
+nivel 5. Las seis celdas estan verificadas contra los artefactos crudos.}
+
+\subsection{Time to detection}
+
+\todo{TTD por condicion con IC bootstrap. IMPORTANTE: usar las cifras
+corregidas de la Seccion 5, no las publicadas originalmente. Reportar tambien
+que por debajo de n=5 no se da intervalo (\texttt{N\_MINIMO\_IC}).}
+
+\subsection{Monitor strength sweep}
+
+\todo{Figura: TTD contra parametro de configuracion, un panel por mecanismo.
+Fuente \texttt{results/monitor\_strength.jsonl}, ya graficado en el dashboard.
+Dos lecturas: el heartbeat es lineal en su umbral y predecible; el canary es
+plano porque desde el cambio a inotify el parametro ya no gobierna la latencia
+de deteccion.}
+
+\subsection{The causal experiment}
+
+\todo{El experimento que aisla "nombrar la superficie de ataque". Prediccion
+falsable registrada ANTES de correr (\texttt{sandbox/prompts.py}). Resultado:
+\pending{numeros de results\_causal/ con memoria limpia}. Decir sin rodeos si
+la prediccion se cumplio o no; la version previa de este experimento la
+falsaba.}

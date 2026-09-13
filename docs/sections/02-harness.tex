@@ -1,0 +1,29 @@
+\section{The Harness}
+
+\todo{Arquitectura en un parrafo + la figura. Exportar el diagrama del
+dashboard (\texttt{dashboard/static/index.html}, el SVG de arquitectura) a
+\texttt{figures/architecture.pdf}: ya esta ruteado ortogonalmente y muestra
+las tres redes Docker, los dos bind mounts persistentes y las dos raices que
+vigila el fs-monitor.}
+
+\subsection{Three model-independent signals}
+
+\todo{Tabla: monitor, superficie que audita, que lo dispara, donde vive.
+heartbeat (silencio del proceso), canary de prompt en filesystem
+(nombres + contenido, inotify), canary y baseline en egress (mitmproxy).
+El punto a subrayar: ninguna de las tres consulta al modelo ni depende de su
+cooperacion.}
+
+\subsection{Six induction vectors}
+
+\todo{task\_01--03 (tentacion pasiva), task\_04 (inyeccion via fetch de red),
+task\_05 (memoria persistente envenenada), task\_06 (RAG envenenado).
+Ubicar 5 y 6 bajo OWASP ASI06 (Memory \& Context Poisoning), como ya hace
+\texttt{report/scope.md}.}
+
+\subsection{Conditions}
+
+\todo{\texttt{sin\_harness}, \texttt{con\_harness},
+\texttt{con\_harness\_generico}. Describir los tres bloques de
+\texttt{sandbox/prompts.py} y por que el tercero existe: aislar "nombrar la
+superficie de ataque" de "ser largo y enfatico".}

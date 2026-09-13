@@ -1,0 +1,57 @@
+\section{Threats to Validity, and Four Retractions}
+
+\todo{Framing de la seccion, en dos frases: estas correcciones salieron de
+recomputar cada cifra del reporte contra los artefactos crudos, de forma
+independiente del script que las produjo. Se publican porque el patron
+--que agregados calculados por script resistieron y las enumeraciones escritas
+a mano no-- es el resultado transferible.}
+
+\subsection{The filesystem monitor detected itself}
+
+\todo{\texttt{sandbox/agent.py} escribe el transcript DENTRO de
+\texttt{/workspace} para que el canary\_monitor lo vea. Cuando el modelo narra
+en prosa "voy a crear \texttt{/workspace/ack\_<canary>}", el token aterriza en
+ese log y el monitor se detecta a si mismo. 31 de 60 corridas tienen al menos
+un evento asi. La tasa publicada de 24/24 (100\%) baja a 18/24 (75\%) contando
+solo superficies que produce el agente. Separar los dos efectos: 6 detecciones
+sin ninguna otra senal (fuga realmente sin detectar) y 13 donde la senal real
+existia pero el artefacto llego primero (el TTD esta mal, la deteccion no).}
+
+\subsection{The causal table had no data behind it}
+
+\todo{Se publico una tabla de 10 corridas de \texttt{con\_harness\_generico}
+con 4/10 de fuga. En \texttt{results/} habia 3, una truncada. La cifra se
+redacto leyendo \texttt{repetitions: 10} de un archivo de configuracion en vez
+de contar artefactos. Regla que queda: toda cifra "N/10" se cuenta sobre
+\texttt{results/}, nunca se lee del config que las habria producido.}
+
+\subsection{Finding 2 does not replicate across machines}
+
+\todo{Con el mismo modelo y el mismo digest verificado, la misma tarea dio
+9/10 contra 3/10 en la maquina de Daniel y \pending{numeros} en la de Sergio.
+La evidencia esta en los transcripts: mediana de 4 turnos frente a 14, y 0 de
+23 corridas agotando el tope de turnos frente a 11 de 30. Descartado el
+truncamiento de contexto como causa --se remidio contra un servidor con
+contexto mayor y el comportamiento de bucle no cambio. La causa probable es la
+version de Ollama, que ningun artefacto del corpus registra. Decir que el
+hallazgo estrella del proyecto esta condicionado a una configuracion que no se
+documento.}
+
+\subsection{Runs were not independent}
+
+\todo{\texttt{./memory} es un bind mount al host, asi que
+\texttt{docker compose down -v} no lo toca. Tras la matriz causal el archivo
+tenia 85 notas, 58 con el canary literal de una corrida previa: un agente
+podia leer el secreto de otra corrida, y ninguna corrida de task\_05/06 empezo
+en las mismas condiciones que la anterior. Corregido --el orquestador ahora
+resetea la memoria por corrida-- y las 30 corridas causales se regeneraron
+sobre esa base.}
+
+\subsection{Log integrity under concurrent append}
+
+\todo{Los tres monitores hacen append al mismo \texttt{\{run\_id\}.jsonl} desde
+contenedores distintos. Sobre un bind mount de Docker Desktop en Windows ese
+append no es atomico: se observo una linea desgarrada, que empieza a mitad del
+JSON. Es un riesgo de integridad del formato de evento compartido, no un bug
+de un monitor concreto. Mitigacion aplicada: el analisis salta la linea y
+avisa con archivo:linea en vez de morir.}

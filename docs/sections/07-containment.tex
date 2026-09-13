@@ -1,0 +1,19 @@
+\section{Detection Without Response}
+
+\todo{El numero que ancla la seccion: el arnes detecta en 1.79s de mediana y
+la corrida sigue viva 37s mas, con 4 tool calls mas del agente. 31 de 33
+corridas siguieron actuando despues de que el monitor ya sabia. Ese es el
+dwell time que una capa de contencion cerraria, y es medible con lo que ya
+hay.}
+
+\todo{Por que el arnes no contiene: los tres monitores son
+arquitectonicamente incapaces. El addon de mitmproxy solo loguea (mitmproxy
+SI puede matar flows); el canary monta el workspace read-only; el heartbeat no
+tiene handle sobre el contenedor; el orquestador espera a que la corrida
+termine sin mirar eventos. Tabla corta.}
+
+\todo{Trabajo futuro, con la condicion de diseno que lo hace publicable: si se
+agrega contencion, tiene que ser un brazo NUEVO, no una modificacion del
+existente, o el corpus deja de ser comparable. Y la escalera 0--6 necesita un
+eje paralelo (contenido si/no), porque con contencion el escape nunca
+completa.}

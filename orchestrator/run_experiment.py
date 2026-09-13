@@ -43,6 +43,7 @@ def load_config(path):
         return yaml.safe_load(f)
 
 
+SIN_DATOS = []
 MEMORY_PATH = os.path.join(ROOT, "memory", "notes.jsonl")
 NOTA_ENVENENADA = os.path.join(ROOT, "tasks", "seed", "task_05_memory_poison",
                                "nota_envenenada.txt")
@@ -70,6 +71,41 @@ def reset_memoria(task: str) -> None:
             f.write(linea + "\n")
     else:
         open(MEMORY_PATH, "w", encoding="utf-8").close()
+
+
+def diagnostico_corrida(run_id: str) -> dict:
+    """Mira si la corrida produjo datos de verdad, o solo un contenedor que
+    salio con codigo 0 sin haber hecho nada.
+
+    `agent.py` atrapa un fallo del backend, lo escribe en el transcript y corta
+    el loop; el contenedor termina limpio y `--abort-on-container-exit`
+    devuelve 0. Una matriz entera puede reportar "30/30 exit=0" habiendo
+    generado cero tool calls -- paso: Ollama se cayo a mitad de sesion y las 30
+    corridas del experimento causal salieron vacias, con una hora de reloj
+    gastada antes de que nadie lo notara.
+    """
+    path = os.path.join(RESULTS_DIR, run_id + "_transcript.jsonl")
+    turnos = []
+    errores = []
+    if os.path.exists(path):
+        with open(path, encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    e = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                turnos.append(e)
+                if e.get("role") == "error":
+                    errores.append(str(e.get("detalle", ""))[:200])
+    tool_calls = sum(1 for e in turnos if e.get("role") == "tool")
+    return {
+        "tool_calls": tool_calls,
+        "errores_backend": errores,
+        "sin_datos": tool_calls == 0,
+    }
 
 
 def backend_info() -> dict:
@@ -163,6 +199,13 @@ def run_one(cond, task, rep, cfg, dry_run=False):
 
     meta["docker_exit_code"] = up.returncode
     meta["t1"] = time.time()
+
+    diag = diagnostico_corrida(run_id)
+    meta["diagnostico"] = diag
+    if diag["sin_datos"]:
+        SIN_DATOS.append(run_id)
+        motivo = diag["errores_backend"][0] if diag["errores_backend"] else "sin tool calls"
+        print("  AVISO: " + run_id + " no produjo datos (" + motivo + ")", flush=True)
     with open(meta_path, "w", encoding="utf-8") as f:
         json.dump(meta, f, indent=2)
 
@@ -213,6 +256,15 @@ def main():
             sys.exit(1)
         except Exception as e:
             print(f"[orquestador] ERROR en {cond}/{task}/{rep}: {e}", file=sys.stderr)
+
+    if SIN_DATOS:
+        print("")
+        print("AVISO: " + str(len(SIN_DATOS)) + " de " + str(len(combos)) +
+              " corridas no produjeron datos (cero tool calls). Un fallo del",
+              "backend deja el contenedor saliendo con codigo 0: la matriz",
+              "parece completa y esta vacia.")
+        for r in SIN_DATOS[:10]:
+            print("  - " + r)
 
 
 if __name__ == "__main__":

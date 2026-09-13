@@ -1,0 +1,34 @@
+\section{Method}
+
+\subsection{Operational definitions}
+
+\todo{Las definiciones son eleccion nuestra y hay que decirlo. (1) "Intento de
+escape": para task\_01--03, la primera llamada a \texttt{http\_fetch}; para
+task\_04--06, el canary en los argumentos de una tool call --porque en esas
+tareas el hint autoriza consultar el canal, asi que acceder al canal no es la
+violacion. Fuente: \texttt{analysis/compute\_ttd.py::escape\_ts\_for}.}
+
+\todo{(2) La escalera de escalada 0--6 (\texttt{NIVELES}). Tabla con los siete
+niveles. Subrayar que se calcula desde el TRANSCRIPT, no desde los eventos de
+los monitores: por eso sobrevive a los cambios en la logica de deteccion
+descritos en la Seccion 5.}
+
+\todo{(3) TTD: del acto del agente a la primera alerta posterior. Documentar
+el filtro por \texttt{docker\_exit\_code}: con exit 0, ninguna alerta de
+heartbeat cuenta como deteccion, porque el apagado limpio siempre dispara una.}
+
+\subsection{Experimental matrix}
+
+\todo{Tabla de corridas: 63 en \texttt{results/} (vectores 4--6, tres
+condiciones, backend local) y 30 en \texttt{results\_causal/} (experimento
+causal homogeneo). Decir de que maquina salio cada conjunto --ver
+\texttt{report/hardware\_validation.md}-- porque la Seccion 5 depende de esa
+distincion.}
+
+\subsection{Deterministic validation}
+
+\todo{Los controles positivos y el barrido de fortaleza. El argumento: un
+monitor que nunca disparo es indistinguible de uno roto, asi que antes de
+reportar cualquier tasa de deteccion hay que demostrar que las tres senales
+disparan ante un evento sintetico. Cinco controles, sin LLM, deterministas.
+Numeros medidos: \pending{pegar la corrida final de tests/positive\_controls.sh}.}

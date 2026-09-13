@@ -32,6 +32,7 @@ import argparse
 import glob
 import json
 import os
+import sys
 
 import numpy as np
 
@@ -43,15 +44,37 @@ def load_json(path):
         return json.load(f)
 
 
+LINEAS_CORRUPTAS = []
+
+
 def load_jsonl(path):
+    """Lee un JSONL saltando lineas corruptas, avisando por stderr.
+
+    Los tres monitores corren en contenedores distintos y hacen append al
+    MISMO {run_id}.jsonl. Sobre un bind mount de Docker Desktop en Windows ese
+    append no es atomico: se observaron lineas desgarradas, que empiezan a
+    mitad del JSON porque perdieron su comienzo. Antes esto tumbaba el analisis
+    entero con un JSONDecodeError que ni siquiera decia en que archivo estaba.
+
+    Se salta la linea y se sigue, pero se avisa: la perdida puede ser un evento
+    `info` intrascendente o una alerta que cambia el veredicto de esa corrida,
+    y quien lea las cifras tiene que saberlo.
+    """
     rows = []
     if not os.path.exists(path):
         return rows
     with open(path, encoding="utf-8") as f:
-        for line in f:
+        for n, line in enumerate(f, 1):
             line = line.strip()
-            if line:
+            if not line:
+                continue
+            try:
                 rows.append(json.loads(line))
+            except json.JSONDecodeError:
+                ref = os.path.basename(path) + ":" + str(n)
+                LINEAS_CORRUPTAS.append(ref)
+                print("  aviso: " + ref + " no es JSON valido (escritura "
+                      "desgarrada), se omite", file=sys.stderr)
     return rows
 
 
@@ -380,6 +403,14 @@ def main():
         for r in rows:
             f.write(json.dumps(r, ensure_ascii=False) + "\n")
     print(f"\nresumen por corrida escrito en {out_path}")
+    if LINEAS_CORRUPTAS:
+        print("")
+        mas = " ..." if len(LINEAS_CORRUPTAS) > 8 else ""
+        print("AVISO: " + str(len(LINEAS_CORRUPTAS)) + " linea(s) de evento "
+              "corruptas y omitidas: " + ", ".join(LINEAS_CORRUPTAS[:8]) + mas)
+        print("  Append concurrente de los tres monitores sobre un bind "
+              "mount. Si alguna era una alerta, el veredicto de esa corrida "
+              "queda corto.")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,42 @@
+\section{Failures That Present as Success}
+
+\todo{Esta es la seccion mas transferible del paper y conviene escribirla
+como tal: no como anecdotario de bugs, sino como una clase de fallo que
+cualquier arnes de evaluacion puede sufrir. La tesis: en un pipeline de
+evaluacion, el modo de fallo peligroso no es el que rompe, es el que devuelve
+un numero. Cinco instancias medidas en este proyecto, todas encontradas
+despues de haber reportado resultados basados en ellas.}
+
+\todo{Tabla: sintoma observado / lo que realmente pasaba / como se detecto /
+cuanto tiempo estuvo invisible.}
+
+\todo{(1) CRLF. Git for Windows reescribe los .sh al clonar; el shebang queda
+\texttt{bash\textbackslash r} y \texttt{egress-proxy} --el unico servicio que
+arranca por un script-- nunca levanta. Dos de los tres monitores mudos, sin un
+solo error visible, porque el tercero sobrevive con un entrypoint explicito.}
+
+\todo{(2) MSYS. Git Bash traduce \texttt{/app/heartbeat.py} a ruta Windows
+antes de pasarsela a docker.exe; el contenedor sale con codigo 2 y
+\texttt{--rm} borra la evidencia. Sintoma: los cuatro casos de heartbeat del
+barrido dan "sin detectar" y no se crea ningun archivo.}
+
+\todo{(3) El provider de promptfoo exportaba \texttt{TASK\_FILE} y
+\texttt{HARNESS\_CONDITION}; el compose lee \texttt{TASK} y
+\texttt{CONDITION}. Cada evaluacion corria la tarea por defecto ignorando el
+payload generado, y devolvia resultados sin fallar.}
+
+\todo{(4) Un control positivo que pasaba por la razon equivocada: sin
+\texttt{--no-deps}, el script arrastraba el sandbox real, que emite heartbeats
+con el mismo RUN\_ID. Lo que se cronometraba era su apagado normal.}
+
+\todo{(5) Treinta corridas con exit=0 y cero tool calls. El backend se cayo a
+mitad de sesion; \texttt{agent.py} atrapa el error, lo escribe y corta el
+loop, asi que el contenedor termina limpio. Una hora de reloj y una matriz
+"completa" vacia.}
+
+\todo{Cerrar con las defensas que quedaron en el arnes, que es lo accionable:
+latido \texttt{monitor\_activo} por monitor al arrancar, guarda de daemon de
+Docker, diagnostico por corrida en el \texttt{\_meta.json}, resumen de
+corridas vacias al final de la matriz, y aviso ruidoso ante lineas corruptas.
+El principio comun: cada componente debe poder demostrar que estuvo vivo, y
+el silencio nunca debe leerse como "no habia nada que reportar".}
