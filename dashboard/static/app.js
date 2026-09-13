@@ -623,8 +623,9 @@ function renderLauncherState(snap) {
   if (snap.config_clave) partes.push(`vector: ${snap.config_clave}`);
   if (snap.corridas_nuevas) partes.push(`${snap.corridas_nuevas} corrida${snap.corridas_nuevas === 1 ? "" : "s"} nueva${snap.corridas_nuevas === 1 ? "" : "s"} en results/`);
   if (snap.codigo_salida !== null && snap.codigo_salida !== undefined) partes.push(`codigo de salida: ${snap.codigo_salida}`);
-  if (snap.ultima_linea_log) partes.push(`ultima linea: ${snap.ultima_linea_log}`);
   detail.textContent = partes.length ? partes.join(" · ") : "sin corridas lanzadas desde este panel todavia";
+
+  renderLauncherLog(snap);
 
   if (corriendo && !state.launcherPollTimer) {
     state.launcherPollTimer = setInterval(pollLauncherState, LAUNCHER_POLL_MS);
@@ -632,6 +633,25 @@ function renderLauncherState(snap) {
     clearInterval(state.launcherPollTimer);
     state.launcherPollTimer = null;
   }
+}
+
+function renderLauncherLog(snap) {
+  const claveBox = document.getElementById("launcher-log-clave");
+  const tailBox = document.getElementById("launcher-log-tail");
+  const wrap = document.getElementById("launcher-log-wrap");
+
+  const clave = snap.lineas_clave_log || [];
+  const tail = snap.ultimas_lineas_log || [];
+  wrap.hidden = clave.length === 0 && tail.length === 0;
+
+  if (clave.length > 0) {
+    claveBox.hidden = false;
+    claveBox.textContent = clave.join("\n");
+  } else {
+    claveBox.hidden = true;
+  }
+  tailBox.textContent = tail.join("\n");
+  tailBox.scrollTop = tailBox.scrollHeight;
 }
 
 async function pollLauncherState() {
@@ -715,9 +735,9 @@ async function loadIncidenteResumen() {
   // solo redibuja la barra, no vuelve a pedir datos.
   const tabs = document.getElementById("inc-corpus-tabs");
   tabs.innerHTML = "";
-  const vistas = { combinado: { label: "combinado", grupos: data.combinado } };
+  const vistas = { combinado: { label: "combinado", title: "todos los conjuntos juntos", grupos: data.combinado } };
   for (const [clave, info] of Object.entries(data.por_corpus)) {
-    vistas[clave] = { label: `${clave} (${info.total_corridas})`, grupos: info.grupos };
+    vistas[clave] = { label: `${clave} (${info.total_corridas})`, title: info.label, grupos: info.grupos };
   }
   let activa = "combinado";
   const grid = document.getElementById("inc-agg-grid");
@@ -730,7 +750,7 @@ async function loadIncidenteResumen() {
     const btn = document.createElement("button");
     btn.className = "corpus-tab" + (clave === activa ? " active" : "");
     btn.textContent = vistas[clave].label;
-    btn.title = CORPUS_TITLES[clave] || "";
+    btn.title = vistas[clave].title || "";
     btn.addEventListener("click", () => {
       activa = clave;
       tabs.querySelectorAll(".corpus-tab").forEach((b) => b.classList.remove("active"));
@@ -742,12 +762,6 @@ async function loadIncidenteResumen() {
   pintar();
 }
 
-const CORPUS_TITLES = {
-  corpus: "matriz base: vectores 4, 5 y 6, resultados/",
-  causal: "repeticion homogenea del experimento causal, resultados_causal/",
-  redteam: "vector 4 corrido como matriz separada, resultados_redteam/",
-};
-
 async function loadIncidenteComparacion() {
   const res = await fetch("/api/incidente/corpus_comparacion");
   const data = await res.json();
@@ -755,10 +769,12 @@ async function loadIncidenteComparacion() {
   grid.innerHTML = "";
 
   const porTarea = new Map();
+  const advertenciasVistas = new Map();
   for (const f of data.filas) {
     if (!f.corridas) continue;
     if (!porTarea.has(f.tarea)) porTarea.set(f.tarea, []);
     porTarea.get(f.tarea).push(f);
+    if (f.advertencia) advertenciasVistas.set(f.corpus, f.advertencia);
   }
   if (porTarea.size === 0) {
     grid.innerHTML = '<p class="empty-note">sin datos.</p>';
@@ -770,15 +786,26 @@ async function loadIncidenteComparacion() {
     let rows = "";
     for (const f of filas.sort((a, b) => a.corpus.localeCompare(b.corpus) || a.condicion.localeCompare(b.condicion))) {
       const pct = (f.tasa_nivel5 || 0) * 100;
+      const marca = f.advertencia ? " ⚠" : "";
       rows += `
         <div class="finding-row">
-          <span class="fr-label" title="${escapeHtml(CORPUS_TITLES[f.corpus] || "")}">${escapeHtml(f.corpus)} · ${escapeHtml(f.condicion)}</span>
+          <span class="fr-label" title="${escapeHtml(f.corpus_label || "")}">${escapeHtml(f.corpus)}${marca} · ${escapeHtml(f.condicion)}</span>
           <span class="fr-bar-wrap"><span class="fr-bar" style="width:${pct}%"></span></span>
           <span class="fr-val tabular">${f.nivel5}/${f.corridas}</span>
         </div>`;
     }
     card.innerHTML = `<h3>${escapeHtml(tarea.replace(/^task_\d+_/, ""))}</h3>${rows}`;
     grid.appendChild(card);
+  }
+
+  if (advertenciasVistas.size > 0) {
+    const nota = document.createElement("p");
+    nota.className = "mono inc-note";
+    nota.style.marginTop = "14px";
+    nota.innerHTML = [...advertenciasVistas.entries()]
+      .map(([c, a]) => `<strong>⚠ ${escapeHtml(c)}:</strong> ${escapeHtml(a)}`)
+      .join("<br><br>");
+    grid.parentElement.appendChild(nota);
   }
 }
 
@@ -1018,14 +1045,27 @@ function setStreamStatus(connected) {
     : "reconectando…";
 }
 
-function feedItemNode({ cls, time, runId, badge, msg }) {
+// El observer vigila TODO results/machine-A/ (corpus/ y cualquier otro
+// lote, p.ej. una corrida de prueba mandada a su propio directorio para no
+// mezclarse con el corpus curado). "corpus" es el unico lote que aparece en
+// el selector de "corrida en detalle" (lo arma /api/runs, que solo mira
+// RESULTS_DIR) -- un evento de otro lote se ve igual en el feed, con una
+// etiqueta que dice de donde vino, pero no crea una opcion falsa ahi.
+const LOTE_CORPUS_OFICIAL = "corpus";
+
+function loteBadge(lote) {
+  if (!lote || lote === LOTE_CORPUS_OFICIAL) return "";
+  return `<span class="fi-lote" title="lote: ${escapeHtml(lote)} (no es el corpus oficial, no aparece en el selector de arriba)">${escapeHtml(lote)}</span>`;
+}
+
+function feedItemNode({ cls, time, runId, lote, badge, msg }) {
   const div = document.createElement("div");
   div.className = `feed-item fi-new ${cls}`;
   if (runId) div.dataset.runId = runId;
   div.innerHTML = `
     <span class="fi-time tabular">${escapeHtml(time)}</span>
     <span class="fi-run" title="${escapeHtml(runId || "")}">${escapeHtml(shortRunId(runId || ""))}</span>
-    <span class="fi-badge">${badge}</span>
+    <span class="fi-badge">${badge}${loteBadge(lote)}</span>
     <span class="fi-msg">${msg}</span>
   `;
   return div;
@@ -1033,17 +1073,18 @@ function feedItemNode({ cls, time, runId, badge, msg }) {
 
 function buildFeedNode(msg) {
   const runId = msg.run_id;
+  const lote = msg.lote;
   if (msg.feed_type === "run_started") {
     const meta = msg.data || {};
     return feedItemNode({
-      cls: "fi-lifecycle started", time: fmtClock(meta.t0), runId,
+      cls: "fi-lifecycle started", time: fmtClock(meta.t0), runId, lote,
       badge: "▶ iniciada", msg: escapeHtml(`${meta.condicion || "?"} / ${meta.tarea || "?"}`),
     });
   }
   if (msg.feed_type === "run_finished") {
     const meta = msg.data || {};
     return feedItemNode({
-      cls: "fi-lifecycle finished", time: fmtClock(meta.t1), runId,
+      cls: "fi-lifecycle finished", time: fmtClock(meta.t1), runId, lote,
       badge: "■ finalizada", msg: escapeHtml(`exit=${meta.docker_exit_code ?? "?"}`),
     });
   }
@@ -1051,7 +1092,7 @@ function buildFeedNode(msg) {
     const ev = msg.data || {};
     const isAlert = ev.severidad === "alerta";
     return feedItemNode({
-      cls: `${mechClass(ev)} ${isAlert ? "sev-alerta" : ""}`, time: fmtClock(ev.ts), runId,
+      cls: `${mechClass(ev)} ${isAlert ? "sev-alerta" : ""}`, time: fmtClock(ev.ts), runId, lote,
       badge: `${isAlert ? "⚠ alerta" : "info"} · ${escapeHtml(mechLabel(ev))}`,
       msg: escapeHtml(JSON.stringify(ev.detalle || {}).slice(0, 220)),
     });
@@ -1061,7 +1102,7 @@ function buildFeedNode(msg) {
     if (!(entry.role === "tool" || (entry.role === "assistant" && entry.tool_calls))) return null;
     const escape = isEscapeToolCall(entry);
     return feedItemNode({
-      cls: `fi-agent ${escape ? "is-escape" : ""}`, time: fmtClock(entry.ts), runId,
+      cls: `fi-agent ${escape ? "is-escape" : ""}`, time: fmtClock(entry.ts), runId, lote,
       badge: escape ? "⚑ posible fuga" : "agente",
       msg: toolSummary(entry),
     });
@@ -1094,6 +1135,15 @@ function scheduleDetailRefresh(runId) {
 }
 
 async function handleLifecycleEvent(msg) {
+  // Los ciclos de vida de lotes que no son el corpus oficial (una corrida
+  // de prueba en su propio directorio) se ven en el feed, pero no tocan el
+  // selector de "corrida en detalle" -- ese selector lo arma /api/runs, que
+  // solo lista RESULTS_DIR, y agregar una opcion falsa aca podria duplicar
+  // un value si el lote de prueba reusa un run_id que ya existe en el
+  // corpus (paso de verdad probando esto: mismo nombre, dos corridas
+  // distintas).
+  if (msg.lote && msg.lote !== LOTE_CORPUS_OFICIAL) return;
+
   const picker = document.getElementById("run-picker");
   const exists = [...picker.options].some((o) => o.value === msg.run_id);
 
@@ -1183,8 +1233,12 @@ document.getElementById("feed-list").addEventListener("click", (e) => {
   const item = e.target.closest(".feed-item");
   const runId = item && item.dataset.runId;
   if (!runId) return;
+  // /api/runs/<id> busca en todo results/machine-A/ (no solo el corpus
+  // oficial), asi que el detalle abre igual para un lote de prueba aunque
+  // no tenga opcion en el selector -- el <select> mismo se deja como esta
+  // si el value no es una de sus opciones (el navegador lo ignora, no
+  // rompe nada).
   const picker = document.getElementById("run-picker");
-  if (![...picker.options].some((o) => o.value === runId)) return;
   picker.value = runId;
   state.userPicked = true;
   state.selectedRunId = runId;

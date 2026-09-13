@@ -317,6 +317,72 @@ segun el intervalo. Ver `report/findings.md` para la medicion aislada que
 muestra deteccion mas rapida que el propio arranque del contenedor de
 prueba.
 
+## Lanzar corridas desde el dashboard y generar logs de validacion
+
+El panel (`dashboard/app.py`) tiene un lanzador real en la superficie "Corrida
+en vivo": un boton que dispara `orchestrator/run_experiment.py` como
+subproceso, con un selector de vector y un limite opcional de corridas. El
+estado (`inactivo` / `corriendo` / `terminado` / `fallado`) se consulta al
+proceso real en cada poll, nunca se asume -- y si algo falla, el panel
+muestra el traceback completo (no solo la ultima linea de docker compose),
+filtrado por patrones de error, debajo del boton.
+
+### Antes de tocar el boton, siempre
+
+```bash
+chmod -R 777 results/machine-A results/machine-B   # una vez, o despues de crear un directorio nuevo
+tests/positive_controls.sh                          # 6 controles, sin LLM, ~1 minuto
+```
+
+Los contenedores corren con `cap_drop: [ALL]`: sin ese `chmod`, cada monitor
+muere con `PermissionError` al primer intento de escribir su log, y el
+sintoma visible es "el experimento se corta y no dice nada" -- el panel ya
+te muestra el traceback si esto vuelve a pasar, pero mejor evitarlo de
+entrada.
+
+### Generar logs reales sin tocar el corpus curado
+
+El corpus de `results/machine-A/corpus/` es el que usa `report/findings.md`:
+correr un experimento apuntando ahi de nuevo hace que el orquestador salte
+todo lo que ya existe (es reentrante) y no genere nada nuevo. Para una
+corrida de validacion real, propia, aislada:
+
+```bash
+mkdir -p results/machine-A/<nombre-de-tu-prueba>
+chmod 777 results/machine-A/<nombre-de-tu-prueba>
+
+SENTINEL_LIVE_CORPUS="$(pwd)/results/machine-A/<nombre-de-tu-prueba>" \
+  python3 dashboard/app.py
+```
+
+`SENTINEL_LIVE_CORPUS` hace que el feed en vivo, el selector de "corrida en
+detalle" y el boton de lanzar corridas trabajen SOLO sobre ese directorio
+(la superficie "Analisis del incidente" sigue viendo todos los corpus
+descubiertos, incluido este nuevo, en su propio selector por lote). Con el
+panel abierto asi, el boton "correr experimento" ya escribe ahi, no en
+`machine-A/corpus/`.
+
+Para tener señal rica rapido (en vez de la matriz base, que casi nunca
+induce un intento de escape, ver `report/scope.md`), el vector
+`orchestrator/config_demo_denso.yaml` corre solo
+`task_06_rag_poison` (con_harness y sin_harness, 10 repeticiones cada uno):
+es la celda con la tasa de nivel 5 (fuga real) mas alta y confiable medida
+hasta ahora, no necesita el overlay de red-teamer ni sembrar memoria a mano.
+Aparece en el selector del lanzador como "solo task_06_rag_poison
+(con_harness), rapido y con alta tasa de fuga". Una corrida individual tarda
+60-180 segundos; las 20 de esa config, unos 30-40 minutos.
+
+### Limpieza despues
+
+```bash
+docker ps -a --format "{{.Names}}" | grep sbxharness   # deberia no imprimir nada
+docker volume ls --format "{{.Name}}" | grep sbxharness
+```
+
+El orquestador baja cada stack (`docker compose down -v`) al terminar cada
+corrida, asi que no deberia quedar nada -- si algo aparece aca, es una
+corrida que se interrumpio a mitad de camino.
+
 ## Linea de tiempo forense (OpenObserve)
 
 El dashboard de arriba responde "que esta pasando ahora mismo". Esta capa

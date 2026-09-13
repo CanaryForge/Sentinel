@@ -50,6 +50,7 @@
         <option value="redteam">vector 4, red teamer</option>
         <option value="memory_rag">vectores 5 y 6, memoria y RAG</option>
         <option value="causal_priming">experimento causal</option>
+        <option value="demo_denso">solo task_06_rag_poison (con_harness), rapido y con alta tasa de fuga</option>
       </select>
       <label class="picker-label" for="launcher-limit">limite de corridas</label>
       <input type="number" id="launcher-limit" min="1" step="1" placeholder="todas" title="Vacio corre la matriz completa (puede tardar hasta una hora). Un numero chico (1 o 2) sirve para probar el boton sin comprometer una corrida larga.">
@@ -65,6 +66,11 @@
       el orquestador es secuencial a proposito (ver README). El estado de arriba se consulta al proceso
       real cada 2 segundos, nunca se marca "corriendo" solo porque se apreto el boton.
     </p>
+    <div class="launcher-log-wrap" id="launcher-log-wrap" hidden>
+      <p class="eyebrow" style="margin-top:16px;">Log real del proceso (docker compose + orquestador)</p>
+      <pre class="launcher-log launcher-log-clave" id="launcher-log-clave" hidden></pre>
+      <pre class="launcher-log" id="launcher-log-tail"></pre>
+    </div>
   </div>
 </section>
 
@@ -333,13 +339,14 @@
 </section>
 
 <section id="inc-comparacion">
-  <p class="eyebrow">Comparacion entre lotes de corridas</p>
+  <p class="eyebrow">Comparacion entre maquinas</p>
   <p class="mono inc-note">
-    Corridas de la matriz base, del experimento causal y del vector 4 separado se corrieron en sesiones
-    distintas. La version de Ollama y la maquina que produjo cada lote no son un campo estructurado en
-    <code>meta.json</code>, solo estan documentadas en prosa en <code>report/hardware_validation.md</code>:
-    esta vista compara LOTES (corpus, causal, redteam), no maquinas, porque ese dato no existe en los
-    artefactos.
+    Los conjuntos estan organizados por maquina (<code>results/machine-A/</code>,
+    <code>results/machine-B/</code>, ver <code>results/README.md</code> y el <code>manifest.json</code> de
+    cada una): dos corridas del mismo experimento en maquinas con Ollama distinto no son comparables entre
+    si, y esa es justo la razon de esta vista. <code>machine-B/causal-ollama0.6.8</code> esta marcado con
+    ⚠ porque el agente agota el tope de turnos en vez de converger con esa version: se muestra, no se
+    esconde, pero no hay que leerlo junto al resto sin esa salvedad.
   </p>
   <div class="comparacion-grid" id="inc-comparacion-grid">
     <p class="empty-note">cargando…</p>
