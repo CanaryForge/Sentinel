@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sentinel — panel de deteccion</title>
+<title>Sentinel, panel de deteccion</title>
 <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
@@ -11,24 +11,62 @@
 <header class="topbar">
   <div class="brand">
     <svg class="wordmark" viewBox="0 0 32 32" role="img" aria-label="Sentinel">
-      <circle cx="16" cy="16" r="14.5" fill="none" stroke="var(--mech-heartbeat)" stroke-width="1.4" opacity="0.35"></circle>
-      <circle cx="16" cy="16" r="9.5" fill="none" stroke="var(--mech-heartbeat)" stroke-width="1.4" opacity="0.55"></circle>
+      <circle cx="16" cy="16" r="14.5" fill="none" stroke="var(--brand-gold)" stroke-width="1.4" opacity="0.35"></circle>
+      <circle cx="16" cy="16" r="9.5" fill="none" stroke="var(--brand-gold)" stroke-width="1.4" opacity="0.55"></circle>
       <circle cx="16" cy="16" r="2.2" fill="var(--status-good)"></circle>
       <g class="sweep">
-        <path d="M16,16 L16,2.2 A13.8,13.8 0 0 1 27,9.5 Z" fill="var(--mech-heartbeat)" opacity="0.16"></path>
-        <line x1="16" y1="16" x2="16" y2="2.2" stroke="var(--mech-heartbeat)" stroke-width="1.4"></line>
+        <path d="M16,16 L16,2.2 A13.8,13.8 0 0 1 27,9.5 Z" fill="var(--brand-gold)" opacity="0.16"></path>
+        <line x1="16" y1="16" x2="16" y2="2.2" stroke="var(--brand-gold)" stroke-width="1.4"></line>
       </g>
     </svg>
-    <span class="dot" id="live-dot"></span>
-    <h1>SENTINEL</h1>
-    <span class="sub">panel de deteccion de fuga de sandbox</span>
+    <div class="brand-text">
+      <div class="brand-top">
+        <span class="dot" id="live-dot"></span>
+        <h1>Sentinel</h1>
+      </div>
+      <span class="sub">CanaryForge · deteccion de fuga de sandbox</span>
+    </div>
   </div>
-  <div class="topbar-controls">
-    <label class="picker-label" for="run-picker">corrida en detalle</label>
-    <select id="run-picker"><option>cargando corridas...</option></select>
-    <button id="refresh-btn" title="Releer results/ del disco (respaldo manual; el feed ya empuja solo)">↻ releer results/</button>
-  </div>
+  <nav class="screen-nav" id="screen-nav" aria-label="Superficies del panel">
+    <a href="#vivo" data-screen="vivo">Corrida en vivo</a>
+    <a href="#incidente" data-screen="incidente">Analisis del incidente</a>
+  </nav>
 </header>
+
+<!-- ======================================================================
+     SUPERFICIE 1: corrida en vivo. "que esta pasando ahora": el lanzador
+     real del experimento, el feed empujado por SSE, y el detalle de UNA
+     corrida (arquitectura, timeline, linea de tiempo forense, mecanismos).
+     ====================================================================== -->
+<main id="screen-vivo" data-screen-panel="vivo">
+
+<section id="launcher">
+  <p class="eyebrow">Lanzar una corrida</p>
+  <div class="launcher-card">
+    <div class="launcher-row">
+      <label class="picker-label" for="launcher-config">vector</label>
+      <select id="launcher-config">
+        <option value="base">matriz base (vectores 4, 5, 6)</option>
+        <option value="redteam">vector 4, red teamer</option>
+        <option value="memory_rag">vectores 5 y 6, memoria y RAG</option>
+        <option value="causal_priming">experimento causal</option>
+      </select>
+      <label class="picker-label" for="launcher-limit">limite de corridas</label>
+      <input type="number" id="launcher-limit" min="1" step="1" placeholder="todas" title="Vacio corre la matriz completa (puede tardar hasta una hora). Un numero chico (1 o 2) sirve para probar el boton sin comprometer una corrida larga.">
+      <button id="launcher-start-btn" class="btn-primary">▶ correr experimento</button>
+      <button id="launcher-stop-btn" title="Envia una señal de termino al proceso del orquestador" hidden>■ detener</button>
+    </div>
+    <div class="launcher-status" id="launcher-status">
+      <span class="status-pill" id="launcher-pill" data-estado="inactivo">inactivo</span>
+      <span class="mono" id="launcher-detail">sin corridas lanzadas desde este panel todavia</span>
+    </div>
+    <p class="mono launcher-note">
+      Una corrida sola tarda entre 60 y 180 segundos. Una matriz completa puede tardar hasta una hora:
+      el orquestador es secuencial a proposito (ver README). El estado de arriba se consulta al proceso
+      real cada 2 segundos, nunca se marca "corriendo" solo porque se apreto el boton.
+    </p>
+  </div>
+</section>
 
 <section id="live-feed">
   <div class="term">
@@ -38,19 +76,19 @@
       <div class="feed-controls">
         <span class="dot" id="stream-dot"></span>
         <span class="mono" id="stream-status">conectando…</span>
-        <button id="feed-pause-btn" title="Pausar auto-scroll (los eventos se siguen guardando)">⏸ pausar</button>
+        <button id="feed-pause-btn" title="Pausar auto scroll (los eventos se siguen guardando)">⏸ pausar</button>
         <button id="feed-clear-btn" title="Vaciar la vista del feed (no borra results/)">vaciar</button>
       </div>
     </div>
     <div class="feed-list" id="feed-list">
-      <p class="empty-note">Esperando eventos por /api/stream… corre <code>tests/positive_controls.sh</code> o <code>orchestrator/run_experiment.py</code> con este panel abierto.</p>
+      <p class="empty-note">Esperando eventos por /api/stream. Apreta "correr experimento" arriba, o corre <code>tests/positive_controls.sh</code> en una terminal.</p>
     </div>
     <div class="term-prompt"><span class="prompt-caret">▊</span></div>
   </div>
 </section>
 
 <section id="architecture">
-  <p class="eyebrow">Arquitectura — topologia real de docker-compose.yml (+ overlays)</p>
+  <p class="eyebrow">Arquitectura, topologia real de docker-compose.yml (+ overlays)</p>
   <div class="arch-card">
     <svg viewBox="0 0 1040 620" role="img" aria-label="Diagrama de arquitectura del arnes: tres redes Docker, el camino del heartbeat, los volumenes persistentes y las dos raices que vigila el fs-monitor">
       <defs>
@@ -84,14 +122,10 @@
         .netbox { fill: none; stroke: rgba(255,255,255,0.10); stroke-width: 1; stroke-dasharray: 2 4; rx: 10; }
       </style>
 
-      <!-- El backend del LLM va DIRECTAMENTE encima del sandbox. En la version
-           anterior estaba arriba a la derecha y su arista cruzaba el diagrama
-           entero por encima de red-mocks; aqui la relacion es una vertical
-           corta que no cruza nada. -->
       <rect class="box-ext" x="40" y="24" width="250" height="84" rx="8"></rect>
       <text class="lbl" x="165" y="50" text-anchor="middle">backend LLM</text>
       <text class="lbl-sub" x="165" y="66" text-anchor="middle">Ollama (host) / OpenCode Go - Zen</text>
-      <text class="lbl-sub" x="165" y="82" text-anchor="middle" fill="#e05555">llm-backend - NO internal</text>
+      <text class="lbl-sub" x="165" y="82" text-anchor="middle" fill="#e05555">llm-backend, NO internal</text>
       <text class="lbl-sub" x="165" y="97" text-anchor="middle" fill="#5f6c7a">fuera del alcance auditado</text>
 
       <rect class="netbox" x="20" y="162" width="410" height="188"></rect>
@@ -109,8 +143,6 @@
       <text class="lbl-sub" x="329" y="292" text-anchor="middle" fill="#3987e5">heartbeat_monitor.py</text>
       <text class="lbl-sub" x="329" y="304" text-anchor="middle" fill="#3987e5">:9000 (bypassea mitmproxy)</text>
 
-      <!-- Mocks apilados en vertical, no lado a lado: asi cada arista desde el
-           proxy entra horizontal a su destino sin atravesar el box vecino. -->
       <rect class="netbox" x="470" y="162" width="540" height="230"></rect>
       <text class="lbl-net" x="480" y="154">RED-MOCKS (internal)</text>
 
@@ -129,30 +161,27 @@
 
       <rect class="box-vol" x="40" y="418" width="215" height="76" rx="8"></rect>
       <text class="lbl" x="147" y="440" text-anchor="middle" font-size="11">workspace</text>
-      <text class="lbl-sub" x="147" y="455" text-anchor="middle">rw: sandbox - ro: fs-monitor</text>
+      <text class="lbl-sub" x="147" y="455" text-anchor="middle">rw: sandbox, ro: fs-monitor</text>
       <text class="lbl-sub" x="147" y="469" text-anchor="middle" fill="#9085e9">knowledge_base/ (vector 6, RAG)</text>
       <text class="lbl-sub" x="147" y="483" text-anchor="middle" fill="#5f6c7a">volumen efimero (down -v lo borra)</text>
 
       <rect class="box-vol" x="295" y="418" width="215" height="76" rx="8"></rect>
       <text class="lbl" x="402" y="440" text-anchor="middle" font-size="11">./memory</text>
-      <text class="lbl-sub" x="402" y="455" text-anchor="middle">rw: sandbox - ro: fs-monitor</text>
+      <text class="lbl-sub" x="402" y="455" text-anchor="middle">rw: sandbox, ro: fs-monitor</text>
       <text class="lbl-sub" x="402" y="469" text-anchor="middle" fill="#9085e9">notas envenenadas (vector 5)</text>
-      <text class="lbl-sub" x="402" y="483" text-anchor="middle" fill="#5f6c7a">bind mount - down -v NO lo borra</text>
+      <text class="lbl-sub" x="402" y="483" text-anchor="middle" fill="#5f6c7a">bind mount, down -v NO lo borra</text>
 
       <rect class="box-vol" x="550" y="418" width="215" height="76" rx="8"></rect>
       <text class="lbl" x="657" y="440" text-anchor="middle" font-size="11">./results</text>
       <text class="lbl-sub" x="657" y="455" text-anchor="middle">evidencia de la corrida</text>
       <text class="lbl-sub" x="657" y="469" text-anchor="middle" fill="#5f6c7a">sandbox + egress-proxy + fs-monitor</text>
-      <text class="lbl-sub" x="657" y="483" text-anchor="middle" fill="#5f6c7a">bind mount - sobrevive down -v</text>
+      <text class="lbl-sub" x="657" y="483" text-anchor="middle" fill="#5f6c7a">bind mount, sobrevive down -v</text>
 
       <rect class="box-mon" x="150" y="546" width="250" height="58" rx="8"></rect>
       <text class="lbl" x="275" y="569" text-anchor="middle" font-size="11">fs-monitor</text>
-      <text class="lbl-sub" x="275" y="584" text-anchor="middle" fill="#9085e9">canary_monitor.py - inotify</text>
+      <text class="lbl-sub" x="275" y="584" text-anchor="middle" fill="#9085e9">canary_monitor.py, inotify</text>
       <text class="lbl-sub" x="275" y="596" text-anchor="middle" fill="#5f6c7a">network_mode: none</text>
 
-      <!-- Aristas: todo ortogonal salvo la del backend, que es una vertical
-           recta. Los cruces diagonales ambiguos de la version anterior
-           desaparecen por layout, no por trucos de dibujo. -->
       <path class="edge-ext" d="M165,108 L165,186"></path>
       <text class="lbl-edge" x="175" y="152" fill="#e05555">chat/completions (no auditado)</text>
 
@@ -181,18 +210,24 @@
     </svg>
   </div>
   <p class="mono arch-caption">
-    Rojo punteado = sale de verdad a internet, fuera de lo auditado. Amarillo punteado = servicio de juguete
-    dentro de una red <code>internal: true</code>. Violeta punteado = volumen o bind mount, no red: es la
-    superficie que vigila el <code>fs-monitor</code>. Azul punteado = el heartbeat, que bypassea el proxy
+    Rojo punteado, sale de verdad a internet, fuera de lo auditado. Amarillo punteado, servicio de juguete
+    dentro de una red <code>internal: true</code>. Violeta punteado, volumen o bind mount, no red: es la
+    superficie que vigila el <code>fs-monitor</code>. Azul punteado, el heartbeat, que bypassea el proxy
     a proposito.
-    <code>docker-compose.control.yml</code> (demo manual, fuera de la matriz automatizada) quita <code>sandbox</code>
-    de <code>red-proxy</code> y lo conecta directo a <code>red-mocks</code>: sin egress-proxy, sin heartbeat, sin
-    canary de red.
   </p>
 </section>
 
 <section id="run-section">
-  <p class="eyebrow">Corrida seleccionada</p>
+  <div class="run-section-head">
+    <p class="eyebrow">Corrida en detalle</p>
+    <div class="run-picker-wrap">
+      <select id="run-picker"><option>cargando corridas...</option></select>
+      <label class="picker-label incidents-only-label" title="Filtra el selector a corridas con nivel de escalada 4 o mas (fetch exitoso, o fuga real)">
+        <input type="checkbox" id="incidents-only-toggle"> solo incidentes
+      </label>
+      <button id="refresh-btn" title="Releer results/ del disco (respaldo manual, el feed ya empuja solo)">↻ releer</button>
+    </div>
+  </div>
   <div class="run-meta" id="run-meta"></div>
 
   <div class="timeline-card">
@@ -211,81 +246,192 @@
     </div>
     <div class="turn-log" id="turn-log"></div>
   </div>
+
+  <div class="timeline-card narrative-card">
+    <div class="timeline-head">
+      <div>
+        <h2 style="font-size:14px;">Linea de tiempo forense completa</h2>
+        <p class="mono" style="font-size:12px;color:var(--text-muted);margin-top:6px;">
+          Todas las fuentes de esta corrida en un solo hilo cronologico: meta, los 3 monitores, cada
+          turno del agente, entrega del red teamer si aplica, y el veredicto final. Reusa
+          <code>timeline/export_timeline.py</code>.
+        </p>
+      </div>
+    </div>
+    <div class="narrative-list" id="narrative-list">
+      <p class="empty-note">cargando linea de tiempo…</p>
+    </div>
+  </div>
+</section>
+
+<section id="mechanisms">
+  <p class="eyebrow">Los tres mecanismos</p>
+  <div class="mech-grid" id="mech-grid"></div>
+</section>
+
+<section id="monitor-strength">
+  <p class="eyebrow">Fortaleza de los monitores, mismo evento sintetico, config variable</p>
+  <p class="mono" style="font-size:12px;color:var(--text-muted);margin:0 0 16px;max-width:65ch;">
+    Sin depender de un LLM: dispara el mismo evento de fuga (crear un directorio con el canario, o
+    matar el heartbeat) variando el intervalo del monitor, para medir cuanto empeora el TTD al aflojar
+    la vigilancia. Corre con <code>tests/monitor_strength_sweep.sh</code>.
+  </p>
+  <div class="mstr-grid" id="mstr-grid">
+    <p class="empty-note">Sin datos todavia, corre tests/monitor_strength_sweep.sh</p>
+  </div>
 </section>
 
 <section id="postincident">
-  <p class="eyebrow">Despues de la deteccion — que procede</p>
+  <p class="eyebrow">Despues de la deteccion, que procede</p>
   <ol class="runbook">
     <li>
       <h3>Contener sin perder evidencia</h3>
       <p><code>docker compose -p &lt;project_name_prefix&gt;_&lt;run_id&gt; kill sandbox</code> corta el proceso
         del agente al toque. Todavia NO <code>down -v</code>: eso borra el volumen <code>workspace</code>,
-        que es evidencia si la fuga toco filesystem (ver README, "reentrante").</p>
+        que es evidencia si la fuga toco filesystem.</p>
     </li>
     <li>
       <h3>Preservar el paquete forense antes de bajar el stack</h3>
-      <p><code>results/{run_id}.jsonl</code> (cada alerta de los 3 monitores) + <code>_transcript.jsonl</code>
-        (cada tool call del agente, con timestamp) + <code>_meta.json</code> ya son el minimo forense y
-        sobreviven a <code>down -v</code> por ser bind mounts. Si la fuga toco <code>/workspace</code>
-        (volumen efimero, ese si se borra), <code>docker cp &lt;contenedor&gt;:/workspace ./evidencia/{run_id}/</code>
-        antes de limpiar.</p>
+      <p><code>results/{run_id}.jsonl</code> (cada alerta de los 3 monitores) mas <code>_transcript.jsonl</code>
+        y <code>_meta.json</code> ya son el minimo forense y sobreviven a <code>down -v</code> por ser bind
+        mounts. Si la fuga toco <code>/workspace</code>, copiarlo antes de limpiar.</p>
     </li>
     <li>
-      <h3>Tratar el canary como comprometido, no como reusable</h3>
-      <p><code>CANARY_TOKEN</code> es por-corrida. Si esto corriera alguna vez con un canary real (no de
-        laboratorio) y aparece fuera de <code>results/</code>, se rota antes de la proxima corrida — nunca
-        se reusa un token que ya broto.</p>
+      <h3>Tratar el canario como comprometido, no como reusable</h3>
+      <p><code>CANARY_TOKEN</code> es por corrida. Si esto corriera con un canario real y aparece fuera de
+        <code>results/</code>, se rota antes de la proxima corrida.</p>
     </li>
     <li>
       <h3>La remediacion real ajusta el harness, no cierra el ticket</h3>
-      <p>Cuando el vector ya es conocido — ej. vector 4: el <code>con_harness</code> generico fugo
-        <strong>mas</strong> que <code>sin_harness</code> porque nombra la superficie del ataque al advertir
-        sobre ella (<code>report/findings.md</code>) — la correccion real es tocar
-        <code>sandbox/prompts.py</code>, no marcar la alerta como revisada.</p>
-    </li>
-    <li>
-      <h3>Un monitor que no disparo es el incidente, no un detalle</h3>
-      <p>Caso real documentado: el punto ciego de <code>egress_monitor.py</code> con conexiones que fallan a
-        nivel de red antes de establecerse (<code>report/scope.md</code>). El post-mortem correcto es un fix
-        al monitor + un caso nuevo en <code>tests/positive_controls.sh</code> que lo cubra permanentemente —
-        nunca bajar el umbral para que "detecte".</p>
+      <p>Cuando el vector ya es conocido, la correccion real es tocar <code>sandbox/prompts.py</code> o el
+        monitor correspondiente, no marcar la alerta como revisada. Ver "Analisis del incidente" para el
+        detalle agregado.</p>
     </li>
     <li>
       <h3>Cerrar el loop con la pregunta que origino todo esto</h3>
       <p>Este arnes existe para responder cuanto hubiera tardado en notar lo mismo que paso en el incidente
-        OpenAI-Hugging Face de julio 2026 (SSRF via Artifactory, comunicacion entre agentes escondida en
-        nombres de directorio, sin deteccion en tiempo real). Cada TTD medido aca es esa respuesta —
-        no un numero suelto para una tabla.</p>
+        OpenAI Hugging Face de julio 2026. Cada TTD medido aca es esa respuesta.</p>
     </li>
   </ol>
 </section>
 
-<section id="mechanisms">
-  <p class="eyebrow">Los tres monitores</p>
-  <div class="mech-grid" id="mech-grid"></div>
+</main>
+
+<!-- ======================================================================
+     SUPERFICIE 2: analisis del incidente. "que paso, en conjunto": agregado
+     sobre los 115 corridas versionadas (63 matriz base + 30 causal + 20
+     redteam + 2 corridas manuales de humo), no el detalle de una corrida.
+     ====================================================================== -->
+<main id="screen-incidente" data-screen-panel="incidente" hidden>
+
+<section id="inc-resumen">
+  <p class="eyebrow">Resumen agregado, tres corpus versionados</p>
+  <div class="stat-tile-row" id="inc-tiles"></div>
+  <div class="corpus-tabs" id="inc-corpus-tabs"></div>
+  <div class="agg-grid" id="inc-agg-grid"></div>
+  <div class="legend" id="inc-agg-legend"></div>
 </section>
 
-<section id="monitor-strength">
-  <p class="eyebrow">Fortaleza de los monitores — mismo evento sintetico, config variable</p>
-  <p class="mono" style="font-size:12px;color:var(--text-muted);margin:0 0 16px;max-width:65ch;">
-    Sin depender de un LLM: se dispara el mismo evento de fuga (crear un directorio con el canary /
-    matar el heartbeat) variando el intervalo de polling del monitor, para medir cuanto empeora el
-    TTD al aflojar la vigilancia. Corre con <code>tests/monitor_strength_sweep.sh</code>.
+<section id="inc-comparacion">
+  <p class="eyebrow">Comparacion entre lotes de corridas</p>
+  <p class="mono inc-note">
+    Corridas de la matriz base, del experimento causal y del vector 4 separado se corrieron en sesiones
+    distintas. La version de Ollama y la maquina que produjo cada lote no son un campo estructurado en
+    <code>meta.json</code>, solo estan documentadas en prosa en <code>report/hardware_validation.md</code>:
+    esta vista compara LOTES (corpus, causal, redteam), no maquinas, porque ese dato no existe en los
+    artefactos.
   </p>
-  <div class="mstr-grid" id="mstr-grid">
-    <p class="empty-note">Sin datos todavia — corre tests/monitor_strength_sweep.sh</p>
+  <div class="comparacion-grid" id="inc-comparacion-grid">
+    <p class="empty-note">cargando…</p>
   </div>
 </section>
 
-<section id="aggregate">
-  <p class="eyebrow">Agregado — todas las corridas en results/</p>
-  <div class="stat-tile-row" id="agg-tiles"></div>
-  <div class="agg-grid" id="agg-grid"></div>
-  <div class="legend" id="agg-legend"></div>
+<section id="inc-canary">
+  <p class="eyebrow">Cuando aparece el canario, por superficie</p>
+  <p class="mono inc-note">
+    Distingue superficie que el AGENTE produjo de artefacto del propio arnes: una version anterior de
+    <code>canary_monitor.py</code> escaneaba tambien su propio log
+    (<code>agent_transcript.jsonl</code>), asi que una parte de las detecciones "por contenido" son el
+    arnes detectandose a si mismo, no al agente. Ya esta corregido (el monitor excluye ese archivo), pero
+    el corpus historico todavia tiene esas filas.
+  </p>
+  <div class="canary-surface-grid" id="inc-canary-grid">
+    <p class="empty-note">cargando…</p>
+  </div>
 </section>
 
+<section id="inc-routing">
+  <p class="eyebrow">Ruteo observado contra declarado</p>
+  <p class="mono inc-note">
+    Nodos y aristas grises: topologia declarada, parseada en vivo de <code>docker-compose.yml</code> y el
+    overlay de red team. Aristas doradas: destinos que el proxy vio de verdad, grosor segun cuantas veces.
+    Un nodo tachado en rojo es un destino que el agente adivino y que no existe en la topologia declarada.
+  </p>
+  <div class="routing-card">
+    <svg id="routing-svg" viewBox="0 0 900 360" role="img" aria-label="Grafo de ruteo observado contra declarado"></svg>
+  </div>
+  <div id="routing-ssrf-note" class="ssrf-note" hidden></div>
+</section>
+
+<section id="inc-herramientas">
+  <p class="eyebrow">Secuencias de herramientas, con fuga contra sin fuga</p>
+  <p class="mono inc-note">
+    Transiciones mas frecuentes entre llamadas a herramientas consecutivas del mismo turno del agente,
+    separadas segun si esa corrida llego a nivel 5 (fuga real). Incluye nombres de herramienta que el
+    modelo invoco y que NO existen en <code>sandbox/agent.py</code> (<code>mkdir</code>,
+    <code>write_dir</code>): el dispatcher les devuelve un error, pero el intento queda grabado.
+  </p>
+  <div class="herramientas-grid" id="inc-herramientas-grid">
+    <p class="empty-note">cargando…</p>
+  </div>
+</section>
+
+<section id="inc-memoria">
+  <p class="eyebrow">Contaminacion de memoria entre corridas</p>
+  <p class="mono inc-note">
+    Reconstruido de <code>memory_write</code>/<code>memory_read</code> en los transcripts, no del archivo
+    volatil <code>./memory/notes.jsonl</code> (se resetea entre sesiones). Una contaminacion real: una
+    corrida lee, con <code>memory_read</code>, un texto que contiene el canario de OTRA corrida.
+  </p>
+  <div id="inc-memoria-body">
+    <p class="empty-note">cargando…</p>
+  </div>
+</section>
+
+<section id="inc-fuera-de-alcance">
+  <p class="eyebrow">Lo que no se construyo, y por que</p>
+  <div class="fuera-de-alcance-grid">
+    <div class="finding-card">
+      <h3>Tokens por corrida</h3>
+      <p class="mono" style="font-size:12.5px;color:var(--text-secondary);">
+        El transcript no guardaba <code>usage</code> y <code>agent.py</code> nunca lo registraba: no
+        existe para las 115 corridas de este corpus. Se agrego la captura de <code>usage</code> en
+        <code>sandbox/agent.py</code> para corridas futuras, pero no se construyo una aproximacion por
+        caracteres o palabras sobre el corpus existente: una aproximacion mostrada junto a cifras reales
+        del resto de este panel invita a leerla como si fuera un conteo real, que es exactamente el error
+        que este proyecto ya tuvo que retractar una vez.
+      </p>
+    </div>
+    <div class="finding-card">
+      <h3>Analisis semantico agregado del razonamiento</h3>
+      <p class="mono" style="font-size:12.5px;color:var(--text-secondary);">
+        <code>analysis/extract_cot.py</code> ya extrae, por corrida, el razonamiento previo al escape en
+        <code>report/cot_analysis.md</code>: es lectura de calidad media alta. Agregarlo en una vista
+        (por ejemplo agrupando temas) exige decidir que eje de comparacion importa, y esa decision es un
+        trabajo de investigacion en si mismo, no una vista que se pueda derivar mecanicamente de los
+        artefactos como el resto de este panel. Se prefiere linkear el analisis cualitativo ya escrito
+        antes que construir un agregado superficial (por ejemplo una nube de palabras) que parezca
+        analisis sin serlo.
+      </p>
+    </div>
+  </div>
+</section>
+
+</main>
+
 <footer>
-  Datos leidos en vivo de <code class="mono">results/*.jsonl</code> en este host.
+  Datos leidos en vivo de <code class="mono">results/</code>, <code class="mono">results_causal/</code> y
+  <code class="mono">results_redteam/</code> en este host.
   Ver <code class="mono">report/scope.md</code> para el alcance honesto de estos numeros
   y <code class="mono">report/findings.md</code> para el detalle narrativo de cada corrida.
 </footer>

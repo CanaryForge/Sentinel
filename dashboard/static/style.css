@@ -1,46 +1,79 @@
-/* Sentinel — panel de deteccion. Identidad deliberada de consola de
-   seguridad (unico tema, oscuro): un dashboard de monitoreo real casi
-   nunca cambia a modo claro, y aqui el fondo oscuro es parte del genero,
-   no una omision. Todos los colores se declaran explicitos. */
+/* Sentinel (CanaryForge). Interfaz agentica, no panel de monitoreo: fondo
+   casi negro, tipografia con jerarquia clara, densidad baja. Un tema unico
+   oscuro a proposito -- ver nota historica de diseno mas abajo en el propio
+   :root. Paleta de marca (dorado canario + neutros calidos) inyectada por
+   quien pidio el rediseño; --mech-*, --nivel-* y los --status-* se
+   conservan intactos (rampa de severidad de 7 pasos ya validada, colores de
+   mecanismo ya memorizados por quien usa el panel seguido). */
 
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
 
 :root {
   color-scheme: dark;
 
-  --bg: #0a0e14;
-  --surface: #121820;
-  --surface-2: #1a222c;
-  --surface-3: #212b37;
-  --border: rgba(255, 255, 255, 0.09);
-  --border-strong: rgba(255, 255, 255, 0.16);
+  /* paleta de marca: dorado canario sobre neutros calidos casi negros */
+  --color-primary-50: #f9f9f8;
+  --color-primary-100: #f3f1ed;
+  --color-primary-200: #e9e3d3;
+  --color-primary-300: #e1cfa2;
+  --color-primary-400: #e4bd5e;
+  --color-primary-500: #b8860b;
+  --color-primary-600: #9a6f05;
+  --color-primary-700: #7a5803;
+  --color-primary-800: #593f01;
+  --color-primary-900: #382902;
+  --color-primary-950: #1d1502;
 
-  --text-primary: #eef2f6;
-  --text-secondary: #98a4b3;
-  --text-muted: #5f6c7a;
+  --color-neutral-50: #f9f9f8;
+  --color-neutral-100: #f3f2f2;
+  --color-neutral-200: #e9e8e7;
+  --color-neutral-300: #d5d4d2;
+  --color-neutral-400: #a7a59f;
+  --color-neutral-500: #817d74;
+  --color-neutral-600: #615e56;
+  --color-neutral-700: #47443e;
+  --color-neutral-800: #2e2d28;
+  --color-neutral-900: #1b1a18;
+  --color-neutral-950: #11100e;
+
+  --color-success-500: #24bc5c;
+  --color-warning-500: #f59f0a;
+  --color-error-500: #de2e21;
+  --color-info-500: #2c7cdd;
+
+  /* tokens estructurales del panel, remapeados a la paleta de arriba */
+  --bg: #000000;
+  --surface: #11100e;
+  --surface-2: #1b1a18;
+  --surface-3: #2e2d28;
+  --border: rgba(249, 249, 248, 0.08);
+  --border-strong: rgba(249, 249, 248, 0.16);
+
+  --text-primary: #f9f9f8;
+  --text-secondary: #d5d4d2;
+  --text-muted: #817d74;
+
+  --brand-gold: var(--color-primary-500);
+  --brand-gold-bright: var(--color-primary-400);
 
   /* categorico (dataviz/palette.md, orden fijo, pasos dark) -- una hue por
-     mecanismo de deteccion, nunca reasignadas */
+     mecanismo de deteccion, nunca reasignadas. Conservadas tal cual pide el
+     rediseño: ya funcionan y se citan por nombre en report/findings.md. */
   --mech-heartbeat: #3987e5;   /* slot 1 blue */
   --mech-egress: #199e70;      /* slot 3 aqua */
   --mech-canary-net: #c98500;  /* slot 4 yellow */
   --mech-canary-fs: #9085e9;   /* slot 7 violet */
 
   /* estado (fijo, nunca tematizado ni reusado como serie) */
-  --status-good: #0ca30c;
-  --status-warning: #fab219;
+  --status-good: var(--color-success-500);
+  --status-warning: var(--color-warning-500);
   --status-serious: #ec835a;
-  --status-critical: #e05555;
+  --status-critical: var(--color-error-500);
 
   /* rampa secuencial ordinal (niveles 0-6 de escalada), pasos claros =
-     mas prominentes sobre este fondo oscuro */
-  /* Siete pasos de severidad, no siete claridades del mismo azul: la rampa
-     anterior era monocroma y los niveles 1 y 5 -- donde vive el hallazgo del
-     proyecto -- quedaban indistinguibles en la barra apilada. Esta mueve el
-     TONO ademas de la luminosidad (pizarra inerte -> teal -> azul -> violeta
-     -> ambar -> rojo), asi que el orden se lee sin consultar la leyenda y
-     sobrevive a una captura en escala de grises. Los pasos 3, 4 y 6 reusan
-     los acentos que el panel ya usa para heartbeat, canary y critico. */
+     mas prominentes sobre este fondo oscuro. Conservada intacta: mueve tono
+     ademas de luminosidad (pizarra -> teal -> azul -> violeta -> ambar ->
+     rojo), es donde vive el hallazgo mas citado del proyecto. */
   --nivel-0: #45525f;
   --nivel-1: #2b7086;
   --nivel-2: #2f84b4;
@@ -49,7 +82,7 @@
   --nivel-5: #d9782f;
   --nivel-6: #e05555;
 
-  --radius: 10px;
+  --radius: 12px;
   --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Consolas, monospace;
   --font-sans: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
@@ -87,18 +120,30 @@ header.topbar {
   z-index: 10;
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 24px;
   flex-wrap: wrap;
-  padding-block: 18px;
+  padding-block: 20px;
   background: linear-gradient(var(--bg) 85%, transparent);
   border-bottom: 1px solid var(--border);
-  margin-bottom: 28px;
+  margin-bottom: 36px;
 }
 
 .brand {
   display: flex;
-  align-items: baseline;
-  gap: 10px;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.brand-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .wordmark {
@@ -149,35 +194,45 @@ header.topbar {
 .brand h1 { font-size: 17px; letter-spacing: 0.01em; }
 .brand .sub { color: var(--text-muted); font-size: 12.5px; font-family: var(--font-mono); }
 
-.topbar-controls {
+/* Nav segmentado entre las dos superficies: no son pestañas de contenido,
+   son dos DESTINOS ("corrida en vivo" / "analisis del incidente"), asi que
+   se leen como un selector de lugar, no como tabs de un mismo dato. */
+.screen-nav {
   margin-left: auto;
   display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  /* min-width:0 deja que los hijos se encojan. Sin esto el <select> se
-     dimensiona al texto de su opcion mas larga (un run_id completo mas la
-     etiqueta de estado, ~440px) y empuja el ancho del documento por encima
-     del viewport en movil: la pagina entera scrollea de lado. */
-  min-width: 0;
-  max-width: 100%;
+  gap: 4px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  padding: 3px;
 }
 
-/* El selector de corrida se acota al contenedor y trunca; el nombre completo
-   sigue disponible en el menu desplegado y en el title. */
-.topbar-controls select {
-  max-width: 100%;
-  min-width: 0;
-  text-overflow: ellipsis;
+.screen-nav a {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  padding: 7px 16px;
+  border-radius: 999px;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s;
 }
 
-select, button {
+.screen-nav a:hover { color: var(--text-primary); }
+
+.screen-nav a.active {
+  background: var(--brand-gold);
+  color: var(--color-neutral-950);
+  font-weight: 600;
+}
+
+select, button, input {
   font-family: var(--font-mono);
   font-size: 12.5px;
   background: var(--surface-2);
   color: var(--text-primary);
   border: 1px solid var(--border-strong);
-  border-radius: 7px;
+  border-radius: 8px;
   padding: 7px 10px;
 }
 
@@ -185,7 +240,16 @@ button {
   cursor: pointer;
   color: var(--text-secondary);
 }
-button:hover { color: var(--text-primary); border-color: var(--mech-heartbeat); }
+button:hover:not(:disabled) { color: var(--text-primary); border-color: var(--brand-gold); }
+button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.btn-primary {
+  background: var(--brand-gold);
+  border-color: var(--brand-gold);
+  color: var(--color-neutral-950);
+  font-weight: 600;
+}
+.btn-primary:hover:not(:disabled) { background: var(--brand-gold-bright); border-color: var(--brand-gold-bright); color: var(--color-neutral-950); }
 
 .eyebrow {
   font-family: var(--font-mono);
@@ -770,4 +834,283 @@ footer a { color: var(--text-secondary); }
   text-transform: uppercase;
   color: var(--text-muted);
   white-space: nowrap;
+}
+
+.incidents-only-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  text-transform: none;
+  letter-spacing: normal;
+}
+.incidents-only-label input { accent-color: var(--status-critical); cursor: pointer; }
+
+/* ---------- lanzador del experimento (superficie 1) ---------- */
+
+.launcher-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+}
+
+.launcher-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+#launcher-limit { width: 90px; }
+
+.launcher-status {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+/* Cuatro estados reales, cuatro colores: nunca se inventa un quinto matiz
+   para "probablemente corriendo". El estado viene siempre de
+   /api/experimento/estado, que a su vez consulta Popen.poll(). */
+.status-pill {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+.status-pill[data-estado="corriendo"] {
+  color: var(--status-warning);
+  border-color: var(--status-warning);
+  background: rgba(245, 159, 10, 0.08);
+}
+.status-pill[data-estado="terminado"] {
+  color: var(--status-good);
+  border-color: var(--status-good);
+}
+.status-pill[data-estado="fallado"] {
+  color: var(--status-critical);
+  border-color: var(--status-critical);
+  background: rgba(222, 46, 33, 0.08);
+}
+
+#launcher-detail { font-size: 12px; color: var(--text-muted); }
+
+.launcher-note {
+  margin-top: 14px;
+  font-size: 11.5px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  max-width: 80ch;
+}
+
+/* ---------- cabecera de la corrida en detalle ---------- */
+
+.run-section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.run-picker-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.run-picker-wrap select {
+  max-width: min(100%, 420px);
+  min-width: 0;
+  text-overflow: ellipsis;
+}
+
+/* ---------- linea de tiempo forense (narrativa completa) ---------- */
+
+.narrative-card { margin-top: 20px; }
+
+.narrative-list {
+  max-height: 480px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--border);
+}
+
+.narrative-item {
+  display: grid;
+  grid-template-columns: 74px 150px 1fr;
+  gap: 12px;
+  padding: 8px 4px;
+  font-size: 12.5px;
+  border-bottom: 1px solid var(--border);
+  border-left: 2px solid transparent;
+  align-items: baseline;
+}
+.narrative-item:last-child { border-bottom: none; }
+
+.narrative-item .ni-t { font-family: var(--font-mono); color: var(--text-muted); font-size: 11.5px; }
+.narrative-item .ni-source {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.narrative-item .ni-msg { color: var(--text-primary); }
+
+.narrative-item.src-agente { border-left-color: var(--text-muted); }
+.narrative-item.src-egress-proxy { border-left-color: var(--mech-egress); }
+.narrative-item.src-fs-monitor { border-left-color: var(--mech-canary-fs); }
+.narrative-item.src-heartbeat-monitor { border-left-color: var(--mech-heartbeat); }
+.narrative-item.src-redteam { border-left-color: var(--nivel-5); }
+.narrative-item.src-memoria-persistente { border-left-color: var(--nivel-5); }
+.narrative-item.src-orquestador { border-left-color: var(--border-strong); }
+.narrative-item.src-analisis { border-left-color: var(--border-strong); }
+
+.narrative-item.sev-alerta { background: rgba(222, 46, 33, 0.05); }
+.narrative-item.sev-alerta .ni-msg { color: var(--status-warning); }
+.narrative-item.sev-critico { background: rgba(222, 46, 33, 0.1); }
+.narrative-item.sev-critico .ni-msg { color: var(--status-critical); font-weight: 600; }
+
+@media (max-width: 720px) {
+  .narrative-item { grid-template-columns: 1fr; gap: 2px; }
+}
+
+/* ================================================================
+   Superficie 2: analisis del incidente
+   ================================================================ */
+
+.inc-note {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  max-width: 82ch;
+  margin: 0 0 16px;
+}
+.inc-note code { color: var(--text-secondary); }
+
+.corpus-tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.corpus-tab {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-2);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.corpus-tab:hover { color: var(--text-primary); }
+.corpus-tab.active {
+  background: var(--brand-gold);
+  border-color: var(--brand-gold);
+  color: var(--color-neutral-950);
+  font-weight: 600;
+}
+
+.comparacion-grid,
+.herramientas-grid,
+.fuera-de-alcance-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 14px;
+}
+
+.finding-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+}
+.finding-card h3 { font-size: 13px; margin-bottom: 14px; }
+
+.finding-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.finding-row:last-child { margin-bottom: 0; }
+.finding-row .fr-label {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  width: 110px;
+  flex-shrink: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.finding-row .fr-bar-wrap {
+  flex: 1;
+  height: 18px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.finding-row .fr-bar { height: 100%; background: var(--nivel-5); transition: width 0.2s; }
+.finding-row .fr-val {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--text-primary);
+  width: 54px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.canary-surface-grid { max-width: 640px; }
+
+/* ---------- grafo de ruteo ---------- */
+
+.routing-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  overflow-x: auto;
+}
+.routing-card svg { display: block; min-width: 720px; width: 100%; height: auto; }
+.routing-node-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  fill: var(--text-primary);
+  text-anchor: middle;
+  dominant-baseline: middle;
+}
+
+.ssrf-note {
+  margin-top: 14px;
+  padding: 12px 16px;
+  border-radius: var(--radius);
+  border: 1px solid var(--status-critical);
+  background: rgba(222, 46, 33, 0.08);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+.ssrf-note strong { color: var(--status-critical); }
+.ssrf-note code { color: var(--text-primary); }
+
+@media (max-width: 720px) {
+  .launcher-row { flex-direction: column; align-items: stretch; }
+  #launcher-limit { width: 100%; }
 }
