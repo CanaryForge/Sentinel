@@ -20,6 +20,7 @@
   --display:"Cormorant Garamond",Georgia,serif;
   --body:"Raleway",system-ui,sans-serif;
   --mono:"Courier Prime",ui-monospace,monospace;
+  --wash:linear-gradient(135deg,#b8860b15,#7a580308);
   --r:2px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
@@ -46,7 +47,10 @@ a{color:inherit}
 .col{padding:64px 72px 120px;max-width:1180px}
 
 /* ---- masthead ---- */
-.masthead{border-bottom:1px solid var(--border);padding-bottom:40px;margin-bottom:56px}
+.masthead{border-bottom:1px solid var(--border);padding:0 0 40px;margin-bottom:56px;
+  position:relative}
+.masthead::before{content:"";position:absolute;inset:-64px -72px 0 -72px;z-index:-1;
+  background:var(--wash)}
 .masthead h1{font-family:var(--display);font-size:56px;font-weight:400;line-height:1.08;
   letter-spacing:-.01em;max-width:20ch}
 .masthead h1 em{font-style:italic;color:var(--primary-400);line-height:1.12;padding-bottom:2px}
@@ -73,7 +77,8 @@ section{margin-bottom:88px}
 .sec-head p{color:var(--text-muted);font-size:15.5px;max-width:68ch}
 
 /* ---- finding: pull-quote style lead, data beneath ---- */
-.finding{border-left:2px solid var(--primary-600);padding-left:28px;margin-bottom:36px}
+.finding{border-left:2px solid var(--primary-600);padding:22px 28px;margin-bottom:36px;
+  background:var(--wash),var(--surface);border-radius:0 var(--r) var(--r) 0}
 .finding .lead{font-family:var(--display);font-size:25px;font-weight:400;line-height:1.35;
   max-width:44ch;color:var(--text)}
 .finding .lead b{font-weight:600;color:var(--primary-300)}
@@ -84,6 +89,7 @@ section{margin-bottom:88px}
 .lrow{display:grid;grid-template-columns:290px 1fr 96px;gap:24px;align-items:center;
   padding:16px 0;border-bottom:1px solid var(--border)}
 .lrow:first-child{border-top:1px solid var(--border)}
+.lrow:hover{background:var(--wash)}
 .lname{font-family:var(--mono);font-size:13.5px;color:var(--text-2);line-height:1.5}
 .lname span{display:block;color:var(--text-muted);font-size:13px}
 .lbar{display:flex;height:16px;border-radius:var(--r);overflow:hidden;background:var(--surface)}
@@ -108,7 +114,8 @@ section{margin-bottom:88px}
 .sval.dim{color:var(--text-muted)}
 .aside h3{font-family:var(--display);font-size:19px;font-weight:500;margin-bottom:10px}
 .aside p{font-size:15.5px;color:var(--text-muted);line-height:1.65}
-.aside .warn{border-left:2px solid var(--error-500);padding-left:16px;margin-top:20px}
+.aside .warn{border-left:2px solid var(--error-500);padding:14px 16px;margin-top:20px;
+  background:var(--wash),var(--surface);border-radius:0 var(--r) var(--r) 0}
 .aside .warn strong{color:var(--error-400);font-weight:500}
 
 /* ---- routing: plain rows, status by type not by dot ---- */
@@ -138,10 +145,10 @@ section{margin-bottom:88px}
   font-variant-numeric:tabular-nums}
 
 /* ---- deep link out to OpenObserve ---- */
-.oo{display:inline-flex;align-items:center;gap:9px;font-family:var(--mono);font-size:13.5px;
+.oo{display:inline-flex;align-items:center;gap:9px;font-family:var(--mono);font-size:13.5px;font-weight:700;
   letter-spacing:.04em;color:var(--primary-400);text-decoration:none;padding:9px 16px;
   border:1px solid var(--primary-700);border-radius:var(--r);
-  background:linear-gradient(135deg,#b8860b15,#7a580308);transition:border-color .18s,color .18s}
+  background:var(--wash),var(--surface);transition:border-color .18s,color .18s}
 .oo:hover{border-color:var(--primary-500);color:var(--primary-300)}
 .oo:active{transform:translateY(1px)}
 .oo-row{display:flex;gap:12px;margin-top:28px;flex-wrap:wrap}

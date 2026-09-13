@@ -19,6 +19,7 @@
   --display:"Cormorant Garamond",Georgia,serif;
   --body:"Raleway",system-ui,sans-serif;
   --mono:"Courier Prime",ui-monospace,monospace;
+  --wash:linear-gradient(135deg,#b8860b15,#7a580308);
   --r:4px;
   --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s6:24px; --s8:32px; --s12:48px; --s16:64px;
 }
@@ -28,7 +29,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--body);font-weight:
 
 /* ---- top bar, single line, 64px ---- */
 .topbar{height:64px;border-bottom:1px solid var(--border);display:flex;align-items:center;
-  gap:var(--s8);padding:0 var(--s8);position:sticky;top:0;background:var(--bg);z-index:10}
+  gap:var(--s8);padding:0 var(--s8);position:sticky;top:0;
+  background:var(--wash),var(--surface);z-index:10}
 .brand{display:flex;align-items:center;gap:var(--s3)}
 .brand img{width:30px;height:30px;object-fit:contain}
 .brand b{font-family:var(--display);font-size:21px;font-weight:600;letter-spacing:.01em}
@@ -47,7 +49,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--body);font-weight:
 .band.k2{grid-template-columns:1.45fr 1fr}
 .band.k3{grid-template-columns:1fr 1fr 1fr}
 
-.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+.panel{background:var(--wash),var(--surface);border:1px solid var(--border);border-radius:var(--r);
   padding:var(--s6)}
 .panel > header{display:flex;align-items:baseline;justify-content:space-between;
   margin-bottom:var(--s4);padding-bottom:var(--s3);border-bottom:1px solid var(--border)}
@@ -55,12 +57,12 @@ body{background:var(--bg);color:var(--text);font-family:var(--body);font-weight:
 .panel .hint{font-family:var(--mono);font-size:13px;color:var(--text-faint);letter-spacing:.04em}
 
 /* ---- readouts: mono numerals, gold is the number that matters ---- */
-.readout{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+.readout{background:var(--wash),var(--surface);border:1px solid var(--border);border-radius:var(--r);
   padding:var(--s4) var(--s6)}
 .readout .n{font-family:var(--mono);font-size:40px;font-weight:700;line-height:1.1;
   font-variant-numeric:tabular-nums;letter-spacing:-.02em}
 .readout.key{border-color:var(--primary-700);
-  background:linear-gradient(135deg,#b8860b15,#7a580308)}
+  background:var(--wash),var(--wash),var(--surface)}
 .readout.key .n{color:var(--primary-400)}
 .readout .k{font-size:14.5px;color:var(--text-2);margin-top:var(--s2)}
 .readout .sub{font-family:var(--mono);font-size:13px;color:var(--text-faint);margin-top:var(--s1)}
@@ -133,17 +135,18 @@ tr:hover td{background:#ffffff05}
 
 /* ---- callout ---- */
 .callout{border-left:3px solid var(--primary-500);padding:var(--s3) var(--s4);
-  background:linear-gradient(135deg,#b8860b15,#7a580308);border-radius:0 var(--r) var(--r) 0;
+  background:var(--wash),var(--elevated);border-radius:0 var(--r) var(--r) 0;
   margin-top:var(--s4)}
 .callout p{font-size:15px;color:var(--text-2);max-width:70ch}
 .callout b{color:var(--primary-300);font-weight:600}
 .callout.danger{border-left-color:var(--error-500);background:#440d0822}
 .callout.danger b{color:var(--error-400)}
 
-.oo{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:13.5px;
+.oo{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:13.5px;font-weight:700;
   letter-spacing:.04em;color:var(--primary-400);text-decoration:none;padding:8px 14px;
   border:1px solid var(--primary-700);border-radius:var(--r);transition:background .15s,color .15s}
-.oo:hover{background:var(--primary-900);color:var(--primary-300)}
+.oo{background:var(--wash),var(--surface)}
+.oo:hover{background:var(--wash),var(--primary-900);color:var(--primary-300)}
 .oo:active{transform:translateY(1px)}
 .oorow{display:flex;gap:var(--s3);margin-top:var(--s4);flex-wrap:wrap}
 </style>
