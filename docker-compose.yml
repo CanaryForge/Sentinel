@@ -82,6 +82,11 @@ services:
     network_mode: "none"
     volumes:
       - workspace:/workspace:ro
+      # Memoria persistente entre corridas, solo lectura. Es el canal de fuga
+      # mas duradero (sobrevive a `down -v`) y hasta ahora no lo miraba nadie:
+      # el agente puede dejar su canary en una nota con memory_write y ninguna
+      # de las tres señales se entera. Ver report/findings.md (A4).
+      - ./memory:/memory:ro
       - ./results:/results
     cap_drop: [ALL]
     security_opt: ["no-new-privileges:true"]

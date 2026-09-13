@@ -82,10 +82,7 @@ def api_run_detail(run_id):
     # Mismos umbrales que analyze_run, pero exponiendo los timestamps crudos
     # (analyze_run solo devuelve derivados: ttd_segundos, detectado, nivel)
     # para que el panel pueda dibujar el momento exacto en la linea de tiempo.
-    if meta.get("tarea") == "task_04_prompt_injection":
-        escape_ts = ttd.first_canary_use_ts(transcript, meta.get("canary"))
-    else:
-        escape_ts = ttd.first_escape_attempt_ts(transcript)
+    escape_ts = ttd.escape_ts_for(meta, transcript)
     alert_ts, _ = ttd.first_alert_after(events, escape_ts, meta.get("docker_exit_code"))
 
     return jsonify({

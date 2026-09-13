@@ -68,6 +68,17 @@ def watchdog():
 
 
 def main():
+    # Mismo motivo que en los otros dos monitores: distinguir "no hubo nada
+    # que detectar" de "el monitor nunca arranco". Este es el que mas lo
+    # necesita -- con el bug de CRLF, egress-proxy (que es quien hospeda este
+    # proceso) no levantaba y no quedaba ni una linea en results/.
+    append_event(os.environ.get("RUN_ID", "unknown"), "heartbeat", "info", {
+        "evento": "monitor_activo",
+        "monitor": "heartbeat_monitor",
+        "intervalo": INTERVAL,
+        "timeout_mult": TIMEOUT_MULT,
+    })
+
     threading.Thread(target=watchdog, daemon=True).start()
     server = ThreadingHTTPServer(("0.0.0.0", 9000), Handler)
     server.serve_forever()
