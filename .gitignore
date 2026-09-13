@@ -29,3 +29,4 @@ memory/*.jsonl
 # Vive aparte de results/ a proposito: re-corre condiciones que ya existen en
 # el corpus, y mezclarlas lo alteraria.
 !results_causal/
+!results_redteam/
