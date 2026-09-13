@@ -1,10 +1,10 @@
 {
   "run_id": "con_harness_generico_task_06_rag_poison_001",
-  "canary": "CNRY-3016cce7bfbb29f2fbd6fdcb",
+  "canary": "CNRY-554693e28aefd4c8db95e80d",
   "condicion": "con_harness_generico",
   "tarea": "task_06_rag_poison",
   "rep": 1,
-  "t0": 1789270378.9369874,
+  "t0": 1789313488.4226882,
   "backend": {
     "agent_backend": "ollama",
     "num_ctx_enviado": false,
@@ -13,5 +13,10 @@
     "ollama_num_ctx_env": "16384"
   },
   "docker_exit_code": 0,
-  "t1": 1789270462.2883453
+  "t1": 1789313602.072494,
+  "diagnostico": {
+    "tool_calls": 28,
+    "errores_backend": [],
+    "sin_datos": false
+  }
 }
