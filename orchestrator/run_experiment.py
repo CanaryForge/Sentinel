@@ -43,6 +43,32 @@ def load_config(path):
         return yaml.safe_load(f)
 
 
+def backend_info() -> dict:
+    """Configuracion del backend del LLM tal como la ve esta corrida.
+
+    `ollama_num_ctx_env` se registra pero `num_ctx_enviado` es False a
+    proposito: `sandbox/agent.py` NO manda `options.num_ctx` a Ollama, asi
+    que esa variable --presente en .env.example, docker-compose.yml y el
+    README-- hoy no tiene efecto y el contexto real es el default del
+    servidor Ollama (`OLLAMA_CONTEXT_LENGTH`, 4096 por defecto), por debajo
+    de los 8000-16000 tokens que el propio README dice que consume un turno.
+    Se deja como esta a proposito: mandarlo cambiaria el comportamiento del
+    agente y las corridas nuevas dejarian de ser comparables con el corpus
+    existente. Queda registrado para que la comparacion sea auditable, y
+    documentado como pendiente en report/findings.md.
+    """
+    backend = os.environ.get("AGENT_BACKEND", "ollama")
+    info = {"agent_backend": backend, "num_ctx_enviado": False}
+    if backend == "ollama":
+        info["modelo"] = os.environ.get("OLLAMA_MODEL", "")
+        info["host"] = os.environ.get("OLLAMA_HOST", "")
+        info["ollama_num_ctx_env"] = os.environ.get("OLLAMA_NUM_CTX", "")
+    else:
+        info["modelo"] = os.environ.get("OPENAI_MODEL", "")
+        info["host"] = os.environ.get("OPENAI_API_BASE", "")
+    return info
+
+
 def compose_file_args(cfg):
     files = cfg.get("compose_files", ["docker-compose.yml"])
     args = []
@@ -64,6 +90,12 @@ def run_one(cond, task, rep, cfg, dry_run=False):
         "tarea": task,
         "rep": rep,
         "t0": time.time(),
+        # Con que se corrio. Sin esto una corrida es inauditable: el corpus
+        # de 63 corridas no registra su modelo en ningun artefacto, asi que
+        # "se uso qwen2.5:7b-instruct" es prosa de report/findings.md y no un
+        # dato -- la misma clase de afirmacion sin respaldo que obligo a
+        # retractar la tabla del experimento causal.
+        "backend": backend_info(),
     }
     meta_path = os.path.join(RESULTS_DIR, f"{run_id}_meta.json")
 
@@ -85,6 +117,10 @@ def run_one(cond, task, rep, cfg, dry_run=False):
         "CONDITION": cond,
         "TASK": task,
         "RUN_TIMEOUT_SECONDS": str(cfg.get("run_timeout_seconds", 240)),
+        # Los contenedores montan este directorio como /results. Sin esto,
+        # --results-dir solo movia el _meta.json y los monitores seguian
+        # escribiendo en ./results -- la corrida quedaba partida en dos sitios.
+        "RESULTS_HOST_DIR": RESULTS_DIR,
     })
 
     print(f"[orquestador] corriendo {run_id}", flush=True)
@@ -107,15 +143,26 @@ def run_one(cond, task, rep, cfg, dry_run=False):
 
 
 def main():
+    global RESULTS_DIR
+
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", default=os.path.join(os.path.dirname(__file__), "config.yaml"),
                          help="archivo de config (default: orchestrator/config.yaml)")
     parser.add_argument("--dry-run", action="store_true", help="solo lista las corridas planeadas")
     parser.add_argument("--limit", type=int, default=None, help="corta la matriz a las primeras N corridas")
+    parser.add_argument("--results-dir", default=RESULTS_DIR,
+                        help="donde escribir los artefactos (default: results/). "
+                             "Un experimento que re-corre condiciones ya presentes "
+                             "en results/ debe usar un directorio propio: si no, "
+                             "el orquestador las salta por existir, y si se borran "
+                             "para forzarlas se altera el corpus del que dependen "
+                             "las demas secciones de report/findings.md.")
     args = parser.parse_args()
 
-    cfg = load_config(args.config)
+    RESULTS_DIR = os.path.abspath(args.results_dir)
     os.makedirs(RESULTS_DIR, exist_ok=True)
+
+    cfg = load_config(args.config)
 
     combos = list(itertools.product(cfg["conditions"], cfg["tasks"], range(cfg["repetitions"])))
     if args.limit:

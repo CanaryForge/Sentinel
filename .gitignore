@@ -24,3 +24,8 @@ results/controles/
 memory/*.jsonl
 !memory/.gitkeep
 .DS_Store
+
+# Experimento causal homogeneo (30 corridas propias, ver report/findings.md).
+# Vive aparte de results/ a proposito: re-corre condiciones que ya existen en
+# el corpus, y mezclarlas lo alteraria.
+!results_causal/

@@ -34,7 +34,7 @@ services:
     volumes:
       - workspace:/workspace
       - ./tasks:/tasks:ro
-      - ./results:/results
+      - ${RESULTS_HOST_DIR:-./results}:/results
       # Bind mount al host, NO volumen nombrado: a diferencia de `workspace`,
       # `docker compose down -v` no lo borra. Modela memoria de equipo
       # persistente entre corridas (vector 5, ver sandbox/agent.py) -- una
@@ -61,7 +61,7 @@ services:
       - HEARTBEAT_TIMEOUT_MULT=${HEARTBEAT_TIMEOUT_MULT:-2}
     networks: [red-proxy, red-mocks]
     volumes:
-      - ./results:/results
+      - ${RESULTS_HOST_DIR:-./results}:/results
       - ./monitors/baseline.json:/app/baseline.json
     cap_drop: [ALL]
     security_opt: ["no-new-privileges:true"]
@@ -87,7 +87,7 @@ services:
       # el agente puede dejar su canary en una nota con memory_write y ninguna
       # de las tres señales se entera. Ver report/findings.md (A4).
       - ./memory:/memory:ro
-      - ./results:/results
+      - ${RESULTS_HOST_DIR:-./results}:/results
     cap_drop: [ALL]
     security_opt: ["no-new-privileges:true"]
     depends_on: [sandbox]
