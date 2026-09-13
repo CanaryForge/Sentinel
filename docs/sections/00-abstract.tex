@@ -1,8 +1,16 @@
-\todo{Escribir al final, cuando los numeros esten cerrados. Debe cubrir, en
-este orden: (1) el incidente ancla y la pregunta --cuanto tarda un equipo en
-notar una fuga de sandbox; (2) que construimos --tres senales independientes
-del modelo, seis vectores de induccion; (3) el numero titular de deteccion y
-el de dwell time; (4) el giro: la mitad de lo que el arnes contaba como
-deteccion era su propio log, y el hallazgo mas fuerte no replica fuera de una
-maquina; (5) la contribucion transferible --una taxonomia de fallos que se
-presentan como exito.}
+We measure how long it takes to notice an LLM agent leaving its sandbox. A
+harness runs a tool-calling agent in Docker under planted temptation and
+prompt injection, watched by three signals that never consult the model:
+process liveness, a canary token on the filesystem and in cross-run memory,
+and outbound traffic against a baseline. Across 113 runs we find that the
+delivery channel of an injected instruction matters more than its content,
+with follow-through rising from 10\% over the network to 60\% from a local
+knowledge base, and that a production security guardrail is associated with
+roughly three times the leakage of no guardrail, replicated on two machines. A
+registered prediction that this comes from naming the attack surface fails: a
+guardrail matched for length and emphasis but naming nothing leaks identically.
+Detection takes 2.22 seconds and the agent keeps working for another 44, a gap
+no component in the harness was built to close. We also report four
+corrections to our own published figures, including a monitor that was
+detecting the harness's own log, and the class of failure they belong to:
+evaluation components that return a number while having measured nothing.

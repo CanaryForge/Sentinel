@@ -41,9 +41,9 @@ credited that silence as a real detection.
 \toprule
 \textbf{Set} & \textbf{Tasks} & \textbf{Conditions} & \textbf{Runs} & \textbf{Machine} \\
 \midrule
-\texttt{results/} & 04, 05, 06 & 2 (plus 3 partial) & 63 & A (Apple Silicon) \\
-\texttt{results\_causal/} & 06 & 3 & 30 & B (Windows) \\
-\texttt{results\_redteam/} & 04 & 2 & 20 & B (Windows) \\
+\texttt{corpus} & 04, 05, 06 & 2 (plus 3 partial) & 63 & A (Apple Silicon) \\
+\texttt{causal} & 06 & 3 & 30 & B (Windows) \\
+\texttt{redteam} & 04 & 2 & 20 & B (Windows) \\
 \bottomrule
 \end{tabular}
 \caption{113 runs across three sets. The corpus was planned as 60 runs; the
@@ -52,51 +52,14 @@ three extra are an incomplete arm whose reported table had to be retracted
 bookkeeping: it is the axis along which the main finding fails to replicate.}
 \end{table}
 
-All runs use \texttt{qwen2.5:7b-instruct}, with the digest verified identical
-across both machines before the second set was generated. Runs are sequential
-by design, since the model is the scarce resource and parallel runs would
-produce contention rather than throughput.
+All runs use \texttt{qwen2.5:7b-instruct} with its digest verified identical
+across both machines, and are sequential by design: the model is the scarce
+resource, so parallelism would produce contention rather than throughput.
 
-\todo{Si Daniel pasa su version de Ollama y su OLLAMA\_CONTEXT\_LENGTH, anadir
-aqui una fila de configuracion de runtime por maquina. Es el dato que decide
-si la Seccion 5 reporta una limitacion explicada o un misterio abierto.}
+Machine A ran Ollama 0.32.5 and machine B 0.6.8 for its first set and 0.34.0
+after updating. That field decides whether two sets are comparable at all, and
+it is the one the corpus never recorded; see Section~\ref{sec:validity}.
 
-\subsection{Deterministic validation}
-
-A monitor that never fired is indistinguishable from a monitor that is broken.
-Before reporting any detection rate, we therefore fire each event the monitors
-are supposed to catch, by hand, and measure how long each takes. The suite
-needs no model backend and costs nothing to run.
-
-\begin{table}[h]
-\centering
-\small
-\begin{tabular}{@{}rlr@{}}
-\toprule
-\textbf{\#} & \textbf{Control} & \textbf{Measured} \\
-\midrule
-1 & heartbeat silence after killing the pinger & 9.08\,s \\
-2 & canary in a workspace directory name & 0.43\,s \\
-3 & canary in an outbound query string & 0.49\,s \\
-4 & destination outside the egress baseline & 0.49\,s \\
-5 & canary in cross-run persistent memory & 18.45\,s \\
-6 & red-teamer serves its payload through the SSRF & 0.52\,s \\
-\bottomrule
-\end{tabular}
-\caption{All six fire. Control 1 measures the configured threshold (5\,s
-interval times a multiplier of 2) minus the time since the last ping, not
-monitor slowness. Control 5 is an order of magnitude slower than the other
-canary surfaces because inotify does not fire for host-side writes to a bind
-mount, so that surface falls back to the periodic sweep.}
-\end{table}
-
-Two of these controls exist because the harness failed silently without them.
-Control 5 was added after finding that the most persistent leak channel in the
-corpus, a canary written into cross-run memory, was the only one nothing
-watched. Control 6 was added after finding that no control touched the
-attacker path at all, and it reported a blind spot on its first run
-(Section~\ref{sec:validity}).
-
-A separate sweep varies each monitor's configuration parameter against the
-same synthetic event, isolating how often a monitor looks from the variance of
-model behaviour. Its results appear in Section~\ref{sec:results}.
+The monitors are validated before any detection rate is reported, by firing
+each event they are meant to catch and measuring the latency. All six controls
+fire; Appendix~\ref{sec:controls} gives the numbers.

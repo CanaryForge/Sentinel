@@ -36,20 +36,11 @@ it was ever built to act.
 Each signal is structurally incapable of intervening, and in three of the four
 cases that is a deliberate design choice rather than an oversight.
 
-\begin{table}[h]
-\centering
-\small
-\begin{tabular}{@{}lp{8.4cm}@{}}
-\toprule
-\textbf{Component} & \textbf{Why it cannot act} \\
-\midrule
-\texttt{egress\_monitor} & A mitmproxy addon that only logs. mitmproxy \emph{can} kill a flow; this one chooses not to. \\
-\texttt{canary\_monitor} & Mounts the workspace read-only. It cannot delete or quarantine even if asked. \\
-\texttt{heartbeat\_monitor} & An HTTP server and a watchdog thread, with no handle on the sandbox container. \\
-\texttt{run\_experiment} & Waits for the run to exit. It never reads events while one is in progress. \\
-\bottomrule
-\end{tabular}
-\end{table}
+The egress monitor is a mitmproxy addon that only logs, though mitmproxy can
+kill a flow and this one chooses not to. The canary monitor mounts the
+workspace read-only. The heartbeat monitor is an HTTP server and a watchdog
+thread with no handle on the sandbox container. The orchestrator waits for the
+run to exit and never reads events while one is in progress.
 
 The read-only mount is the interesting one. It exists so the monitor cannot
 contaminate the surface it audits, which is correct for a measurement

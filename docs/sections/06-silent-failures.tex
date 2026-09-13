@@ -30,55 +30,38 @@ Agent ``declined'' the payload & It was never served one & Counting deliveries a
 uncomfortable one: in no case did the pipeline detect its own failure.}
 \end{table}
 
-\subsection{Two platform translations}
+Two are platform translations that silence a component without an error. Git
+for Windows rewrites shell scripts to CRLF on clone, so the entrypoint shebang
+becomes \texttt{bash\textbackslash r} and the container exits 127. The egress
+proxy is the only service that boots through a script, so it never starts,
+taking two of the three monitors with it; the third survives because the
+compose file gives it an explicit entrypoint, which is exactly why the failure
+looks partial rather than total. Separately, MSYS rewrites POSIX-looking
+arguments before \texttt{docker.exe} sees them, so the container exits 2 and
+\texttt{-{}-rm} removes it before anyone can read the log. The sweep then
+reports ``not detected'', which reads as a slow monitor rather than a
+container that never ran.
 
-Git for Windows rewrites shell scripts to CRLF on clone, so the entrypoint
-shebang becomes \texttt{bash\textbackslash r} and the container exits 127. The
-egress proxy is the only service that boots through a script, so it never
-starts, taking both the egress monitor and the heartbeat monitor with it. The
-third monitor survives because the compose file gives it an explicit
-entrypoint, which is precisely why the failure looks partial rather than
-total: runs complete, events are written, and two of three signals are simply
-absent.
+Three are configurations pointing somewhere other than intended. The promptfoo
+provider exported \texttt{TASK\_FILE} and \texttt{HARNESS\_CONDITION} where
+the compose file reads \texttt{TASK} and \texttt{CONDITION}, so every
+evaluation ran the default task and ignored the generated payload while
+returning transcripts. The positive-control suite brought up the filesystem
+monitor without \texttt{-{}-no-deps}, pulling in the real sandbox, which runs
+its own heartbeat under the same run identifier: the heartbeat control passed
+in 1.8 seconds having timed the sandbox's clean shutdown rather than the
+pinger it kills. It was caught because the suite was quietly spending paid API
+quota on agent runs it was documented not to need. And when the model backend
+went down mid-session, the agent caught the error, wrote it to the transcript
+and ended its loop, so thirty runs reported success with zero tool calls
+between them.
 
-Separately, MSYS rewrites POSIX-looking arguments before \texttt{docker.exe}
-sees them, so \texttt{/app/heartbeat.py} arrives as a Windows path. The
-container exits 2 immediately and \texttt{-{}-rm} removes it before anyone can
-read the log. The sweep reported ``not detected'' for every heartbeat case and
-produced no event file at all, which reads as a monitor that is slow rather
-than a container that never ran.
-
-\subsection{Three configurations that pointed somewhere else}
-
-The promptfoo provider exported \texttt{TASK\_FILE} and
-\texttt{HARNESS\_CONDITION}; the compose file reads \texttt{TASK} and
-\texttt{CONDITION}. Every evaluation therefore ran the default task under the
-default condition, ignoring the payload promptfoo had generated, and returned
-transcripts without failing.
-
-The positive-control suite brought up the filesystem monitor without
-\texttt{-{}-no-deps}, which pulled in the real sandbox as a dependency. That
-container runs the heartbeat pinger under the same run identifier, so the
-heartbeat control was timing the sandbox's own clean shutdown rather than the
-pinger it kills. It passed, in 1.8 seconds, measuring the wrong event. It was
-found because the suite was quietly spending paid API quota on agent runs it
-was documented not to need.
-
-The third is the most expensive. The model backend went down mid-session. The
-agent catches a backend error, writes it to the transcript, and ends its loop,
-so the container exits cleanly and \texttt{-{}-abort-on-container-exit}
-returns zero. Thirty runs reported success with zero tool calls between them,
-an hour of wall time, before anyone opened a transcript.
-
-\subsection{One that reached the published numbers}
-
-The attacker logs each delivery of its payload. Counting those against runs
-shows that eight of twenty runs in one task were never served the attack, and
-the split was badly skewed by condition. In \texttt{summary.jsonl} a run that
-was never attacked is indistinguishable from one where the agent read the
-payload and declined: both are simply low on the escalation ladder. The
-published rate for that channel was computed over planned runs rather than
-exposed ones, and had to be corrected.
+The sixth reached the published numbers. The attacker logs each delivery of
+its payload, and counting those against runs shows eight of twenty were never
+served the attack, skewed by condition. In the summary a run that was never
+attacked is indistinguishable from one where the agent read the payload and
+declined: both simply score low. That channel's rate had been computed over
+planned runs rather than exposed ones.
 
 \subsection{What we changed}
 

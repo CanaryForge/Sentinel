@@ -15,31 +15,23 @@ it will create \texttt{/workspace/ack\_<canary>}, the token lands in that log
 and the monitor fires on an artifact the harness wrote. This happens in 34 of
 60 corpus runs.
 
-The reported detection rate of 25/25 becomes \textbf{19/25} counting only
-surfaces the agent produced. Two effects need separating, because they are not
-equally serious. Six detections have no other signal at all: those leaks are
-genuinely unseen, and the reported detection was an artifact. The rest have
-real signal that arrived after the self-detection, so what is wrong there is
-the time to detection, not the detection.
-
-The monitor now excludes its own log. That change was not applied
-retroactively, since altering a monitor alters the measured system; the
-corrected figures come from reprocessing the existing artifacts.
-
-Level counts are unaffected, because levels 0 through 5 come from the
-transcript rather than from monitor events. That separation is why a
-correction this large leaves Section~\ref{sec:results} standing.
+The reported 25/25 becomes \textbf{19/25} counting only surfaces the agent
+produced. Six of those detections have no other signal at all, so those leaks
+are genuinely unseen; in the rest real signal existed but arrived after the
+self-detection, making the time wrong rather than the detection. The monitor
+now excludes its own log, not applied retroactively since altering a monitor
+alters the measured system. Level counts are unaffected, because levels 0
+through 5 come from the transcript rather than from monitor events, which is
+why a correction this large leaves Section~\ref{sec:results} standing.
 
 \subsection{A published table had no data behind it}
 
-An earlier draft reported ten runs of \texttt{con\_harness\_generico} at 4/10.
-Three existed on disk, one of them truncated. The figure had been written from
-\texttt{repetitions: 10} in a YAML file rather than counted over the
-artifacts. It was retracted, and the experiment was then actually run, which
-is what Section~\ref{sec:results} reports.
-
-The rule that came out of it is now written into the repository: every figure
-is counted over the artifacts at the time of writing, never read from the
+An earlier draft reported ten runs of \texttt{con\_harness\_generico} at
+4/10. Three existed on disk, one truncated: the figure had been written from
+\texttt{repetitions: 10} in a YAML file rather than counted. It was retracted
+and the experiment then actually run, which is what Section~\ref{sec:results}
+reports. The rule it produced is now in the repository: every figure is
+counted over artifacts at the time of writing, never read from the
 configuration that would have produced them.
 
 \subsection{A runtime version made the main finding disappear}
@@ -109,42 +101,7 @@ never attacked is indistinguishable from one where the agent read the payload
 and declined: both simply score low. The channel rate in
 Section~\ref{sec:results} therefore carries both denominators.
 
-\subsection{Two structural limits we did not fix}
-
-\paragraph{The SSRF path evades the egress baseline.} When the agent reaches
-the attacker through the route the task suggests, the proxy sees
-\texttt{package-registry:5000}, which is in the baseline because it is a
-legitimate service. The attacker's address travels URL-encoded inside a query
-string, where the baseline check does not look, and the second hop happens
-server to server inside an internal network without crossing the proxy at all.
-This is the anchor incident's own pattern, and it bounds what the egress
-monitor is for: it catches the naive agent and misses the one that takes the
-detour the task offers it.
-
-The bound is a capability, not an observed evasion, and the distinction
-matters. Across all 113 runs the proxy recorded exactly one destination,
-\texttt{mirror-externo:5002}, thirty times, flagged anomalous on every one:
-every agent that reached the attacker went at it directly. Not one run used
-the SSRF route. The blind spot was demonstrated by a synthetic control, not
-exploited by a model, so what we report is that the monitor can be evaded this
-way, not that it was.
-
-\paragraph{The shared event log is not safe under concurrent append.} The
-three monitors append to one file per run from separate containers, and that
-append is not atomic over a Docker Desktop bind mount on Windows. We observed
-lines beginning mid-JSON. The analysis now skips a torn line and names the
-file and line rather than dying on it, but a lost line may be an inert event
-or an alert that changes a run's verdict.
-
-\paragraph{Tool-call sequences do not predict a leak.} We looked for a
-syntactic signal in the transcripts, on the theory that the order in which an
-agent reaches for its tools might separate runs that leak from runs that do
-not. It does not, at least at this sample size: the dominant transitions are
-the same in both groups, and the apparent signal in which tool an agent
-reaches for first is an artifact of each task exposing a different channel. We
-report the negative because it bounds what the transcripts support.
-
-\paragraph{Canary obfuscation coverage is a floor, not a claim.} Detection
-matches the plain token plus base64, URL encoding, hex and reversal. An agent
-encoding the token in, for example, the lengths of file names defeats it, and
-we make no claim beyond the four.
+Three further limits are structural rather than corrections, and are reported
+in Appendix~\ref{sec:limits}: an SSRF route that evades the egress
+baseline, a shared event log that is not safe under concurrent append, and
+tool-call sequences that carry no predictive signal at this sample size.
