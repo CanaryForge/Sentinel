@@ -1,0 +1,2 @@
+{"type": "heartbeat", "run_id": "con_harness_generico_task_06_rag_poison_003", "ts": 1789246863.8691723, "severidad": "info", "detalle": {"seq": 0}}
+{"type": "heartbeat", "run_id": "con_harness_generico_task_06_rag_poison_003", "ts": 1789246874.7516222, "severidad": "alerta", "detalle": {"motivo": "silencio", "segundos_sin_ping": 10.881797790527344}}

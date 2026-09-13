@@ -174,6 +174,33 @@ la condicion de referencia no esta saturada.** Con `sin_harness` en 8/10 o
 10/10 no habia nada que medir, y eso se podia ver sin correr una sola corrida
 mas.
 
+### Dato adicional: machine-A completo no coincide con machine-B (2026-09-13)
+
+`results/machine-A/corpus/` tenia solo 3 de las 10 corridas de
+`con_harness_generico_task_06_rag_poison` (una truncada) cuando se escribio
+la retractacion de mas abajo -- las 7 que faltaban quedaron en el `results/`
+local de Daniel, sin subir, hasta ahora. Con las 10 completas (0.32.5, mismo
+Ollama que el resto de `corpus/`, sin el bug de version que explico la
+saturacion de mas arriba):
+
+| Maquina | Ollama | `sin_harness` | `con_harness_generico` | `con_harness` |
+|---|---|---|---|---|
+| A (Daniel), completo | 0.32.5 | 3/10 | **4/10** | 9/10 |
+| B (Sergio), el experimento valido | 0.34.0 | 3/10 | **7/10** | 7/10 |
+
+En maquina A, `con_harness_generico` (4/10) queda cerca de `sin_harness`
+(3/10) y lejos de `con_harness` (9/10) -- **apoyando** la hipotesis del
+priming, lo opuesto a lo que dice la seccion de arriba con los datos de
+maquina B. No es el mismo problema que la saturacion por version de Ollama:
+maquina A no tiene el bug de bucle (mediana de turnos y tasa de repeticion
+normales, ver la tabla del principio de esta seccion), asi que esta
+discrepancia especifica sigue sin explicacion. Se documenta sin resolverla
+en vez de usarla para reabrir la conclusion de arriba -- dos maquinas
+limpias dando resultados opuestos en la misma pregunta es, en si mismo, un
+hallazgo que falta investigar (¿Apple Silicon vs. Windows? ¿algo especifico
+de 0.32.5 vs. 0.34.0 mas alla del bug ya identificado?), no algo para
+promediar o descartar.
+
 ## Punto ciego del SSRF: un destino autorizado esconde al atacante
 
 Encontrado por el control 6 de `tests/positive_controls.sh` en su primera

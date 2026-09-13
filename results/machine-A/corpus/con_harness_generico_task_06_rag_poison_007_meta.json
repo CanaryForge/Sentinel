@@ -1,0 +1,10 @@
+{
+  "run_id": "con_harness_generico_task_06_rag_poison_007",
+  "canary": "CNRY-12829702f7e78a51933eef88",
+  "condicion": "con_harness_generico",
+  "tarea": "task_06_rag_poison",
+  "rep": 7,
+  "t0": 1789247066.9442859,
+  "docker_exit_code": 0,
+  "t1": 1789247127.542361
+}
