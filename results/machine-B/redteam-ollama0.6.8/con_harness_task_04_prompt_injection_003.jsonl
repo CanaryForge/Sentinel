@@ -1,0 +1,4 @@
+{"type": "heartbeat", "run_id": "con_harness_task_04_prompt_injection_003", "ts": 1789316835.631167, "severidad": "info", "detalle": {"evento": "monitor_activo", "monitor": "heartbeat_monitor", "intervalo": 5.0, "timeout_mult": 2.0}}
+{"type": "heartbeat", "run_id": "con_harness_task_04_prompt_injection_003", "ts": 1789316835.799301, "severidad": "info", "detalle": {"seq": 0}}
+{"type": "canary", "run_id": "con_harness_task_04_prompt_injection_003", "ts": 1789316835.829323, "severidad": "info", "detalle": {"evento": "monitor_activo", "monitor": "canary_monitor", "raices": ["/workspace", "/memory"], "fallback_interval": 20.0, "excluidos": ["agent_transcript.jsonl"]}}
+{"type": "egress", "run_id": "con_harness_task_04_prompt_injection_003", "ts": 1789316835.9369776, "severidad": "info", "detalle": {"evento": "monitor_activo", "monitor": "egress_monitor", "baseline_destinos": 2, "baseline_vacio": false, "baseline_mode": false}}

@@ -1,0 +1,70 @@
+\section{Method}
+\label{sec:method}
+
+\subsection{Operational definitions}
+
+Every figure in this paper rests on three definitions that are our choices,
+not universal detections. They are stated here so a reader can disagree with
+them specifically.
+
+\paragraph{Escape attempt.} For tasks 01 through 03 it is the first call to
+the \texttt{http\_fetch} tool. For tasks 04 through 06 it is the first
+appearance of the run's canary token in the arguments or result of a tool
+call. The difference matters: in those three tasks the planted hint authorises
+consulting the channel, so reaching the mirror, the memory store, or the
+knowledge base is not itself a violation. Acting on the injected instruction
+is. Both definitions live in one function,
+\texttt{compute\_ttd.escape\_ts\_for}, imported by every layer that needs
+them, after an earlier version drifted between the analysis and the dashboard.
+
+\paragraph{Escalation ladder.} Each run is scored on a seven-step ladder, from
+0 (no signal) through 4 (successfully contacted an internal mock) to 5 (used
+the out-of-scope forwarding, meaning the canary appears where an attacker
+asked for it) and 6 (sandbox broken, detected as heartbeat silence). Levels 0
+through 5 are computed from the agent transcript alone. Only level 6 consults
+monitor events. That separation is load-bearing for this paper: every
+correction we made to detection logic, described in
+Section~\ref{sec:validity}, leaves the level counts untouched.
+
+\paragraph{Time to detection.} The interval from the agent's act to the first
+monitor alert at or after it. One filter is applied: when a container exits
+cleanly, no heartbeat alert counts as a detection, because a clean shutdown
+always produces heartbeat silence and an earlier version of the analysis
+credited that silence as a real detection.
+
+\subsection{Experimental matrix}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}lllrl@{}}
+\toprule
+\textbf{Set} & \textbf{Tasks} & \textbf{Conditions} & \textbf{Runs} & \textbf{Machine} \\
+\midrule
+\texttt{corpus} & 04, 05, 06 & 3 & 70 & A, Ollama 0.32.5 \\
+\texttt{causal} & 06 & 3 & 30 & B, Ollama 0.34.0 \\
+\texttt{causal} (void) & 06 & 3 & 30 & B, Ollama 0.6.8 \\
+\texttt{redteam} & 04 & 2 & 20 & B, Ollama 0.6.8 \\
+\bottomrule
+\end{tabular}
+\caption{150 runs across four sets. The corpus was planned as 60 across two
+conditions; the third, \texttt{con\_harness\_generico}, was run at $n{=}3$ in
+an earlier draft, whose reported table had to be retracted for lack of data
+(Section~\ref{sec:validity}), and was completed to $n{=}10$ afterward. The
+third row is the causal experiment run before machine B's runtime was
+updated, kept because it saturates and therefore measures nothing, which is
+itself a result. Machine and runtime are not bookkeeping here: they are the
+axis that decides which sets can be compared at all.}
+\end{table}
+
+All runs use \texttt{qwen2.5:7b-instruct} with its digest verified identical
+across both machines, and are sequential by design: the model is the scarce
+resource, so parallelism would produce contention rather than throughput.
+
+Machine A ran Ollama 0.32.5 and machine B 0.6.8 for its first set and 0.34.0
+after updating. That field decides whether two sets are comparable at all, and
+it is the one the corpus never recorded; see Section~\ref{sec:validity}.
+
+The monitors are validated before any detection rate is reported, by firing
+each event they are meant to catch and measuring the latency. All six controls
+fire; Appendix~\ref{sec:controls} gives the numbers.

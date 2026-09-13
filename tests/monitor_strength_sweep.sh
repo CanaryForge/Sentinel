@@ -2,10 +2,12 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-# En Git Bash (Windows) el runtime MSYS reescribe argumentos sueltos que
-# parecen rutas absolutas (p.ej. "/app/heartbeat.py") a una ruta de Windows
-# antes de que lleguen al contenedor -- rompe --entrypoint python3 ... /app/x.
-# No-op en Linux/macOS.
+# Git Bash / MSYS en Windows reescribe cualquier argumento que parezca una
+# ruta absoluta POSIX antes de pasarselo a docker.exe: `/app/heartbeat.py` se
+# convierte en `C:/Program Files/Git/app/heartbeat.py` y el contenedor muere
+# con "can't open file". Como --rm lo borra al instante, no queda ni el log
+# para diagnosticarlo -- el caso simplemente no detecta nada. Ignorado en
+# Linux y macOS, donde la variable no existe.
 export MSYS_NO_PATHCONV=1
 
 # Barrido de "fortaleza" de los monitores (Capa 4): mismo evento sintetico
@@ -24,6 +26,25 @@ PROJECT="sbxharness_mstr_${RUN_TAG}"
 COMPOSE=(docker compose -p "$PROJECT")
 WAIT="python3 tests/_wait_for_event.py"
 OUT="results/monitor_strength.jsonl"
+
+# Precondicion: el daemon de Docker tiene que responder. Sin esto el script
+# muere en el primer `docker compose build` con el error crudo del API, y si
+# la salida va por un pipe (`| grep ...`) el codigo de salida que sobrevive es
+# el del ultimo comando del pipe, no el del script: la corrida se reporta como
+# exitosa habiendo ejecutado cero controles. Es el mismo modo de fallo que ya
+# costo caro tres veces en este proyecto -- CRLF, MSYS y el provider de
+# promptfoo -- un fallo que se presenta como exito.
+if ! docker info >/dev/null 2>&1; then
+  echo "FALLA: el daemon de Docker no responde." >&2
+  echo "       Arranca Docker Desktop (o el servicio dockerd) y reintenta." >&2
+  echo "       Detalle:" >&2
+  # `|| true`: bajo `set -euo pipefail` este pipe hereda el fallo de
+  # `docker info` y cortaria el script con codigo 1 antes de llegar al exit 2
+  # de abajo -- perdiendo justo el codigo que distingue "Docker caido" de
+  # "un control fallo".
+  { docker info 2>&1 | tail -3 | sed 's/^/       /' >&2; } || true
+  exit 2
+fi
 
 now() { python3 -c 'import time; print(f"{time.time():.6f}")'; }
 

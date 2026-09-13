@@ -1,0 +1,91 @@
+% Sentinel -- AI Incident Response Sprint (Apart Research / CeSIA)
+% Incident Analysis track.
+%
+% Build:  ./build.sh      (latexmk, intermediates land in _build/)
+% Source of every number in this paper: the results/ subdirectories of this
+% repository. Nothing here should be written from memory or from a config
+% file -- see docs/README.md, "Rule for numbers".
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+% Times en vez de Latin Modern: es la convencion de IEEE, y al ser mas
+% compacta cabe mas texto por pagina, lo que importa con un limite de 8.
+% newtx es la familia Times moderna; incluye matematicas coherentes, que
+% mathptmx y el viejo paquete times no dan.
+\usepackage{newtxtext,newtxmath}
+\usepackage{microtype}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{booktabs}
+\usepackage{graphicx}
+% Las figuras se dibujan en TikZ, no se exportan del panel: asi heredan la
+% tipografia del documento y una paleta de impresion, en vez de traer la
+% estetica oscura de una pantalla a una pagina en blanco.
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,fit,positioning,calc}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{caption}
+\usepackage[hidelinks]{hyperref}
+
+\graphicspath{{figures/}}
+
+% Inline code that survives underscores in run identifiers.
+\lstset{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  columns=fullflexible,
+  frame=single,
+  rulecolor=\color{gray!40},
+  backgroundcolor=\color{gray!5},
+}
+
+% \todo marks what is still missing. Grep for it before submitting; the paper
+% compiles with them present on purpose, so an unfinished draft is still
+% shareable.
+\newcommand{\todo}[1]{\textcolor{red}{\textbf{[TODO:} #1\textbf{]}}}
+% \pending marks a number that is not yet verified against the artifacts.
+\newcommand{\pending}[1]{\textcolor{orange}{\textbf{[PENDING:} #1\textbf{]}}}
+
+\title{\textbf{Detecting Sandbox Escape in LLM Agents:\\
+Time to Detection, and What the Measurement Hides}}
+
+\author{
+  Sergio Alejandro Casta\~no Arcila \and Daniel Felipe Diab Gonzales \and
+  Juan Esteban Trivi\~no Nieves \and Angie Camila Gutierrez Trujillo \and Sof\'ia Rodriguez Chaparro
+}
+\date{September 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\input{sections/00-abstract}
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-harness}
+\input{sections/03-method}
+\input{sections/04-results}
+\input{sections/05-validity}
+\input{sections/06-silent-failures}
+\input{sections/07-containment}
+\input{sections/08-conclusion}
+
+% 
+ocite{*} hace que las entradas aparezcan mientras el cuerpo todavia no
+% tiene \cite: sin esto bibtex aborta con 'I found no \citation commands'.
+% Quitarlo cuando cada referencia este citada de verdad en el texto.
+\nocite{*}
+\bibliographystyle{IEEEtran}
+\bibliography{refs}
+
+\appendix
+\input{sections/A1-reproducibility}
+\input{sections/A2-controls}
+\input{sections/A3-limits}
+
+\end{document}

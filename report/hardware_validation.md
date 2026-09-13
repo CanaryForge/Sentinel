@@ -1,13 +1,111 @@
 # Validación local: hardware, entorno, y bugs reales encontrados
 
+> ⚠ **Este documento NO describe la máquina que produjo los datos.**
+> Perfila la máquina de Juan Esteban, que **no tiene Ollama instalado** y por
+> lo tanto no generó ninguna de las 63 corridas de `results/`. Esas salieron
+> de la máquina de Daniel. El título y la ubicación en `report/` invitan a
+> asumir lo contrario, así que conviene leer primero la tabla de abajo.
+
 Corrido en la máquina de Juan Esteban (`cachyos-x8664`), 2026-09-12. Objetivo:
 validar que el harness funciona en un entorno real y documentar en qué
 medida sus resultados (timing, TTD, hangs) dependen del hardware específico
-donde corre -- relevante porque el equipo ha corrido esto en al menos 3
-máquinas distintas (esta, la de Daniel con Ollama local, y presumiblemente
-la de Angie) con resultados de timing muy distintos.
+donde corre.
 
-## Perfil de hardware
+## Qué máquina produjo qué
+
+| Máquina | Produjo | Perfilada aquí |
+|---|---|---|
+| **Daniel** (Mac, Apple Silicon) | `results/` -- las **63 corridas** del corpus, sobre las que descansa cada cifra de `findings.md` | Parcial, abajo |
+| **Juan Esteban** (`cachyos-x8664`) | ninguna corrida con LLM (sin Ollama); sí la validación de entorno y los arreglos de `positive_controls.sh` | Sí, abajo |
+| **Sergio** (Windows 11) | `results/machine-B/causal-ollama0.6.8/` -- las 30 corridas del experimento causal homogéneo | Sí, abajo |
+
+**El hueco de la primera fila sigue medio abierto.** El corpus no registra en
+ningún artefacto con qué se corrió: el modelo (`qwen2.5:7b-instruct`) aparece
+solo como prosa en `findings.md`, y la versión de Ollama y el contexto
+efectivo no están en ninguna parte. El hardware ya lo confirmó Daniel de viva
+voz (perfil abajo); los dos datos que faltan los pasa después. Eso importa porque el comportamiento del agente **no es el mismo entre
+instalaciones**: con el mismo modelo y el mismo digest, en la máquina de
+Sergio 11 de 30 corridas agotaron el tope de 15 turnos y ninguna de las 23 de
+Daniel lo hizo (ver `findings.md`, experimento causal). El Hallazgo 2 no
+replica fuera de la máquina de Daniel, y sin sus metadatos no se puede
+explicar por qué.
+
+Para cerrarlo hacen falta dos datos de Daniel:
+
+```bash
+ollama --version
+echo $OLLAMA_CONTEXT_LENGTH   # vacío = el default de Ollama
+```
+
+Desde `a292051`, `orchestrator/run_experiment.py` escribe un bloque
+`backend` en cada `{run_id}_meta.json`, así que ninguna corrida futura vuelve
+a quedar sin procedencia. Las 63 del corpus son anteriores a ese cambio.
+
+## Perfil de hardware -- Daniel (produjo el corpus de 63 corridas)
+
+| | |
+|---|---|
+| Equipo | Mac, Apple Silicon **M5 Pro** |
+| RAM | **24 GB** unificada |
+| Modelo | `qwen2.5:7b-instruct`, digest `845dbda0ea48` (confirmado contra el tag) |
+| Ollama | **0.32.5** |
+| `OLLAMA_CONTEXT_LENGTH` | sin fijar (default de su version) |
+
+Reportado verbalmente por Daniel, no leído de un artefacto: queda anotado como
+lo que es.
+
+**Con la version confirmada, la diferencia entre maquinas deja de ser un
+misterio.** Ollama numera `0.MINOR.PATCH` y su minor pasó de un digito hace
+tiempo, asi que **0.32.5 no es anterior a 0.6.8: son 26 versiones menores de
+diferencia, y la maquina B es la vieja.** Lo confirma el propio updater de esa
+maquina, que tiene descargado el instalador de la v0.34.0.
+
+Ninguno de los dos fijo `OLLAMA_CONTEXT_LENGTH`, asi que cada uno corrio con
+el default de su version. La maquina B reporta 4096 en su arranque; el default
+de 0.32.5 no se midio aqui.
+
+Entre esas dos versiones cambian la plantilla de chat, el manejo de tool calls,
+los parametros de sampling por defecto y el contexto por defecto: exactamente
+el conjunto que explicaria por que los agentes de la maquina B iteran hasta el
+tope de 15 turnos (11 de 30 corridas) y los de la maquina A convergen con una
+mediana de 4 turnos y nunca lo tocan (0 de 23).
+
+**Esto es una hipotesis con un mecanismo plausible, no una causa demostrada.**
+El test que la cierra es barato y esta pendiente: actualizar Ollama en la
+maquina B a una version comparable y repetir `task_06`. Si los agentes pasan a
+converger y `sin_harness` baja del techo, la no replicacion del Hallazgo 2 pasa
+de ser un resultado inexplicado a ser un artefacto de version del runtime, que
+es una limitacion muy distinta de reportar.
+
+Lo que tambien se puede afirmar, y es independiente de la version: **24 GB de memoria unificada y GPU de Apple
+Silicon no son un equipo limitado para un modelo de 7B**, así que la
+divergencia de comportamiento entre su máquina y la de Sergio --mediana de 4
+turnos frente a 14, y 0 de 23 corridas agotando el tope frente a 11 de 30--
+**no se explica por falta de recursos en ninguno de los dos lados**. La causa
+probable sigue siendo el stack de inferencia (versión de Ollama o contexto
+efectivo), no el hardware.
+
+## Perfil de hardware -- Sergio (produjo `results/machine-B/causal-ollama0.6.8/`)
+
+| | |
+|---|---|
+| CPU | Intel Core i7-14700K |
+| RAM | 31.8 GB |
+| GPU | NVIDIA GeForce RTX 3060 (el modelo carga 100% en GPU) |
+| SO | Windows 11 Pro 10.0.26200 |
+| Docker | 29.7.2 |
+| Ollama | 0.6.8 (cliente y servidor), `OLLAMA_CONTEXT_LENGTH` sin fijar → **4096** |
+| Modelo | `qwen2.5:7b-instruct`, digest `845dbda0ea48` |
+
+Dato relevante medido aquí: el endpoint OpenAI-compatible de Ollama
+**ignora en silencio `options.num_ctx`**, así que el contexto real es siempre
+el default del servidor sin importar lo que diga `OLLAMA_NUM_CTX` -- variable
+que además `sandbox/agent.py` nunca envía. Se comprobó levantando un segundo
+servidor con `OLLAMA_CONTEXT_LENGTH=16384` (KV cache de 7.0 GB frente a
+6.0 GB), y el comportamiento de bucle **no cambió**: el truncamiento de
+contexto queda descartado como causa de la divergencia entre máquinas.
+
+## Perfil de hardware -- Juan Esteban (no produjo corridas con LLM)
 
 | | |
 |---|---|
@@ -55,6 +153,24 @@ del script decía evitar. Los transcripts basura se borraron de `results/`.
 **sin ningún transcript nuevo generado** -- confirmado que ya no toca el LLM.
 
 ## 3. Falsa alarma resuelta: `docker compose run` "colgado" era el entorno de ejecucion del asistente, no el proyecto
+
+> **Matiz añadido después (Windows).** La conclusión de esta sección es
+> correcta para el síntoma que describe --un cuelgue indefinido en Linux, con
+> el ciclo detenido entre `attach` y `start`-- pero **no generaliza**: en
+> Windows con Git Bash hay un fallo distinto y real del proyecto en el mismo
+> comando. MSYS reescribe cualquier argumento con pinta de ruta POSIX antes de
+> pasárselo a `docker.exe`, así que `docker compose run ... python3
+> /app/heartbeat.py` llega al contenedor como
+> `/app/C:/Program Files/Git/app/heartbeat.py`, sale con código 2 al instante
+> y `--rm` borra el contenedor antes de que quede rastro. Síntoma: los 4 casos
+> de heartbeat del barrido dan `SIN DETECTAR` y no se crea ningún
+> `results/mstr_heartbeat_*.jsonl`. Corregido con `MSYS_NO_PATHCONV=1` en los
+> dos scripts de prueba (`45fd1e7`).
+>
+> Son dos modos de fallo distintos sobre la misma línea: uno del entorno
+> (Linux, cuelgue) y otro del proyecto (Windows, exit 2). Tal como estaba
+> redactado, este apartado le decía al siguiente que no investigara.
+
 
 Durante esta validación, `docker compose run` (usado por `tests/
 positive_controls.sh` y `tests/monitor_strength_sweep.sh` para disparar sus

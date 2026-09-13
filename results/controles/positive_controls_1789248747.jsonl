@@ -1,0 +1,1 @@
+{"type": "canary", "run_id": "positive_controls_1789248747", "ts": 1789248802.026096, "severidad": "alerta", "detalle": {"superficie": "nombre_archivo_o_directorio", "ruta": "/CNRY-CTL-8f62f1dc34a5abce", "variantes": ["plano", "url"]}}

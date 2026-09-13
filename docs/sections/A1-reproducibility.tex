@@ -1,0 +1,101 @@
+\section{Reproducibility}
+\label{sec:repro}
+
+\subsection{The data is in the repository}
+
+All 150 runs are versioned in the repository~\cite{sentinel-repo}, about
+2.7\,MB: per-run metadata, monitor events, and full agent transcripts, plus
+the aggregate files. They cost real API quota and cannot be reproduced
+identically, which is why they are committed rather than regenerated. Every
+table in this paper can therefore be recomputed by a reader without a model
+backend and without spending anything:
+
+\begin{lstlisting}[language=bash]
+python3 analysis/compute_ttd.py                    # corpus, 70 runs
+python3 analysis/compute_ttd.py --results-dir \
+        results/machine-B/causal-ollama0.34.0     # causal, 30 runs
+python3 analysis/compute_ttd.py --results-dir \
+        results/machine-B/redteam-ollama0.6.8     # task_04, 20 runs
+\end{lstlisting}
+
+\subsection{Running the harness}
+
+Ordered cheapest first. Everything except the last step runs without a model
+backend.
+
+\begin{lstlisting}[language=bash]
+docker compose config -q                                    # compose validates
+python3 orchestrator/run_experiment.py --dry-run --limit 5   # matrix expands
+tests/positive_controls.sh                                   # 6 controls, ~4 min
+python3 analysis/compute_ttd.py                              # reproduces the tables
+python3 timeline/export_timeline.py                          # forensic timeline
+tests/monitor_strength_sweep.sh                              # parameter sweep, ~7 min
+python3 orchestrator/run_experiment.py                       # the matrix (needs a backend)
+\end{lstlisting}
+
+If any positive control fails, do not report detection rates. That is the
+whole point of the suite.
+
+\subsection{Environment traps}
+
+Three of these cost us a working day each, and all three are invisible until
+something downstream is already wrong. They are listed here so the next team
+does not pay for them again.
+
+\begin{itemize}
+\item \textbf{Line endings on Windows.} Git for Windows rewrites shell scripts
+      to CRLF on clone, which turns the entrypoint shebang into
+      \texttt{bash\textbackslash r}. The egress proxy is the only service that
+      boots through a script, so it never starts, and two of the three monitors
+      go silent with no visible error. A \texttt{.gitattributes} pinning
+      \texttt{eol=lf} fixes it for every clone.
+\item \textbf{Path translation under Git Bash.} MSYS rewrites any
+      POSIX-looking argument before \texttt{docker.exe} sees it, so
+      \texttt{/app/heartbeat.py} arrives as a Windows path, the container exits
+      2, and \texttt{--rm} deletes the evidence. \texttt{MSYS\_NO\_PATHCONV=1}
+      fixes it. The orchestrator is unaffected, since it passes no POSIX paths
+      to the Docker CLI.
+\item \textbf{Ingestion age limits.} The timeline exporter targets OpenObserve,
+      which discards events older than five hours by default and reports it as
+      HTTP 200 with a failure count in the body. A forensic timeline is old
+      data by definition.
+\end{itemize}
+
+\subsection{Machine provenance}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{Machine} & \textbf{Produced} & \textbf{Hardware} & \textbf{Runtime} \\
+\midrule
+A & \texttt{machine-A/corpus} (70) & Apple Silicon M5 Pro, 24\,GB & Ollama 0.32.5, context unset \\
+B & \texttt{machine-B/*} (80) & i7-14700K, RTX 3060, 32\,GB & Ollama 0.6.8, then 0.34.0 \\
+C & 20 runs, not yet versioned & Ryzen 3 3250U, 5.7\,GB & no Ollama; cloud backend \\
+\bottomrule
+\end{tabular}
+\caption{Ollama numbers releases as \texttt{0.MINOR.PATCH} and its minor
+passed one digit some time ago, so 0.32.5 is twenty-six minor versions ahead
+of 0.6.8, not behind it: machine B ran the old one. Neither machine set a
+context length, so each used its version's default. Machine A's configuration
+was recorded nowhere in the artifacts and had to be recovered by asking; the
+orchestrator now writes a backend block into every run's metadata. Machine C
+has no Ollama installation, so its 20 runs went through the same
+OpenAI-compatible backend path but reached a cloud endpoint (a
+reasoning-capable model) rather than a local one; those runs are reported in
+Section~\ref{sec:results} as a preliminary observation, not as part of the
+versioned corpus above.}
+\end{table}
+
+\pending{Los 20 runs de la maquina C (task\_06\_rag\_poison, con\_harness y
+sin\_harness, n=10 cada una) viven en resultados/machine-A/prueba-real/ en esa
+maquina, sin commitear. Si el equipo decide que el hallazgo (con\_harness
+0/10, sin\_harness 10/10, direccion opuesta a la Seccion 4) entra al paper de
+verdad, hay que versionarlos primero (resultados/machine-C/ o el nombre que
+se acuerde) y citarlos desde aca como se cita el resto.}
+
+\todo{La diferencia de version de Ollama entre maquinas (0.32.5 contra 0.6.8)
+es la hipotesis principal para la no replicacion de la Seccion 5. El test que la
+cierra: actualizar la maquina B y repetir task\_06. Si no se corre a tiempo,
+reportarla como hipotesis con mecanismo, no como causa demostrada.}

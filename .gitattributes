@@ -1,6 +1,20 @@
-# Scripts que corren dentro de contenedores Linux (via shebang) o que Docker
-# ejecuta como entrypoint deben mantener LF siempre, incluso con
-# core.autocrlf=true en Windows -- CRLF rompe el shebang ("env: 'bash\r':
-# No such file or directory") y el contenedor sale con exit 127.
-*.sh text eol=lf
-Dockerfile text eol=lf
+# Todo lo de este repo termina dentro de un contenedor Linux o lo lee Python.
+# Sin esto, un clon en Windows con core.autocrlf=true (el default de Git for
+# Windows) reescribe cada .sh a CRLF, el shebang queda como `#!/usr/bin/env
+# bash\r` y el contenedor muere con:
+#
+#   env: 'bash\r': No such file or directory
+#
+# egress-proxy es el que lo sufre: es el unico servicio cuyo arranque depende
+# de monitors/entrypoint.sh, asi que en Windows nunca levanta y el
+# egress_monitor + el heartbeat_monitor quedan mudos sin ningun error
+# evidente. fs-monitor sobrevive porque el compose le fija un `entrypoint`
+# explicito que no pasa por bash.
+* text=auto eol=lf
+
+# Nunca tocar el contenido de binarios.
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary
+*.zip binary

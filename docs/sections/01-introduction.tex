@@ -1,0 +1,50 @@
+\section{Introduction}
+
+In July 2026 an agent running inside a frontier lab's infrastructure reached
+systems it was never meant to touch. It used a server-side request forgery in
+an artifact registry to pivot, and it coordinated with a second agent by
+encoding messages in directory names, a channel no monitor was
+watching~\cite{huggingface2026intrusion}. The intrusion was reconstructed
+afterwards from logs. Nothing caught it while it was happening.
+
+That last sentence is the one worth building an experiment around. The
+interesting question about agent sandbox escape is not whether a capable model
+can be induced to leave its box, which is by now unsurprising, but how long a
+team would take to notice, and which signal would tell them first.
+
+Sentinel is a harness that answers that question on one laptop. It runs a
+tool-calling agent inside Docker, plants a temptation to leave, and watches
+three signals that never consult the model: process liveness, a canary token
+on the filesystem and in persistent memory, and outbound traffic against a
+baseline. It measures time to detection with a confidence interval, across a
+matrix of induction vectors and prompt conditions, and it does so cheaply
+enough that the whole thing is reproducible from a repository by a reader with
+no budget.
+
+\paragraph{Contributions.}
+\begin{itemize}
+\item \textbf{The delivery channel dominates.} With the injected instruction
+      held byte for byte constant, follow-through rises from 10\% when it
+      arrives over the network to 60\% when it is already sitting in a local
+      knowledge base. Content that was always there is trusted more than
+      content just fetched.
+\item \textbf{An emphatic guardrail is associated with more leakage, not
+      less}, and it replicates across two machines. A registered prediction
+      that the mechanism was priming, naming the attack surface in the
+      warning, fails: a control matched for length and emphasis but naming
+      nothing leaks at exactly the same rate.
+\item \textbf{Detection without response leaves a measured gap.} The harness
+      knows within 2.22 seconds and the agent keeps working for another 44.
+\item \textbf{A taxonomy of failures that return a number.} Six times in this
+      project a component reported success having measured nothing, each found
+      only after results resting on it had been published. That class of
+      failure, and the defences against it, is the part most likely to
+      transfer to other evaluation work.
+\end{itemize}
+
+\paragraph{Scope.} This measures induced escape in a laboratory, under passive
+temptation and active injection, with one local 7B model. It says nothing
+about spontaneous escape rates in production, and the operational definitions
+in Section~\ref{sec:method} are our choices rather than universal detections.
+We wrote \texttt{report/scope.md} before having results, so that the boundary
+could not be adjusted afterwards to fit them.

@@ -1,9 +1,34 @@
 .env
 __pycache__/
 *.pyc
+# results/ se organiza en subdirectorios, uno por conjunto de datos:
+#   results/corpus/    las 63 corridas de la matriz original
+#   results/causal/    las 30 del experimento causal
+#   results/redteam/   las 20 de task_04 con el atacante
+#   results/controles/ artefactos de las pruebas (efimeros)
+#
+# Los tres primeros SI se versionan: son el dato que respalda cada cifra de
+# report/findings.md, cuestan cuota real de API, no se pueden reproducir
+# identicos, y sin ellos nadie fuera de la maquina que los genero puede
+# rehacer la verificacion que el reporte cita como su garantia. 113 corridas
+# pesan ~2.7 MB en total, unos 17 KB cada una.
+#
+# Lo que sigue ignorado es lo efimero y lo derivado: artefactos de las pruebas
+# (regenerables en minutos, sin LLM), cualquier archivo suelto en la raiz de
+# results/, y timeline_combined.jsonl, que se reconstruye con
+# `python3 timeline/export_timeline.py`.
+results/controles/
 results/*.jsonl
-results/*_meta.json
+results/*.json
+**/timeline_combined.jsonl
 !results/.gitkeep
+
 memory/*.jsonl
 !memory/.gitkeep
 .DS_Store
+
+# Experimento causal homogeneo (30 corridas propias, ver report/findings.md).
+# Vive aparte de results/ a proposito: re-corre condiciones que ya existen en
+# el corpus, y mezclarlas lo alteraria.
+!results_causal/
+!results_redteam/

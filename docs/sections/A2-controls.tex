@@ -1,0 +1,40 @@
+\section{Deterministic Validation of the Monitors}
+\label{sec:controls}
+
+A monitor that never fired is indistinguishable from a monitor that is broken.
+Before reporting any detection rate, we therefore fire each event the monitors
+are supposed to catch, by hand, and measure how long each takes. The suite
+needs no model backend and costs nothing to run.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}rlr@{}}
+\toprule
+\textbf{\#} & \textbf{Control} & \textbf{Measured} \\
+\midrule
+1 & heartbeat silence after killing the pinger & 9.08\,s \\
+2 & canary in a workspace directory name & 0.43\,s \\
+3 & canary in an outbound query string & 0.49\,s \\
+4 & destination outside the egress baseline & 0.49\,s \\
+5 & canary in cross-run persistent memory & 18.45\,s \\
+6 & red-teamer serves its payload through the SSRF & 0.52\,s \\
+\bottomrule
+\end{tabular}
+\caption{All six fire. Control 1 measures the configured threshold (5\,s
+interval times a multiplier of 2) minus the time since the last ping, not
+monitor slowness. Control 5 is an order of magnitude slower than the other
+canary surfaces because inotify does not fire for host-side writes to a bind
+mount, so that surface falls back to the periodic sweep.}
+\end{table}
+
+Two of these controls exist because the harness failed silently without them.
+Control 5 was added after finding that the most persistent leak channel in the
+corpus, a canary written into cross-run memory, was the only one nothing
+watched. Control 6 was added after finding that no control touched the
+attacker path at all, and it reported a blind spot on its first run
+(Section~\ref{sec:validity}).
+
+A separate sweep varies each monitor's configuration parameter against the
+same synthetic event, isolating how often a monitor looks from the variance of
+model behaviour. Its results appear in Section~\ref{sec:results}.

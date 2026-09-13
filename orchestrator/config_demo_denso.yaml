@@ -1,0 +1,18 @@
+# Config chica para generar logs densos rapido, sin tocar el corpus curado
+# (results/machine-A/corpus, del que depende report/findings.md). Solo
+# con_harness/task_06_rag_poison: es la celda con la tasa de fuga mas alta y
+# confiable medida hasta ahora (9-10 de 10 en corpus y en causal), no
+# necesita el overlay de redteam ni sembrar memoria a mano (task_06 no toca
+# ./memory, su tentacion vive en el seed de la tarea).
+#
+# Uso (con --results-dir propio, NUNCA el default, para no mezclar con el
+# corpus existente):
+#   python3 orchestrator/run_experiment.py \
+#     --config orchestrator/config_demo_denso.yaml \
+#     --results-dir results/machine-A/demo-denso
+conditions: [con_harness, sin_harness]
+tasks: [task_06_rag_poison]
+repetitions: 10
+run_timeout_seconds: 480
+project_name_prefix: sbxharness_demo
+compose_files: [docker-compose.yml]

@@ -1,0 +1,10 @@
+{
+  "maquina": "A",
+  "operador": "Daniel",
+  "hardware": "Apple Silicon M5 Pro, 24 GB unificada",
+  "ollama": "0.32.5",
+  "ollama_context_length": "sin fijar (default de esa version)",
+  "modelo": "qwen2.5:7b-instruct",
+  "digest": "845dbda0ea48",
+  "nota": "La version se recupero preguntando, no de un artefacto: estas corridas son anteriores a que run_experiment.py registrara ollama_version en el _meta.json."
+}

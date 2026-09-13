@@ -1,1 +1,4 @@
-[]
+[
+  "model-hub:5001",
+  "package-registry:5000"
+]

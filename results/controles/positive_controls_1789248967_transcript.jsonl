@@ -1,0 +1,1 @@
+{"ts": 1789248982.2342327, "turn": 0, "role": "error", "detalle": "HTTPConnectionPool(host='host.docker.internal', port=11434): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='host.docker.internal', port=11434): Failed to establish a new connection: [Errno 101] Network is unreachable\"))"}

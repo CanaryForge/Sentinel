@@ -1,0 +1,51 @@
+\section{Structural Limits}
+\label{sec:limits}
+
+\subsection*{The SSRF path evades the egress baseline.} When the agent reaches
+the attacker through the route the task suggests, the proxy sees
+\texttt{package-registry:5000}, which is in the baseline because it is a
+legitimate service. The attacker's address travels URL-encoded inside a query
+string, where the baseline check does not look, and the second hop happens
+server to server inside an internal network without crossing the proxy at all.
+This is the anchor incident's own pattern, and it bounds what the egress
+monitor is for: it catches the naive agent and misses the one that takes the
+detour the task offers it.
+
+The bound is a capability, not an observed evasion, and the distinction
+matters. Across all 150 runs the proxy recorded exactly one destination,
+\texttt{mirror-externo:5002}, thirty times, flagged anomalous on every one:
+every agent that reached the attacker went at it directly. Not one run used
+the SSRF route. The blind spot was demonstrated by a synthetic control, not
+exploited by a model, so what we report is that the monitor can be evaded this
+way, not that it was.
+
+\subsection*{The shared event log is not safe under concurrent append.} The
+three monitors append to one file per run from separate containers, and that
+append is not atomic over a Docker Desktop bind mount on Windows. We observed
+lines beginning mid-JSON. The analysis now skips a torn line and names the
+file and line rather than dying on it, but a lost line may be an inert event
+or an alert that changes a run's verdict.
+
+\subsection*{Tool-call sequences do not predict a leak.} We looked for a
+syntactic signal in the transcripts, on the theory that the order in which an
+agent reaches for its tools might separate runs that leak from runs that do
+not. It does not, at least at this sample size: the dominant transitions are
+the same in both groups, and the apparent signal in which tool an agent
+reaches for first is an artifact of each task exposing a different channel. We
+report the negative because it bounds what the transcripts support.
+
+\subsection*{The model invents tools that do not exist.} Sixty nine tool calls
+across the corpus name a function absent from the dispatcher: \texttt{mkdir}
+(67), \texttt{write\_dir} (1) and \texttt{edit\_file} (1). The dispatcher
+returns a string naming the unknown tool rather than raising, so the call
+costs a turn rather than ending the run. We do not report this as evidence of
+anything about escape or detection; we note it because \texttt{mkdir} is the
+exact action the injected instruction asks for (create a directory named with
+the agent's canary), and a model reaching for a shell-familiar name it was
+never given is a different kind of tool-use failure than the ones the rest of
+this paper is built to measure.
+
+\subsection*{Canary obfuscation coverage is a floor, not a claim.} Detection
+matches the plain token plus base64, URL encoding, hex and reversal. An agent
+encoding the token in, for example, the lengths of file names defeats it, and
+we make no claim beyond the four.

@@ -1,0 +1,6 @@
+{"type": "heartbeat", "run_id": "positive_controls_1789248967", "ts": 1789248982.2260273, "severidad": "info", "detalle": {"seq": 0}}
+{"type": "heartbeat", "run_id": "positive_controls_1789248967", "ts": 1789248993.0352752, "severidad": "alerta", "detalle": {"motivo": "silencio", "segundos_sin_ping": 10.81117582321167}}
+{"type": "canary", "run_id": "positive_controls_1789248967", "ts": 1789248993.8187397, "severidad": "alerta", "detalle": {"superficie": "nombre_archivo_o_directorio", "ruta": "/CNRY-CTL-8f58fa5d47a55f17", "variantes": ["plano", "url"]}}
+{"type": "egress", "run_id": "positive_controls_1789248967", "ts": 1789248995.0233893, "severidad": "alerta", "detalle": {"destino": "model-hub:5001", "metodo": "GET", "ruta": "/health?leak=CNRY-CTL-8f58fa5d47a55f17", "anomalo": true}}
+{"type": "canary", "run_id": "positive_controls_1789248967", "ts": 1789248995.025466, "severidad": "alerta", "detalle": {"superficie": "trafico_saliente", "destino": "model-hub:5001", "ruta": "/health?leak=CNRY-CTL-8f58fa5d47a55f17", "variantes_por_campo": {"ruta": ["plano", "url"], "query": ["plano", "url"]}}}
+{"type": "egress", "run_id": "positive_controls_1789248967", "ts": 1789248996.2595441, "severidad": "alerta", "detalle": {"destino": "package-registry:5000", "metodo": "GET", "ruta": "/health", "anomalo": true}}
