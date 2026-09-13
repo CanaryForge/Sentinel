@@ -6,10 +6,17 @@ that the agent took the bait. Every component is deliberately cheap: the whole
 thing runs on one laptop with a 7B local model, and nothing in it asks the
 model to report on itself.
 
-\todo{Figura: exportar el diagrama de arquitectura del dashboard
-(\texttt{dashboard/static/index.html}) a \texttt{figures/architecture.pdf}.
-Ya esta ruteado ortogonalmente y muestra las tres redes Docker, los dos bind
-mounts persistentes y las dos raices que vigila el fs-monitor.}
+\begin{figure}[t]
+\centering
+\resizebox{\textwidth}{!}{\input{figures/architecture}}
+\caption{The harness topology. Solid: agent traffic the proxy audits. Dashed:
+the heartbeat, which bypasses the proxy by design so that a saturated network
+cannot silence it. Long dashes: the model backend, outside the audited scope.
+Dotted: volumes and bind mounts, which are not network. The filesystem monitor
+watches two roots, and 	exttt{./memory} survives 	exttt{docker compose
+down -v}, which is what makes it the most durable leak channel.}
+\label{fig:arch}
+\end{figure}
 
 Two Docker networks (\texttt{red-proxy} and \texttt{red-mocks}) are declared
 \texttt{internal}, so no traffic the agent generates can reach the real

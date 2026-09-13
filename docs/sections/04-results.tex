@@ -107,15 +107,29 @@ one out; it does not identify its replacement.
 
 \subsection{Detection latency and monitor strength}
 
-\todo{Cerrar esta subseccion con las cifras corregidas de la Seccion 5, no con
-las publicadas originalmente. Reportar TTD por condicion con IC bootstrap y
-decir que por debajo de n=5 no se da intervalo. Anadir la figura del barrido
-de fortaleza desde results/corpus/monitor\_strength.jsonl, que ya grafica el
-dashboard: el heartbeat es lineal en su umbral y predecible, el canary es
-plano porque desde el cambio a inotify el parametro ya no gobierna la
-latencia. Mencionar que el TTD de la superficie de filesystem cae por debajo
-del milisegundo y a esa resolucion mide desfase entre relojes, no latencia
-del monitor.}
+Detection latency by condition, counting only alerts on surfaces the agent
+produced: \texttt{con\_harness} 1.55\,s (95\% bootstrap CI [1.21, 1.88],
+$n{=}18$) and \texttt{sin\_harness} 1.78\,s ([1.01, 2.47], $n{=}6$). Below
+five measurements no interval is reported, since a bootstrap on two points
+returns their minimum and maximum rather than a measure of uncertainty. On the
+filesystem surface the figure falls below a millisecond, at which resolution
+it measures clock skew between two processes rather than monitor latency: the
+write and the inotify event land in the same instant.
+
+\begin{figure}[t]
+\centering
+\resizebox{\textwidth}{!}{\input{figures/sweep}}
+\caption{Time to detection against each monitor's configuration parameter,
+median of repeated measurements, on the same synthetic leak event with no
+model in the loop. Note the two vertical scales, which differ by two orders of
+magnitude. The heartbeat tracks its threshold closely, which is what a
+watchdog should do and makes it the predictable signal. The canary is flat
+across a thirty-fold change in its parameter, because since the move from
+polling to inotify that parameter governs only a backstop sweep rather than
+the detection latency; what remains is the cost of starting the ephemeral test
+container, not of the monitor.}
+\label{fig:sweep}
+\end{figure}
 
 \subsection{Limitations of these results}
 

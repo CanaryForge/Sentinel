@@ -19,6 +19,13 @@
 \usepackage[margin=2.5cm]{geometry}
 \usepackage{booktabs}
 \usepackage{graphicx}
+% Las figuras se dibujan en TikZ, no se exportan del panel: asi heredan la
+% tipografia del documento y una paleta de impresion, en vez de traer la
+% estetica oscura de una pantalla a una pagina en blanco.
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,fit,positioning,calc}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
 \usepackage{xcolor}
 \usepackage{listings}
 \usepackage{caption}
