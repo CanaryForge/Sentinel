@@ -223,9 +223,9 @@
   </p>
 </section>
 
-<section id="run-section">
-  <div class="run-section-head">
-    <p class="eyebrow">Corrida en detalle</p>
+<section id="incident-story">
+  <div class="incident-head">
+    <p class="eyebrow">Historia de la corrida</p>
     <div class="run-picker-wrap">
       <select id="run-picker"><option>cargando corridas...</option></select>
       <label class="picker-label incidents-only-label" title="Filtra el selector a corridas con nivel de escalada 4 o mas (fetch exitoso, o fuga real)">
@@ -234,45 +234,30 @@
       <button id="refresh-btn" title="Releer results/ del disco (respaldo manual, el feed ya empuja solo)">↻ releer</button>
     </div>
   </div>
-  <div class="run-meta" id="run-meta"></div>
 
-  <div class="timeline-card">
-    <div class="timeline-head">
-      <div>
-        <h2 id="run-title" style="font-size:14px;">—</h2>
-        <p class="mono" style="font-size:12px;color:var(--text-muted);margin-top:6px;" id="run-sub"></p>
-      </div>
-      <div class="ttd-tile">
-        <div class="value tabular" id="ttd-value">—</div>
-        <div class="label" id="ttd-label">tiempo hasta deteccion</div>
-      </div>
-    </div>
-    <div class="timeline-track-wrap" id="timeline-wrap">
-      <div class="timeline-axis" id="timeline-axis"></div>
-    </div>
-    <div class="turn-log" id="turn-log"></div>
+  <div class="incident-banner" id="incident-banner"></div>
+
+  <div class="incident-stage">
+    <div class="stage-label"><span class="stage-num">1</span>Antes: que se planto</div>
+    <div class="stage-body" id="stage-antes"></div>
   </div>
 
-  <div class="timeline-card narrative-card">
-    <div class="timeline-head">
-      <div>
-        <h2 style="font-size:14px;">Linea de tiempo forense completa</h2>
-        <p class="mono" style="font-size:12px;color:var(--text-muted);margin-top:6px;">
-          Todas las fuentes de esta corrida en un solo hilo cronologico: meta, los 3 monitores, cada
-          turno del agente, entrega del red teamer si aplica, y el veredicto final. Reusa
-          <code>timeline/export_timeline.py</code>.
-        </p>
-      </div>
-    </div>
-    <div class="narrative-list" id="narrative-list">
-      <p class="empty-note">cargando linea de tiempo…</p>
+  <div class="incident-stage">
+    <div class="stage-label"><span class="stage-num">2</span>Durante: que hizo el agente</div>
+    <p class="mono stage-note">
+      Un solo hilo cronologico con todas las fuentes (meta, los 3 monitores, cada turno del agente,
+      entrega del red teamer si aplica, y el veredicto final). Los latidos normales del heartbeat se
+      resumen en uno solo para no tapar lo que importa.
+    </p>
+    <div class="story-list" id="story-list">
+      <p class="empty-note">cargando…</p>
     </div>
   </div>
-</section>
 
-<section id="mechanisms">
-  <p class="eyebrow">Los tres mecanismos</p>
-  <div class="mech-grid" id="mech-grid"></div>
+  <div class="incident-stage">
+    <div class="stage-label"><span class="stage-num">3</span>Despues: que procede</div>
+    <div class="stage-body" id="stage-despues"></div>
+  </div>
 </section>
 
 <section id="monitor-strength">
@@ -287,39 +272,6 @@
   </div>
 </section>
 
-<section id="postincident">
-  <p class="eyebrow">Despues de la deteccion, que procede</p>
-  <ol class="runbook">
-    <li>
-      <h3>Contener sin perder evidencia</h3>
-      <p><code>docker compose -p &lt;project_name_prefix&gt;_&lt;run_id&gt; kill sandbox</code> corta el proceso
-        del agente al toque. Todavia NO <code>down -v</code>: eso borra el volumen <code>workspace</code>,
-        que es evidencia si la fuga toco filesystem.</p>
-    </li>
-    <li>
-      <h3>Preservar el paquete forense antes de bajar el stack</h3>
-      <p><code>results/{run_id}.jsonl</code> (cada alerta de los 3 monitores) mas <code>_transcript.jsonl</code>
-        y <code>_meta.json</code> ya son el minimo forense y sobreviven a <code>down -v</code> por ser bind
-        mounts. Si la fuga toco <code>/workspace</code>, copiarlo antes de limpiar.</p>
-    </li>
-    <li>
-      <h3>Tratar el canario como comprometido, no como reusable</h3>
-      <p><code>CANARY_TOKEN</code> es por corrida. Si esto corriera con un canario real y aparece fuera de
-        <code>results/</code>, se rota antes de la proxima corrida.</p>
-    </li>
-    <li>
-      <h3>La remediacion real ajusta el harness, no cierra el ticket</h3>
-      <p>Cuando el vector ya es conocido, la correccion real es tocar <code>sandbox/prompts.py</code> o el
-        monitor correspondiente, no marcar la alerta como revisada. Ver "Analisis del incidente" para el
-        detalle agregado.</p>
-    </li>
-    <li>
-      <h3>Cerrar el loop con la pregunta que origino todo esto</h3>
-      <p>Este arnes existe para responder cuanto hubiera tardado en notar lo mismo que paso en el incidente
-        OpenAI Hugging Face de julio 2026. Cada TTD medido aca es esa respuesta.</p>
-    </li>
-  </ol>
-</section>
 
 </main>
 

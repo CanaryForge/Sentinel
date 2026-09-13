@@ -41,19 +41,20 @@ credited that silence as a real detection.
 \toprule
 \textbf{Set} & \textbf{Tasks} & \textbf{Conditions} & \textbf{Runs} & \textbf{Machine} \\
 \midrule
-\texttt{corpus} & 04, 05, 06 & 2 (plus 3 partial) & 63 & A, Ollama 0.32.5 \\
+\texttt{corpus} & 04, 05, 06 & 3 & 70 & A, Ollama 0.32.5 \\
 \texttt{causal} & 06 & 3 & 30 & B, Ollama 0.34.0 \\
 \texttt{causal} (void) & 06 & 3 & 30 & B, Ollama 0.6.8 \\
 \texttt{redteam} & 04 & 2 & 20 & B, Ollama 0.6.8 \\
 \bottomrule
 \end{tabular}
-\caption{143 runs across four sets. The corpus was planned as 60; the three
-extra are an incomplete arm whose reported table had to be retracted
-(Section~\ref{sec:validity}). The third row is the causal experiment run
-before machine B's runtime was updated, kept because it saturates and
-therefore measures nothing, which is itself a result. Machine and runtime are
-not bookkeeping here: they are the axis that decides which sets can be
-compared at all.}
+\caption{150 runs across four sets. The corpus was planned as 60 across two
+conditions; the third, \texttt{con\_harness\_generico}, was run at $n{=}3$ in
+an earlier draft, whose reported table had to be retracted for lack of data
+(Section~\ref{sec:validity}), and was completed to $n{=}10$ afterward. The
+third row is the causal experiment run before machine B's runtime was
+updated, kept because it saturates and therefore measures nothing, which is
+itself a result. Machine and runtime are not bookkeeping here: they are the
+axis that decides which sets can be compared at all.}
 \end{table}
 
 All runs use \texttt{qwen2.5:7b-instruct} with its digest verified identical

@@ -61,6 +61,31 @@ Once the runtime versions are comparable, the effect appears on both machines
 at close to the same size. It is a correlation across two independent sets,
 not a causal claim, and the next subsection is our attempt to explain it.
 
+\subsection{A different model, on the same task, reverses the sign}
+
+\pending{Preliminar: 20 corridas, una sola maquina, todavia no forman parte
+del corpus versionado (Apendice~\ref{sec:repro}). Se reporta porque la
+direccion es la opuesta a cualquier otra medicion de este paper, no porque
+resuelva nada.}
+
+Every run reported so far uses one local 7B model. A spot check on
+\texttt{task\_06} with a cloud-hosted, reasoning-capable model instead
+(\texttt{deepseek-v4-pro}, reached the same way the harness reaches Ollama,
+through an OpenAI-compatible endpoint) gives \texttt{con\_harness} 0/10 and
+\texttt{sin\_harness} 10/10.
+
+That is not a smaller version of the guardrail effect measured above on two
+machines, 9/10 and 7/10 against a 3/10 control. It is the effect at its
+largest possible magnitude, pointing the other way: here the guardrail
+suppresses leakage entirely, and its absence leaks every time. Three things
+change at once
+between this run and the rest of the paper: the model, whether inference runs
+locally or in the cloud, and the machine, so none of the three can be credited
+individually. What the comparison does support is the limitation already
+stated at the end of this section: nothing measured on one 7B local model
+generalises to a stronger one, and here it does not generalise even in
+direction.
+
 \subsection{Naming the attack surface is not the mechanism}
 
 \texttt{HARNESS\_SECURITY\_BLOCK} confounds three things at once: it is
