@@ -1,11 +1,35 @@
 const NIVEL_COLORS = ["var(--nivel-0)", "var(--nivel-1)", "var(--nivel-2)", "var(--nivel-3)", "var(--nivel-4)", "var(--nivel-5)", "var(--nivel-6)"];
-const POLL_MS = 2500;
+// Respaldo, no mecanismo principal: el feed en vivo llega por /api/stream
+// (SSE, empujado por watchdog sobre results/ en el backend). Esto solo
+// resincroniza el agregado/la lista de corridas si el stream se cayo y
+// se perdio algo entre la desconexion y el reintento de EventSource.
+const FALLBACK_POLL_MS = 30000;
+const MAX_FEED_DOM = 300;
+const DETAIL_REFRESH_DEBOUNCE_MS = 400;
 
-const state = { runs: [], detail: null, aggregate: null, selectedRunId: null, userPicked: false };
+const state = {
+  runs: [], detail: null, aggregate: null, selectedRunId: null, userPicked: false,
+  streamConnected: false, feedPaused: false, feedQueue: [], detailRefreshTimer: null,
+};
 
 function fmtSecs(s) {
   if (s === null || s === undefined) return "—";
   return s.toFixed(1) + "s";
+}
+
+function fmtClock(ts) {
+  if (!ts) return "--:--:--";
+  return new Date(ts * 1000).toLocaleTimeString("es-AR", { hour12: false });
+}
+
+function shortRunId(runId) {
+  return runId.length > 40 ? runId.slice(0, 20) + "…" + runId.slice(-16) : runId;
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+  }[c]));
 }
 
 function mechClass(evento) {
@@ -29,10 +53,14 @@ function mechLabel(evento) {
 }
 
 function toolSummary(entry) {
+  // El contenido interpolado aca (nombres de tool, args, texto del agente)
+  // viene de un agente potencialmente adversarial (es lo que este arnes
+  // esta tratando de contener) -- se escapa antes de insertarlo via
+  // innerHTML, nunca se confia en el como HTML seguro.
   if (entry.role === "assistant") {
     const tc = entry.tool_calls;
-    if (!tc) return entry.content ? entry.content.slice(0, 140) : "(respuesta final)";
-    return "→ " + tc.map((t) => t.function.name).join(", ");
+    if (!tc) return entry.content ? escapeHtml(entry.content.slice(0, 140)) : "(respuesta final)";
+    return "→ " + tc.map((t) => escapeHtml(t.function.name)).join(", ");
   }
   if (entry.role === "tool") {
     const args = entry.args || {};
@@ -40,9 +68,13 @@ function toolSummary(entry) {
     if (entry.name === "http_fetch") a = args.url || "";
     else if (args.path) a = args.path;
     else a = JSON.stringify(args).slice(0, 60);
-    return `<code>${entry.name}</code> ${a}`;
+    return `<code>${escapeHtml(entry.name)}</code> ${escapeHtml(a)}`;
   }
-  return entry.role;
+  return escapeHtml(entry.role);
+}
+
+function isEscapeToolCall(entry) {
+  return entry.role === "tool" && entry.name === "http_fetch";
 }
 
 async function loadRuns() {
@@ -75,12 +107,37 @@ async function loadRuns() {
     preferido = sorted[0].run_id;
   }
 
+  // El run_id solo (`con_harness_task_06_rag_poison_003`) no dice nada util:
+  // 63 cadenas casi identicas donde lo que importa --que paso en esa corrida--
+  // no se ve. Cada opcion lleva ahora el desenlace, y van agrupadas por
+  // condicion para que el <select> se pueda recorrer por brazo.
+  const porCondicion = new Map();
   for (const r of state.runs) {
-    const opt = document.createElement("option");
-    opt.value = r.run_id;
-    opt.textContent = `${r.run_id}  [nivel ${r.nivel_escalada}]${r.en_curso ? "  ● en curso" : ""}`;
-    if (r.run_id === preferido) opt.selected = true;
-    picker.appendChild(opt);
+    const c = r.condicion || "(sin condicion)";
+    if (!porCondicion.has(c)) porCondicion.set(c, []);
+    porCondicion.get(c).push(r);
+  }
+  for (const [cond, lista] of [...porCondicion.entries()].sort()) {
+    const grupo = document.createElement("optgroup");
+    grupo.label = `${cond}  (${lista.length})`;
+    for (const r of lista) {
+      const opt = document.createElement("option");
+      opt.value = r.run_id;
+      const tarea = (r.tarea || "").replace(/^task_\d+_/, "");
+      const rep = (r.run_id.match(/_(\d{3})$/) || [, "?"])[1];
+      const nivel = `nivel ${r.nivel_escalada} ${r.nivel_label || ""}`.trim();
+      let estado;
+      if (r.en_curso) estado = "● en curso";
+      else if (r.interrumpida) estado = "⚠ interrumpida";
+      else if (!r.intento_de_escape) estado = "sin intento";
+      else if (r.detectado) estado = `detectado ${r.ttd_segundos != null ? r.ttd_segundos.toFixed(2) + "s" : ""}`.trim();
+      else estado = "SIN DETECTAR";
+      opt.textContent = `${tarea} · rep ${rep} — ${nivel} — ${estado}`;
+      opt.title = r.run_id;
+      if (r.run_id === preferido) opt.selected = true;
+      grupo.appendChild(opt);
+    }
+    picker.appendChild(grupo);
   }
   picker.onchange = () => {
     state.userPicked = true;
@@ -280,7 +337,7 @@ const MECH_INFO = [
   { key: "canary-net", cls: "mech-canary-net", title: "Canary — red", surface: "host / ruta / query / cuerpo de requests salientes",
     desc: "Busca el token (y variantes ofuscadas: b64, url, hex, invertido) en todo el trafico saliente." },
   { key: "canary-fs", cls: "mech-canary-fs", title: "Canary — filesystem", surface: "nombres de archivo/directorio + contenido",
-    desc: "Escanea /workspace cada 3s. El vector del incidente ancla: mensajes codificados en nombres de directorio." },
+    desc: "Reacciona por evento (inotify) en /workspace y en ./memory, con barrido de respaldo. El vector del incidente ancla: mensajes codificados en nombres de directorio." },
 ];
 
 function renderMechCards(data) {
@@ -316,15 +373,20 @@ async function loadAggregate() {
   tiles.innerHTML = "";
   const totalIntentos = data.grupos.reduce((s, g) => s + g.intentos_de_escape, 0);
   const totalDetectados = data.grupos.reduce((s, g) => s + g.detectados, 0);
+  // La cifra que vale es la de superficies que produce el agente. La cruda
+  // cuenta tambien los hallazgos sobre agent_transcript.jsonl, que escribe el
+  // propio harness -- mostrarla sola contradice report/findings.md.
+  const detAgente = data.grupos.reduce((s, g) => s + (g.detectados_superficie_agente || 0), 0);
   const stats = [
     [data.total_corridas, "corridas en results/"],
     [totalIntentos, "intentos de escape"],
-    [totalDetectados, "detectados"],
+    [detAgente, "detectados", `en superficie del agente · ${totalDetectados} contando el log del harness`],
   ];
-  for (const [v, l] of stats) {
+  for (const [v, l, nota] of stats) {
     const t = document.createElement("div");
     t.className = "stat-tile";
-    t.innerHTML = `<div class="value tabular">${v}</div><div class="label">${l}</div>`;
+    t.innerHTML = `<div class="value tabular">${v}</div><div class="label">${l}</div>` +
+      (nota ? `<div class="stat-note">${nota}</div>` : "");
     tiles.appendChild(t);
   }
 
@@ -366,50 +428,104 @@ async function loadAggregate() {
 }
 
 function drawMiniLineChart({ points, color, xLabelFn, xLog }) {
-  // points: [{x, y}], y === null significa "sin detectar" (timeout del barrido)
-  const W = 320, H = 150, PAD_L = 34, PAD_R = 14, PAD_T = 14, PAD_B = 26;
+  // points: [{x, y}], y === null significa "sin detectar" (timeout del barrido).
+  //
+  // Un barrido corrido N veces deja N mediciones por parametro. La version
+  // anterior dibujaba un punto y una etiqueta por medicion, todas en la misma
+  // x: las etiquetas se apilaban ilegibles y la linea zigzagueaba entre
+  // repeticiones del mismo parametro. Aqui se agrupan por x y se dibuja la
+  // mediana con un bigote min-max, que es lo que una medicion repetida
+  // significa de verdad.
+  const W = 320, H = 150, PAD_L = 40, PAD_R = 14, PAD_T = 18, PAD_B = 26;
   const plotW = W - PAD_L - PAD_R, plotH = H - PAD_T - PAD_B;
 
-  const xs = points.map((p) => p.x);
-  const ys = points.filter((p) => p.y !== null).map((p) => p.y);
-  const maxY = Math.max(...ys, 1) * 1.25;
-  const xScale = xLog
-    ? (x) => PAD_L + (Math.log(x / xs[0]) / Math.log(xs[xs.length - 1] / xs[0])) * plotW
-    : (x) => PAD_L + ((x - xs[0]) / (xs[xs.length - 1] - xs[0])) * plotW;
+  const mediana = (a) => {
+    const s = [...a].sort((m, n) => m - n);
+    const i = Math.floor(s.length / 2);
+    return s.length % 2 ? s[i] : (s[i - 1] + s[i]) / 2;
+  };
+
+  const porX = new Map();
+  for (const p of points) {
+    if (!porX.has(p.x)) porX.set(p.x, []);
+    porX.get(p.x).push(p.y);
+  }
+  const grupos = [...porX.entries()]
+    .map(([x, vals]) => {
+      const ok = vals.filter((v) => v !== null);
+      return {
+        x,
+        n: vals.length,
+        med: ok.length ? mediana(ok) : null,
+        min: ok.length ? Math.min(...ok) : null,
+        max: ok.length ? Math.max(...ok) : null,
+        fallos: vals.length - ok.length,
+      };
+    })
+    .sort((a, b) => a.x - b.x);
+
+  const xs = grupos.map((g) => g.x);
+  const todosY = grupos.filter((g) => g.med !== null).map((g) => g.max);
+  const maxY = Math.max(...todosY, 0.001) * 1.3;
+  // Decimales segun la escala: con TTD sub-segundo, toFixed(0) colapsaba el eje
+  // entero a "1s" y "0s" repetidos.
+  const dec = maxY < 1 ? 2 : maxY < 10 ? 1 : 0;
+
+  const spanX = xs.length > 1;
+  const xScale = !spanX
+    ? () => PAD_L + plotW / 2
+    : xLog
+      ? (x) => PAD_L + (Math.log(x / xs[0]) / Math.log(xs[xs.length - 1] / xs[0])) * plotW
+      : (x) => PAD_L + ((x - xs[0]) / (xs[xs.length - 1] - xs[0])) * plotW;
   const yScale = (y) => PAD_T + plotH - (y / maxY) * plotH;
 
   let gridLines = "";
   const nGrid = 3;
   for (let i = 0; i <= nGrid; i++) {
     const y = PAD_T + (plotH / nGrid) * i;
-    const val = maxY - (maxY / nGrid) * i;
+    // Math.abs evita el "-0.00s" que sale al restar maxY de si mismo en coma
+    // flotante.
+    const val = Math.abs(maxY - (maxY / nGrid) * i);
     gridLines += `<line class="grid-line" x1="${PAD_L}" y1="${y}" x2="${W - PAD_R}" y2="${y}"></line>`;
-    gridLines += `<text class="axis-label" x="${PAD_L - 6}" y="${y + 3}" text-anchor="end">${val.toFixed(0)}s</text>`;
+    gridLines += `<text class="axis-label" x="${PAD_L - 6}" y="${y + 3}" text-anchor="end">${val.toFixed(dec)}s</text>`;
   }
 
-  let path = "";
-  let dots = "";
-  let labels = "";
-  const detectedPts = points.filter((p) => p.y !== null);
-  path = detectedPts.map((p, i) => `${i === 0 ? "M" : "L"}${xScale(p.x).toFixed(1)},${yScale(p.y).toFixed(1)}`).join(" ");
+  const conDato = grupos.filter((g) => g.med !== null);
+  const path = conDato
+    .map((g, i) => `${i === 0 ? "M" : "L"}${xScale(g.x).toFixed(1)},${yScale(g.med).toFixed(1)}`)
+    .join(" ");
 
-  for (const p of points) {
-    const cx = xScale(p.x);
-    if (p.y === null) {
-      dots += `<text x="${cx}" y="${PAD_T + 10}" text-anchor="middle" class="miss-label">✕</text>`;
-      labels += `<text x="${cx}" y="${PAD_T + 22}" text-anchor="middle" class="miss-label" font-size="8">sin detectar</text>`;
+  let marks = "";
+  for (const g of grupos) {
+    const cx = xScale(g.x);
+    if (g.med === null) {
+      marks += `<text x="${cx}" y="${PAD_T + 10}" text-anchor="middle" class="miss-label">&#10005;</text>`;
+      marks += `<text x="${cx}" y="${PAD_T + 22}" text-anchor="middle" class="miss-label" font-size="8">sin detectar</text>`;
     } else {
-      const cy = yScale(p.y);
-      dots += `<circle cx="${cx}" cy="${cy}" r="4.5" fill="${color}" stroke="var(--surface)" stroke-width="2"></circle>`;
-      labels += `<text x="${cx}" y="${cy - 10}" text-anchor="middle" class="value-label">${p.y.toFixed(1)}s</text>`;
+      const cy = yScale(g.med);
+      // Bigote min-max: solo cuando hay dispersion real que mostrar.
+      if (g.n > 1 && g.max - g.min > 0.005) {
+        marks += `<line x1="${cx}" y1="${yScale(g.min).toFixed(1)}" x2="${cx}" y2="${yScale(g.max).toFixed(1)}" stroke="${color}" stroke-width="1" opacity="0.45"></line>`;
+      }
+      marks += `<circle cx="${cx}" cy="${cy}" r="4" fill="${color}" stroke="var(--surface)" stroke-width="2"></circle>`;
+      // Anclar al extremo cuando la etiqueta se saldria del viewBox: con
+      // text-anchor=middle, el ultimo punto perdia el ultimo caracter.
+      const ancla = cx > W - PAD_R - 22 ? "end" : cx < PAD_L + 22 ? "start" : "middle";
+      const lx = ancla === "end" ? W - PAD_R : ancla === "start" ? PAD_L : cx;
+      marks += `<text x="${lx}" y="${(g.n > 1 ? yScale(g.max) : cy) - 9}" text-anchor="${ancla}" class="value-label">${g.med.toFixed(2)}s</text>`;
     }
-    labels += `<text x="${cx}" y="${H - 8}" text-anchor="middle" class="axis-label">${xLabelFn(p.x)}</text>`;
+    marks += `<text x="${cx}" y="${H - 8}" text-anchor="middle" class="axis-label">${xLabelFn(g.x)}</text>`;
   }
+
+  const nMax = Math.max(...grupos.map((g) => g.n));
+  const pie = nMax > 1
+    ? `<text x="${W - PAD_R}" y="${PAD_T - 6}" text-anchor="end" class="axis-label" font-size="8">mediana de ${nMax} mediciones - bigote: min a max</text>`
+    : "";
 
   return `<svg viewBox="0 0 ${W} ${H}" role="img">
     ${gridLines}
     <path d="${path}" fill="none" stroke="${color}" stroke-width="2"></path>
-    ${dots}${labels}
+    ${marks}${pie}
   </svg>`;
 }
 
@@ -425,7 +541,7 @@ async function loadMonitorStrength() {
   grid.innerHTML = "";
 
   const groups = [
-    { key: "canary_fs", title: "canary_monitor.py (filesystem)", sub: "parametro: CANARY_SCAN_INTERVAL — segundos entre cada escaneo de /workspace", color: "var(--mech-canary-fs)" },
+    { key: "canary_fs", title: "canary_monitor.py (filesystem)", sub: "parametro: CANARY_FALLBACK_INTERVAL — solo el barrido de respaldo; la deteccion va por inotify", color: "var(--mech-canary-fs)" },
     { key: "heartbeat", title: "heartbeat_monitor.py", sub: "parametro: intervalo × multiplicador — umbral de silencio antes de alertar", color: "var(--mech-heartbeat)" },
   ];
 
@@ -440,15 +556,193 @@ async function loadMonitorStrength() {
   }
 }
 
-async function tick() {
+async function fullResync() {
   await loadRuns();
   await loadAggregate();
   await loadMonitorStrength();
 }
 
-document.getElementById("refresh-btn").addEventListener("click", tick);
+// ---------------------------------------------------------------------
+// Feed en vivo (SOC): un item por evento empujado por /api/stream (SSE).
+// El backend ya filtra/clasifica (run_started, run_finished, monitor,
+// transcript); aca solo se renderiza y, si el evento toca la corrida
+// actualmente seleccionada, se refresca su detalle (con debounce, para
+// no relanzar un fetch por cada linea si el agente escribe en rafaga).
+// ---------------------------------------------------------------------
 
-loadRuns();
-loadAggregate();
-loadMonitorStrength();
-setInterval(tick, POLL_MS);
+function setStreamStatus(connected) {
+  state.streamConnected = connected;
+  document.getElementById("stream-dot").classList.toggle("connected", connected);
+  document.getElementById("stream-status").textContent = connected
+    ? "conectado — push en vivo"
+    : "reconectando…";
+}
+
+function feedItemNode({ cls, time, runId, badge, msg }) {
+  const div = document.createElement("div");
+  div.className = `feed-item fi-new ${cls}`;
+  if (runId) div.dataset.runId = runId;
+  div.innerHTML = `
+    <span class="fi-time tabular">${escapeHtml(time)}</span>
+    <span class="fi-run" title="${escapeHtml(runId || "")}">${escapeHtml(shortRunId(runId || ""))}</span>
+    <span class="fi-badge">${badge}</span>
+    <span class="fi-msg">${msg}</span>
+  `;
+  return div;
+}
+
+function buildFeedNode(msg) {
+  const runId = msg.run_id;
+  if (msg.feed_type === "run_started") {
+    const meta = msg.data || {};
+    return feedItemNode({
+      cls: "fi-lifecycle started", time: fmtClock(meta.t0), runId,
+      badge: "▶ iniciada", msg: escapeHtml(`${meta.condicion || "?"} / ${meta.tarea || "?"}`),
+    });
+  }
+  if (msg.feed_type === "run_finished") {
+    const meta = msg.data || {};
+    return feedItemNode({
+      cls: "fi-lifecycle finished", time: fmtClock(meta.t1), runId,
+      badge: "■ finalizada", msg: escapeHtml(`exit=${meta.docker_exit_code ?? "?"}`),
+    });
+  }
+  if (msg.feed_type === "monitor") {
+    const ev = msg.data || {};
+    const isAlert = ev.severidad === "alerta";
+    return feedItemNode({
+      cls: `${mechClass(ev)} ${isAlert ? "sev-alerta" : ""}`, time: fmtClock(ev.ts), runId,
+      badge: `${isAlert ? "⚠ alerta" : "info"} · ${escapeHtml(mechLabel(ev))}`,
+      msg: escapeHtml(JSON.stringify(ev.detalle || {}).slice(0, 220)),
+    });
+  }
+  if (msg.feed_type === "transcript") {
+    const entry = msg.data || {};
+    if (!(entry.role === "tool" || (entry.role === "assistant" && entry.tool_calls))) return null;
+    const escape = isEscapeToolCall(entry);
+    return feedItemNode({
+      cls: `fi-agent ${escape ? "is-escape" : ""}`, time: fmtClock(entry.ts), runId,
+      badge: escape ? "⚑ posible fuga" : "agente",
+      msg: toolSummary(entry),
+    });
+  }
+  return null;
+}
+
+function renderFeedNode(node) {
+  const list = document.getElementById("feed-list");
+  if (list.querySelector(".empty-note")) list.innerHTML = "";
+  list.prepend(node);
+  while (list.children.length > MAX_FEED_DOM) list.removeChild(list.lastChild);
+  setTimeout(() => node.classList.remove("fi-new"), 1100);
+}
+
+function updatePausedLabel() {
+  const btn = document.getElementById("feed-pause-btn");
+  btn.textContent = state.feedPaused
+    ? `▶ reanudar (${state.feedQueue.length})`
+    : "⏸ pausar";
+}
+
+function scheduleDetailRefresh(runId) {
+  if (runId !== state.selectedRunId) return;
+  if (state.detailRefreshTimer) return;
+  state.detailRefreshTimer = setTimeout(() => {
+    state.detailRefreshTimer = null;
+    loadRunDetail(state.selectedRunId);
+  }, DETAIL_REFRESH_DEBOUNCE_MS);
+}
+
+async function handleLifecycleEvent(msg) {
+  const picker = document.getElementById("run-picker");
+  const exists = [...picker.options].some((o) => o.value === msg.run_id);
+
+  if (msg.feed_type === "run_started") {
+    setLive(true);
+    if (!exists) {
+      if (picker.options[0] && picker.options[0].textContent.includes("sin corridas")) picker.innerHTML = "";
+      const opt = document.createElement("option");
+      opt.value = msg.run_id;
+      opt.textContent = `${msg.run_id}  [nivel ?]  ● en curso`;
+      picker.prepend(opt);
+    }
+    if (!state.userPicked) {
+      picker.value = msg.run_id;
+      state.selectedRunId = msg.run_id;
+      await loadRunDetail(msg.run_id);
+    }
+    return;
+  }
+
+  // run_finished
+  const stillLive = state.runs.some((r) => r.en_curso && r.run_id !== msg.run_id);
+  setLive(stillLive);
+  await loadRuns();
+  await loadAggregate();
+}
+
+function handleStreamMessage(msg) {
+  if (msg.feed_type === "run_started" || msg.feed_type === "run_finished") {
+    handleLifecycleEvent(msg);
+  } else {
+    scheduleDetailRefresh(msg.run_id);
+  }
+
+  const node = buildFeedNode(msg);
+  if (!node) return;
+  if (state.feedPaused) {
+    state.feedQueue.push(node);
+    updatePausedLabel();
+  } else {
+    renderFeedNode(node);
+  }
+}
+
+function startStream() {
+  const es = new EventSource("/api/stream");
+  es.onopen = () => setStreamStatus(true);
+  es.onerror = () => setStreamStatus(false); // EventSource reconecta solo
+  es.onmessage = (ev) => {
+    let msg;
+    try {
+      msg = JSON.parse(ev.data);
+    } catch {
+      return;
+    }
+    handleStreamMessage(msg);
+  };
+}
+
+document.getElementById("refresh-btn").addEventListener("click", fullResync);
+
+document.getElementById("feed-pause-btn").addEventListener("click", () => {
+  state.feedPaused = !state.feedPaused;
+  document.getElementById("feed-pause-btn").classList.toggle("active", state.feedPaused);
+  if (!state.feedPaused) {
+    for (const node of state.feedQueue) renderFeedNode(node);
+    state.feedQueue = [];
+  }
+  updatePausedLabel();
+});
+
+document.getElementById("feed-clear-btn").addEventListener("click", () => {
+  document.getElementById("feed-list").innerHTML =
+    '<p class="empty-note">Feed vaciado (results/ no se toco). Los proximos eventos van a seguir llegando en vivo.</p>';
+});
+
+document.getElementById("feed-list").addEventListener("click", (e) => {
+  const item = e.target.closest(".feed-item");
+  const runId = item && item.dataset.runId;
+  if (!runId) return;
+  const picker = document.getElementById("run-picker");
+  if (![...picker.options].some((o) => o.value === runId)) return;
+  picker.value = runId;
+  state.userPicked = true;
+  state.selectedRunId = runId;
+  loadRunDetail(runId);
+  document.getElementById("run-section").scrollIntoView({ behavior: "smooth", block: "start" });
+});
+
+fullResync();
+startStream();
+setInterval(fullResync, FALLBACK_POLL_MS);

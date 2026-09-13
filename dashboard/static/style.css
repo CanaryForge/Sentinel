@@ -34,13 +34,20 @@
 
   /* rampa secuencial ordinal (niveles 0-6 de escalada), pasos claros =
      mas prominentes sobre este fondo oscuro */
-  --nivel-0: #184f95;
-  --nivel-1: #1c5cab;
-  --nivel-2: #256abf;
-  --nivel-3: #2a78d6;
-  --nivel-4: #3987e5;
-  --nivel-5: #6da7ec;
-  --nivel-6: #b7d3f6;
+  /* Siete pasos de severidad, no siete claridades del mismo azul: la rampa
+     anterior era monocroma y los niveles 1 y 5 -- donde vive el hallazgo del
+     proyecto -- quedaban indistinguibles en la barra apilada. Esta mueve el
+     TONO ademas de la luminosidad (pizarra inerte -> teal -> azul -> violeta
+     -> ambar -> rojo), asi que el orden se lee sin consultar la leyenda y
+     sobrevive a una captura en escala de grises. Los pasos 3, 4 y 6 reusan
+     los acentos que el panel ya usa para heartbeat, canary y critico. */
+  --nivel-0: #45525f;
+  --nivel-1: #2b7086;
+  --nivel-2: #2f84b4;
+  --nivel-3: #3987e5;
+  --nivel-4: #9085e9;
+  --nivel-5: #d9782f;
+  --nivel-6: #e05555;
 
   --radius: 10px;
   --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Consolas, monospace;
@@ -94,6 +101,27 @@ header.topbar {
   gap: 10px;
 }
 
+.wordmark {
+  width: 20px;
+  height: 20px;
+  align-self: center;
+  flex-shrink: 0;
+}
+
+.wordmark .sweep {
+  transform-origin: 16px 16px;
+  animation: sweep-rotate 4s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wordmark .sweep { animation: none; }
+}
+
+@keyframes sweep-rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 .brand .dot {
   width: 9px;
   height: 9px;
@@ -127,6 +155,20 @@ header.topbar {
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
+  /* min-width:0 deja que los hijos se encojan. Sin esto el <select> se
+     dimensiona al texto de su opcion mas larga (un run_id completo mas la
+     etiqueta de estado, ~440px) y empuja el ancho del documento por encima
+     del viewport en movil: la pagina entera scrollea de lado. */
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* El selector de corrida se acota al contenedor y trunca; el nombre completo
+   sigue disponible en el menu desplegado y en el title. */
+.topbar-controls select {
+  max-width: 100%;
+  min-width: 0;
+  text-overflow: ellipsis;
 }
 
 select, button {
@@ -166,7 +208,180 @@ section { margin-bottom: 40px; }
   overflow-x: auto;
 }
 
-.arch-card svg { display: block; min-width: 720px; width: 100%; height: auto; }
+.arch-card svg { display: block; min-width: 820px; width: 100%; height: auto; }
+
+.arch-caption {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  margin: 12px 2px 0;
+  max-width: 84ch;
+  line-height: 1.6;
+}
+.arch-caption code { color: var(--text-secondary); }
+
+/* ---------- live feed (SOC), estilo terminal a proposito -- distinto del */
+/* patron tarjeta-redondeada+eyebrow que se repite en el resto del panel */
+
+.term {
+  background: #05070b;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 20px 50px -25px rgba(0, 0, 0, 0.6);
+}
+
+.term-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+}
+
+.term-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.term-dot.r { background: #e05555; }
+.term-dot.y { background: #fab219; }
+.term-dot.g { background: #0ca30c; }
+
+.term-title {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--text-muted);
+  margin-left: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.term-prompt {
+  padding: 8px 14px 12px;
+  font-family: var(--font-mono);
+  color: var(--mech-egress);
+}
+
+.prompt-caret {
+  animation: caret-blink 1s step-end infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .prompt-caret { animation: none; }
+}
+
+@keyframes caret-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.feed-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.feed-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.feed-controls .mono,
+#stream-status {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.feed-controls button {
+  padding: 5px 9px;
+  font-size: 11.5px;
+}
+
+.feed-controls button.active {
+  color: var(--status-warning);
+  border-color: var(--status-warning);
+}
+
+#stream-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--status-critical);
+  flex-shrink: 0;
+  transition: background 0.3s;
+}
+
+#stream-dot.connected {
+  background: var(--status-good);
+  box-shadow: 0 0 0 3px rgba(12, 163, 12, 0.18);
+}
+
+.feed-list {
+  background: #05070b;
+  max-height: 340px;
+  overflow-y: auto;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+}
+
+.feed-item {
+  display: grid;
+  grid-template-columns: 74px 1fr auto;
+  grid-template-rows: auto auto;
+  column-gap: 12px;
+  row-gap: 2px;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--border);
+  /* Antes habia aqui un border-left de 3px del mismo color en todas las
+     filas: ocupaba peso visual sin codificar nada. La separacion entre filas
+     ya la hace el borde inferior. */
+  border-left: 1px solid transparent;
+  cursor: pointer;
+}
+
+.feed-item:hover { background: var(--surface-2); }
+.feed-item:last-child { border-bottom: none; }
+
+.feed-item .fi-time { color: var(--text-muted); grid-row: 1; }
+.feed-item .fi-run { color: var(--text-secondary); grid-row: 1; grid-column: 2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.feed-item .fi-badge {
+  grid-row: 1; grid-column: 3;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.feed-item .fi-msg { grid-row: 2; grid-column: 1 / -1; color: var(--text-primary); white-space: pre-wrap; word-break: break-word; }
+
+.feed-item.mech-heartbeat { border-left-color: var(--mech-heartbeat); }
+.feed-item.mech-egress { border-left-color: var(--mech-egress); }
+.feed-item.mech-canary-net { border-left-color: var(--mech-canary-net); }
+.feed-item.mech-canary-fs { border-left-color: var(--mech-canary-fs); }
+
+.feed-item.sev-alerta { background: rgba(224, 85, 85, 0.06); }
+.feed-item.sev-alerta .fi-badge { color: var(--status-critical); }
+
+.feed-item.fi-lifecycle { border-left-color: var(--text-muted); }
+.feed-item.fi-lifecycle.started .fi-badge { color: var(--mech-heartbeat); }
+.feed-item.fi-lifecycle.finished .fi-badge { color: var(--text-secondary); }
+
+.feed-item.fi-agent { border-left-color: var(--text-muted); }
+.feed-item.fi-agent.is-escape { background: rgba(224, 85, 85, 0.1); border-left-color: var(--status-critical); }
+.feed-item.fi-agent.is-escape .fi-badge { color: var(--status-critical); }
+
+.feed-item.fi-new { animation: feed-flash 1.1s ease-out; }
+@keyframes feed-flash {
+  0% { background: rgba(57, 135, 229, 0.22); }
+  100% { background: transparent; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .feed-item.fi-new { animation: none; }
+}
 
 /* ---------- run picker / status strip ---------- */
 
@@ -347,6 +562,61 @@ section { margin-bottom: 40px; }
 .turn-row.is-escape .what { color: var(--status-critical); }
 .turn-row.is-detect .what { color: var(--status-good); }
 
+/* ---------- runbook (post-incidente): stepper vertical, a proposito */
+/* distinto del grid de tarjetas que domina el resto del panel */
+
+.runbook {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-width: 92ch;
+}
+
+.runbook li {
+  position: relative;
+  margin-left: 13px;
+  padding: 0 0 26px 32px;
+  border-left: 1px solid var(--border-strong);
+}
+
+.runbook li:last-child {
+  border-left-color: transparent;
+  padding-bottom: 0;
+}
+
+.runbook li::before {
+  counter-increment: step;
+  content: counter(step);
+  position: absolute;
+  left: -13px;
+  top: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  border: 1px solid var(--mech-heartbeat);
+  color: var(--mech-heartbeat);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.runbook { counter-reset: step; }
+
+.runbook h3 { font-size: 14px; margin: 0 0 6px; }
+.runbook p { font-size: 13.5px; color: var(--text-secondary); margin: 0; }
+.runbook code {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  background: var(--surface-2);
+  padding: 1px 6px;
+  border-radius: 4px;
+  color: var(--text-primary);
+}
+
 /* ---------- mechanism cards ---------- */
 
 .mech-grid {
@@ -358,12 +628,30 @@ section { margin-bottom: 40px; }
 .mech-card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-left: 3px solid var(--mech-color, var(--border-strong));
   border-radius: var(--radius);
   padding: 16px 18px;
 }
 
-.mech-card h3 { font-size: 13.5px; margin-bottom: 6px; }
+/* El color identifica el mecanismo, asi que la informacion se conserva -- pero
+   vive en un punto junto al titulo en vez de en una pestana lateral de 3px.
+   Una sola declaracion de elevacion (el borde de 1px), como el resto de las
+   superficies del panel. */
+.mech-card h3 {
+  font-size: 13.5px;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mech-card h3::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+  background: var(--mech-color, var(--text-muted));
+}
 .mech-card .surface { font-size: 12px; color: var(--text-muted); margin-bottom: 10px; }
 .mech-card p { font-size: 13px; color: var(--text-secondary); margin: 0 0 10px; }
 .mech-card .fact { font-family: var(--font-mono); font-size: 12px; color: var(--text-primary); }
@@ -461,4 +749,25 @@ footer a { color: var(--text-secondary); }
   .turn-row .who { grid-column: 1 / -1; }
   .agg-row { grid-template-columns: 1fr; }
   .agg-row .agg-count { text-align: left; }
+}
+
+/* Pie de una tarjeta de estadistica: el matiz que evita que la cifra se lea
+   como algo que no es. Hereda el tono de la superficie, no gris neutro. */
+.stat-tile .stat-note {
+  margin-top: 6px;
+  font-size: 10.5px;
+  line-height: 1.45;
+  color: var(--text-muted);
+  max-width: 34ch;
+}
+
+/* Nombra lo que controla el <select>: sin esto era un desplegable sin titulo
+   junto a un boton, y no se leia que gobierna la seccion de detalle. */
+.picker-label {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  white-space: nowrap;
 }

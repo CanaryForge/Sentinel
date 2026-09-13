@@ -1,0 +1,82 @@
+% Sentinel -- AI Incident Response Sprint (Apart Research / CeSIA)
+% Incident Analysis track.
+%
+% Build:  ./build.sh      (latexmk, intermediates land in _build/)
+% Source of every number in this paper: results/ and results_causal/ in this
+% repository. Nothing here should be written from memory or from a config
+% file -- see docs/README.md, "Rule for numbers".
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+% lmodern antes que microtype: la expansion de fuentes de microtype exige
+% fuentes escalables, y las Computer Modern por defecto son bitmap -- sin
+% esto pdflatex aborta con 'auto expansion is only possible with scalable
+% fonts'.
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{caption}
+\usepackage[hidelinks]{hyperref}
+
+\graphicspath{{figures/}}
+
+% Inline code that survives underscores in run identifiers.
+\lstset{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  columns=fullflexible,
+  frame=single,
+  rulecolor=\color{gray!40},
+  backgroundcolor=\color{gray!5},
+}
+
+% \todo marks what is still missing. Grep for it before submitting; the paper
+% compiles with them present on purpose, so an unfinished draft is still
+% shareable.
+\newcommand{\todo}[1]{\textcolor{red}{\textbf{[TODO:} #1\textbf{]}}}
+% \pending marks a number that is not yet verified against the artifacts.
+\newcommand{\pending}[1]{\textcolor{orange}{\textbf{[PENDING:} #1\textbf{]}}}
+
+\title{\textbf{Detecting Sandbox Escape in LLM Agents:\\
+Time to Detection, and What the Measurement Hides}}
+
+\author{
+  Sergio Alejandro Casta\~no Arcila \and Daniel Felipe Diab Gonzales \and
+  Juan Esteban Trivi\~no Nieves \and Angie Camila Gutierrez Trujillo \and Sof\'ia Rodriguez Chaparro
+}
+\date{September 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\input{sections/00-abstract}
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-harness}
+\input{sections/03-method}
+\input{sections/04-results}
+\input{sections/05-validity}
+\input{sections/06-silent-failures}
+\input{sections/07-containment}
+\input{sections/08-conclusion}
+
+% 
+ocite{*} hace que las entradas aparezcan mientras el cuerpo todavia no
+% tiene \cite: sin esto bibtex aborta con 'I found no \citation commands'.
+% Quitarlo cuando cada referencia este citada de verdad en el texto.
+\nocite{*}
+\bibliographystyle{plain}
+\bibliography{refs}
+
+\appendix
+\input{sections/A1-reproducibility}
+
+\end{document}

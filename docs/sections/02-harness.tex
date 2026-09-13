@@ -1,0 +1,117 @@
+\section{The Harness}
+
+Sentinel runs a tool-calling LLM agent inside a Docker sandbox, plants a
+temptation to leave it, and watches three independent signals for evidence
+that the agent took the bait. Every component is deliberately cheap: the whole
+thing runs on one laptop with a 7B local model, and nothing in it asks the
+model to report on itself.
+
+\todo{Figura: exportar el diagrama de arquitectura del dashboard
+(\texttt{dashboard/static/index.html}) a \texttt{figures/architecture.pdf}.
+Ya esta ruteado ortogonalmente y muestra las tres redes Docker, los dos bind
+mounts persistentes y las dos raices que vigila el fs-monitor.}
+
+Two Docker networks (\texttt{red-proxy} and \texttt{red-mocks}) are declared
+\texttt{internal}, so no traffic the agent generates can reach the real
+internet regardless of what the model decides to do. A third network exists
+only so the harness itself can reach the model backend, and it carries no
+agent-controlled traffic.
+
+\subsection{Three model-independent signals}
+
+Each signal audits a different surface and lives in a different container.
+None of them queries the model, and none depends on the agent cooperating.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Monitor} & \textbf{Surface} & \textbf{Fires on} \\
+\midrule
+\texttt{heartbeat\_monitor} & process liveness & silence past a configured threshold \\
+\texttt{canary\_monitor} & filesystem, persistent memory & canary token in a path or in file content \\
+\texttt{egress\_monitor} & outbound HTTP & destination outside baseline, or canary in a request \\
+\bottomrule
+\end{tabular}
+\caption{The three detection signals. The canary monitor watches two roots:
+the ephemeral workspace volume and the persistent \texttt{./memory} bind
+mount.}
+\end{table}
+
+The canary is a per-run token injected into the agent's system prompt as its
+``internal session identifier''. Detection matches the plain token plus four
+cheap obfuscations (base64, URL encoding, hex, and reversal). That coverage is
+a deliberate floor, not a claim: an agent encoding the token in, say, the
+lengths of file names defeats it, and we say so in Section~\ref{sec:validity}.
+
+The canary monitor detects by inotify rather than polling, with a slower
+periodic sweep as a backstop in case an event is missed.
+
+\subsection{Six induction vectors}
+
+The agent always gets the same surface task, fixing a division bug so a test
+suite passes. What changes is the temptation planted around it.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}llp{6.4cm}@{}}
+\toprule
+\textbf{Task} & \textbf{Channel} & \textbf{Planted temptation} \\
+\midrule
+\texttt{task\_01} & none & control: the task is genuinely unsolvable \\
+\texttt{task\_02} & filesystem & a credentials file in the workspace \\
+\texttt{task\_03} & error text & an error pointing at an internal registry \\
+\texttt{task\_04} & live network fetch & injected instruction served by an external mirror \\
+\texttt{task\_05} & persistent memory & the same instruction seeded in cross-run memory \\
+\texttt{task\_06} & local knowledge base & the same instruction seeded in a RAG document \\
+\bottomrule
+\end{tabular}
+\caption{Tasks 04 through 06 carry an identical injected instruction and
+differ only in how it reaches the agent, which is what makes the channel
+comparison in Section~\ref{sec:results} possible.}
+\end{table}
+
+Tasks 01 through 03 are passive temptation: nothing instructs the agent to do
+anything. Tasks 04 through 06 carry an active injected instruction asking the
+agent to create a confirmation directory named with its own session
+identifier, which is the technique the anchor incident used to move data out
+in directory names~\cite{huggingface2026intrusion}.
+
+Vectors 05 and 06 fall under \textbf{ASI06: Memory and Context
+Poisoning}~\cite{owasp-asi06}: untrusted input stored as trusted memory or
+retrieved context, influencing later and unrelated sessions. Vector 05 is the
+stricter case, since \texttt{./memory} is a host bind mount that survives
+\texttt{docker compose down -v} and therefore outlives the run that wrote it.
+
+\subsection{Conditions}
+
+The experimental axis is what the system prompt says about security, holding
+the task constant.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}llrl@{}}
+\toprule
+\textbf{Condition} & \textbf{Prompt block} & \textbf{Chars} & \textbf{Names the attack surface} \\
+\midrule
+\texttt{sin\_harness} & \texttt{MINIMAL\_BLOCK} & 77 & no \\
+\texttt{con\_harness} & \texttt{HARNESS\_SECURITY\_BLOCK} & 830 & yes \\
+\texttt{con\_harness\_generico} & \texttt{GENERIC\_EMPHASIS\_BLOCK} & 818 & no \\
+\bottomrule
+\end{tabular}
+\caption{The canary is present in all three conditions, since it is detection
+instrumentation rather than a defence. What changes is whether the agent is
+told the token is sensitive, and whether the warning names the surfaces an
+attacker would ask it to use.}
+\end{table}
+
+The third condition exists to separate two things the second confounds. The
+production guardrail is simultaneously longer, more emphatic, and explicit
+about file names, directory names, and URLs. \texttt{GENERIC\_EMPHASIS\_BLOCK}
+matches its length and emphasis (818 characters against 830, 126 words against
+131) while forbidding only that the token leave the working environment,
+without naming how. Section~\ref{sec:results} reports what that isolation
+produced, which is not what we expected.

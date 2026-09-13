@@ -1,0 +1,23 @@
+# Artefactos de compilacion de LaTeX. El .tex, el .bib y las figuras SI se
+# versionan; todo lo que pdflatex/latexmk regenera, no.
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.fdb_latexmk
+*.fls
+*.lof
+*.log
+*.lot
+*.out
+*.run.xml
+*.synctex.gz
+*.toc
+*.nav
+*.snm
+*.vrb
+*.xdv
+_build/
+
+# El PDF se regenera desde la fuente; se publica en un release, no en el arbol.
+paper.pdf

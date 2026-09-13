@@ -1,0 +1,85 @@
+\section{Reproducibility}
+\label{sec:repro}
+
+\subsection{The data is in the repository}
+
+All 113 runs are versioned in the repository~\cite{sentinel-repo}, about
+1.8\,MB: per-run metadata, monitor events, and full agent transcripts, plus
+the aggregate files. They cost real API quota and cannot be reproduced
+identically, which is why they are committed rather than regenerated. Every
+table in this paper can therefore be recomputed by a reader without a model
+backend and without spending anything:
+
+\begin{lstlisting}[language=bash]
+python3 analysis/compute_ttd.py                                # corpus, 63 runs
+python3 analysis/compute_ttd.py --results-dir results_causal   # causal, 30 runs
+python3 analysis/compute_ttd.py --results-dir results_redteam  # task_04, 20 runs
+\end{lstlisting}
+
+\subsection{Running the harness}
+
+Ordered cheapest first. Everything except the last step runs without a model
+backend.
+
+\begin{lstlisting}[language=bash]
+docker compose config -q                                    # compose validates
+python3 orchestrator/run_experiment.py --dry-run --limit 5   # matrix expands
+tests/positive_controls.sh                                   # 6 controls, ~4 min
+python3 analysis/compute_ttd.py                              # reproduces the tables
+python3 timeline/export_timeline.py                          # forensic timeline
+tests/monitor_strength_sweep.sh                              # parameter sweep, ~7 min
+python3 orchestrator/run_experiment.py                       # the matrix (needs a backend)
+\end{lstlisting}
+
+If any positive control fails, do not report detection rates. That is the
+whole point of the suite.
+
+\subsection{Environment traps}
+
+Three of these cost us a working day each, and all three are invisible until
+something downstream is already wrong. They are listed here so the next team
+does not pay for them again.
+
+\begin{itemize}
+\item \textbf{Line endings on Windows.} Git for Windows rewrites shell scripts
+      to CRLF on clone, which turns the entrypoint shebang into
+      \texttt{bash\textbackslash r}. The egress proxy is the only service that
+      boots through a script, so it never starts, and two of the three monitors
+      go silent with no visible error. A \texttt{.gitattributes} pinning
+      \texttt{eol=lf} fixes it for every clone.
+\item \textbf{Path translation under Git Bash.} MSYS rewrites any
+      POSIX-looking argument before \texttt{docker.exe} sees it, so
+      \texttt{/app/heartbeat.py} arrives as a Windows path, the container exits
+      2, and \texttt{--rm} deletes the evidence. \texttt{MSYS\_NO\_PATHCONV=1}
+      fixes it. The orchestrator is unaffected, since it passes no POSIX paths
+      to the Docker CLI.
+\item \textbf{Ingestion age limits.} The timeline exporter targets OpenObserve,
+      which discards events older than five hours by default and reports it as
+      HTTP 200 with a failure count in the body. A forensic timeline is old
+      data by definition.
+\end{itemize}
+
+\subsection{Machine provenance}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{Machine} & \textbf{Produced} & \textbf{Hardware} & \textbf{Runtime} \\
+\midrule
+A & \texttt{results/} (63) & Apple Silicon M5 Pro, 24\,GB & \pending{Ollama version} \\
+B & \texttt{results\_causal/}, \texttt{results\_redteam/} (50) & i7-14700K, RTX 3060, 32\,GB & Ollama 0.6.8, context 4096 \\
+C & no model runs & Ryzen 3 3250U, 5.7\,GB & no Ollama installed \\
+\bottomrule
+\end{tabular}
+\caption{Machine A's runtime configuration was never recorded by any artifact,
+which is why Section~\ref{sec:validity} cannot explain the replication
+failure. The orchestrator now writes a backend block into every run's
+metadata, so no future run is unauditable this way.}
+\end{table}
+
+\todo{Completar la fila de la maquina A cuando Daniel pase
+\texttt{ollama --version} y su \texttt{OLLAMA\_CONTEXT\_LENGTH}. Si el
+contexto resulta mayor que 4096, la Seccion 5 pasa de "sin explicar" a
+"limitacion conocida", que es un cambio sustantivo en como se lee el paper.}

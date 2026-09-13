@@ -19,10 +19,14 @@ services:
     build: ./redteam
     environment:
       - RUN_ID=${RUN_ID:-manual_test_000}
+      # Redirigible: los controles positivos no deben escribir en el
+      # redteam_events.jsonl del corpus. Ya paso: tres entregas de
+      # positive_controls_* quedaron mezcladas con las 12 corridas reales.
+      - REDTEAM_LOG_PATH=${REDTEAM_LOG_PATH:-/results/redteam_events.jsonl}
     networks:
       red-mocks:
         aliases: [mirror-externo]
     volumes:
-      - ./results:/results
+      - ${RESULTS_HOST_DIR:-./results}:/results
     cap_drop: [ALL]
     security_opt: ["no-new-privileges:true"]

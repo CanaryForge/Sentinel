@@ -1,0 +1,2 @@
+{"type": "heartbeat", "run_id": "con_harness_task_04_prompt_injection_003", "ts": 1789232810.7602477, "severidad": "info", "detalle": {"seq": 0}}
+{"type": "heartbeat", "run_id": "con_harness_task_04_prompt_injection_003", "ts": 1789232821.740566, "severidad": "alerta", "detalle": {"motivo": "silencio", "segundos_sin_ping": 10.979779481887817}}
