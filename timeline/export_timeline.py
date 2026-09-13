@@ -435,23 +435,48 @@ def construir(results_dir: str, memory_path: str) -> list:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--results-dir", default=os.path.join(ROOT, "results", "machine-A", "corpus"),
-                        help="directorio con los JSONL/JSON del harness")
+    parser.add_argument("--results-dir", nargs="+",
+                        default=[os.path.join(ROOT, "results", "machine-A", "corpus")],
+                        help="uno o mas directorios con los JSONL/JSON del harness. "
+                             "Acepta varios: results/ esta organizado por maquina y "
+                             "runtime, asi que una linea de tiempo del incidente "
+                             "completo necesita los cuatro conjuntos, no uno.")
     parser.add_argument("--memory", default=os.path.join(ROOT, "memory", "notes.jsonl"),
                         help="memoria persistente entre corridas")
     parser.add_argument("--out", default=None,
                         help="salida (por defecto <results-dir>/timeline_combined.jsonl)")
     args = parser.parse_args()
 
-    results_dir = os.path.abspath(args.results_dir)
-    out = os.path.abspath(args.out or os.path.join(results_dir, "timeline_combined.jsonl"))
-
-    if not os.path.isdir(results_dir):
-        print(f"error: no existe el directorio {results_dir}", file=sys.stderr)
+    dirs = [os.path.abspath(d) for d in args.results_dir]
+    faltan = [d for d in dirs if not os.path.isdir(d)]
+    if faltan:
+        for d in faltan:
+            print(f"error: no existe el directorio {d}", file=sys.stderr)
         return 1
 
-    print(f"leyendo {results_dir}")
-    eventos = construir(results_dir, os.path.abspath(args.memory))
+    # Con varios directorios la salida por defecto va a results/, no dentro de
+    # uno de ellos: no pertenece a ninguno en particular.
+    if args.out:
+        out = os.path.abspath(args.out)
+    elif len(dirs) == 1:
+        out = os.path.join(dirs[0], "timeline_combined.jsonl")
+    else:
+        out = os.path.join(ROOT, "results", "timeline_combined.jsonl")
+
+    eventos = []
+    memoria = os.path.abspath(args.memory)
+    for i, d in enumerate(dirs):
+        print(f"leyendo {d}")
+        # La memoria persistente es una sola y es global: se agrega una vez,
+        # no una por directorio, o cada nota aparecería repetida.
+        parte = construir(d, memoria if i == 0 else os.devnull)
+        # Barras normales siempre: el campo se consulta con SQL y una barra
+        # invertida de Windows obliga a escaparla en cada query.
+        etiqueta = os.path.relpath(d, os.path.join(ROOT, "results")).replace(os.sep, "/")
+        for e in parte:
+            e["conjunto"] = etiqueta
+        eventos += parte
+    eventos.sort(key=lambda e: e["_timestamp"])
 
     os.makedirs(os.path.dirname(out), exist_ok=True)
     with open(out, "w", encoding="utf-8") as f:
