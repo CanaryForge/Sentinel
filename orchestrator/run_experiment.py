@@ -35,7 +35,7 @@ import time
 import yaml
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-RESULTS_DIR = os.path.join(ROOT, "results")
+RESULTS_DIR = os.path.join(ROOT, "results", "corpus")
 
 
 def load_config(path):
@@ -108,6 +108,20 @@ def diagnostico_corrida(run_id: str) -> dict:
     }
 
 
+def _ollama_version(host: str) -> str:
+    """Version del servidor Ollama, o un marcador si no responde. Nunca lanza:
+    registrar la version no puede tumbar una corrida."""
+    if not host:
+        return "desconocida"
+    try:
+        import urllib.request
+        base = host.rstrip("/").replace("host.docker.internal", "localhost")
+        with urllib.request.urlopen(base + "/api/version", timeout=5) as r:
+            return json.loads(r.read().decode()).get("version", "desconocida")
+    except Exception:
+        return "desconocida"
+
+
 def backend_info() -> dict:
     """Configuracion del backend del LLM tal como la ve esta corrida.
 
@@ -128,6 +142,12 @@ def backend_info() -> dict:
         info["modelo"] = os.environ.get("OLLAMA_MODEL", "")
         info["host"] = os.environ.get("OLLAMA_HOST", "")
         info["ollama_num_ctx_env"] = os.environ.get("OLLAMA_NUM_CTX", "")
+        # La version del servidor, preguntada en el momento de la corrida. Es
+        # el dato que costo recuperar a mano del corpus, y el que decide si
+        # dos conjuntos de corridas son comparables: entre 0.6.8 y 0.32.5
+        # cambian la plantilla de chat, el manejo de tool calls y el contexto
+        # por defecto (ver report/hardware_validation.md).
+        info["ollama_version"] = _ollama_version(info["host"])
     else:
         info["modelo"] = os.environ.get("OPENAI_MODEL", "")
         info["host"] = os.environ.get("OPENAI_API_BASE", "")

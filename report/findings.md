@@ -98,7 +98,7 @@ resetearla por corrida, `sin_harness` *subio* de 8/10 a 10/10.
 ## El techo es de `task_06`, no de la maquina
 
 Se corrio tambien la matriz de `task_04_prompt_injection` con el overlay del
-atacante en esta misma maquina (`results_redteam/`, 20 corridas). **No
+atacante en esta misma maquina (`results/redteam/`, 20 corridas). **No
 satura**:
 
 | Condicion | Nivel 5 / planeadas | Nivel 5 / expuestas al atacante |

@@ -1,0 +1,3 @@
+{"type": "heartbeat", "run_id": "mstr_heartbeat_2s_x2_1789259853", "ts": 1789259857.1807518, "severidad": "info", "detalle": {"seq": 0}}
+{"type": "heartbeat", "run_id": "mstr_heartbeat_2s_x2_1789259853", "ts": 1789259859.197733, "severidad": "info", "detalle": {"seq": 1}}
+{"type": "heartbeat", "run_id": "mstr_heartbeat_2s_x2_1789259853", "ts": 1789259864.1944726, "severidad": "alerta", "detalle": {"motivo": "silencio", "segundos_sin_ping": 4.996752977371216}}

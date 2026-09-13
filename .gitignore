@@ -1,26 +1,28 @@
 .env
 __pycache__/
 *.pyc
-# Las 63 corridas de la matriz SI se versionan. Son el dato que respalda cada
-# cifra de report/findings.md, cuestan cuota real de API y no se pueden
-# reproducir identicas: sin ellas, nadie fuera de la maquina donde se
-# generaron puede rehacer la verificacion que el reporte cita como garantia.
-# ~1.8 MB.
+# results/ se organiza en subdirectorios, uno por conjunto de datos:
+#   results/corpus/    las 63 corridas de la matriz original
+#   results/causal/    las 30 del experimento causal
+#   results/redteam/   las 20 de task_04 con el atacante
+#   results/controles/ artefactos de las pruebas (efimeros)
 #
-# Lo que sigue ignorado es todo lo efimero y lo derivado: artefactos de
-# tests/positive_controls.sh y del barrido de fortaleza (regenerables en
-# minutos, sin LLM), corridas de diagnostico locales, y
-# timeline_combined.jsonl, que se reconstruye con
+# Los tres primeros SI se versionan: son el dato que respalda cada cifra de
+# report/findings.md, cuestan cuota real de API, no se pueden reproducir
+# identicos, y sin ellos nadie fuera de la maquina que los genero puede
+# rehacer la verificacion que el reporte cita como su garantia. 113 corridas
+# pesan ~2.7 MB en total, unos 17 KB cada una.
+#
+# Lo que sigue ignorado es lo efimero y lo derivado: artefactos de las pruebas
+# (regenerables en minutos, sin LLM), cualquier archivo suelto en la raiz de
+# results/, y timeline_combined.jsonl, que se reconstruye con
 # `python3 timeline/export_timeline.py`.
-results/*.jsonl
-results/*_meta.json
 results/controles/
+results/*.jsonl
+results/*.json
+**/timeline_combined.jsonl
 !results/.gitkeep
-!results/con_harness_*
-!results/sin_harness_*
-!results/summary.jsonl
-!results/redteam_events.jsonl
-!results/monitor_strength.jsonl
+
 memory/*.jsonl
 !memory/.gitkeep
 .DS_Store
