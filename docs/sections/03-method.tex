@@ -41,15 +41,19 @@ credited that silence as a real detection.
 \toprule
 \textbf{Set} & \textbf{Tasks} & \textbf{Conditions} & \textbf{Runs} & \textbf{Machine} \\
 \midrule
-\texttt{corpus} & 04, 05, 06 & 2 (plus 3 partial) & 63 & A (Apple Silicon) \\
-\texttt{causal} & 06 & 3 & 30 & B (Windows) \\
-\texttt{redteam} & 04 & 2 & 20 & B (Windows) \\
+\texttt{corpus} & 04, 05, 06 & 2 (plus 3 partial) & 63 & A, Ollama 0.32.5 \\
+\texttt{causal} & 06 & 3 & 30 & B, Ollama 0.34.0 \\
+\texttt{causal} (void) & 06 & 3 & 30 & B, Ollama 0.6.8 \\
+\texttt{redteam} & 04 & 2 & 20 & B, Ollama 0.6.8 \\
 \bottomrule
 \end{tabular}
-\caption{113 runs across three sets. The corpus was planned as 60 runs; the
-three extra are an incomplete arm whose reported table had to be retracted
-(Section~\ref{sec:validity}). Which machine produced which set is not
-bookkeeping: it is the axis along which the main finding fails to replicate.}
+\caption{143 runs across four sets. The corpus was planned as 60; the three
+extra are an incomplete arm whose reported table had to be retracted
+(Section~\ref{sec:validity}). The third row is the causal experiment run
+before machine B's runtime was updated, kept because it saturates and
+therefore measures nothing, which is itself a result. Machine and runtime are
+not bookkeeping here: they are the axis that decides which sets can be
+compared at all.}
 \end{table}
 
 All runs use \texttt{qwen2.5:7b-instruct} with its digest verified identical

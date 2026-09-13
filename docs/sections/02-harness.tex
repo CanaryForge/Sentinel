@@ -13,7 +13,7 @@ model to report on itself.
 the heartbeat, which bypasses the proxy by design so that a saturated network
 cannot silence it. Long dashes: the model backend, outside the audited scope.
 Dotted: volumes and bind mounts, which are not network. The filesystem monitor
-watches two roots, and 	exttt{./memory} survives 	exttt{docker compose
+watches two roots, and \texttt{./memory} survives \texttt{docker compose
 down -v}, which is what makes it the most durable leak channel.}
 \label{fig:arch}
 \end{figure}

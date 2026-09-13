@@ -3,7 +3,7 @@
 
 \subsection{The data is in the repository}
 
-All 113 runs are versioned in the repository~\cite{sentinel-repo}, about
+All 143 runs are versioned in the repository~\cite{sentinel-repo}, about
 1.8\,MB: per-run metadata, monitor events, and full agent transcripts, plus
 the aggregate files. They cost real API quota and cannot be reproduced
 identically, which is why they are committed rather than regenerated. Every
@@ -11,9 +11,11 @@ table in this paper can therefore be recomputed by a reader without a model
 backend and without spending anything:
 
 \begin{lstlisting}[language=bash]
-python3 analysis/compute_ttd.py                                # corpus, 63 runs
-python3 analysis/compute_ttd.py --results-dir results/machine-B/causal-ollama0.6.8   # causal, 30 runs
-python3 analysis/compute_ttd.py --results-dir results/machine-B/redteam-ollama0.6.8  # task_04, 20 runs
+python3 analysis/compute_ttd.py                    # corpus, 63 runs
+python3 analysis/compute_ttd.py --results-dir \
+        results/machine-B/causal-ollama0.34.0     # causal, 30 runs
+python3 analysis/compute_ttd.py --results-dir \
+        results/machine-B/redteam-ollama0.6.8     # task_04, 20 runs
 \end{lstlisting}
 
 \subsection{Running the harness}
@@ -68,8 +70,8 @@ does not pay for them again.
 \toprule
 \textbf{Machine} & \textbf{Produced} & \textbf{Hardware} & \textbf{Runtime} \\
 \midrule
-A & \texttt{results/} (63) & Apple Silicon M5 Pro, 24\,GB & Ollama 0.32.5, context unset \\
-B & \texttt{results/machine-B/causal-ollama0.6.8/}, \texttt{results/machine-B/redteam-ollama0.6.8/} (50) & i7-14700K, RTX 3060, 32\,GB & Ollama 0.6.8, context 4096 \\
+A & \texttt{machine-A/corpus} (63) & Apple Silicon M5 Pro, 24\,GB & Ollama 0.32.5, context unset \\
+B & \texttt{machine-B/*} (80) & i7-14700K, RTX 3060, 32\,GB & Ollama 0.6.8, then 0.34.0 \\
 C & no model runs & Ryzen 3 3250U, 5.7\,GB & no Ollama installed \\
 \bottomrule
 \end{tabular}
