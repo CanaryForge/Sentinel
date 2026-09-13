@@ -435,7 +435,7 @@ def construir(results_dir: str, memory_path: str) -> list:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--results-dir", default=os.path.join(ROOT, "results", "corpus"),
+    parser.add_argument("--results-dir", default=os.path.join(ROOT, "results", "machine-A", "corpus"),
                         help="directorio con los JSONL/JSON del harness")
     parser.add_argument("--memory", default=os.path.join(ROOT, "memory", "notes.jsonl"),
                         help="memoria persistente entre corridas")

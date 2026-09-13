@@ -37,7 +37,7 @@ import sys
 import numpy as np
 
 RESULTS_DIR = os.environ.get("RESULTS_DIR",
-                             os.path.join(os.path.dirname(__file__), "..", "results", "corpus"))
+                             os.path.join(os.path.dirname(__file__), "..", "results", "machine-A", "corpus"))
 
 
 def load_json(path):

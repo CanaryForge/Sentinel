@@ -758,7 +758,7 @@ IC95% [1.01, 2.47]s, n=6.
 > artefactos crudos, no de volver a correr nada.
 
 > **Correccion del denominador en `task_04` (verificada sobre
-> `results/redteam_events.jsonl`).** El red-teamer registra cada entrega del
+> `results/machine-B/redteam-ollama0.6.8_events.jsonl`).** El red-teamer registra cada entrega del
 > payload en `/patches/<pkg>`, y solo hay **12 entregas para 20 corridas**:
 > 8 corridas de `task_04` nunca recibieron el ataque. El reparto esta muy
 > sesgado -- `con_harness` 3/10 expuestas contra `sin_harness` 9/10 -- y las

@@ -17,7 +17,7 @@ donde corre.
 |---|---|---|
 | **Daniel** (Mac, Apple Silicon) | `results/` -- las **63 corridas** del corpus, sobre las que descansa cada cifra de `findings.md` | Parcial, abajo |
 | **Juan Esteban** (`cachyos-x8664`) | ninguna corrida con LLM (sin Ollama); sí la validación de entorno y los arreglos de `positive_controls.sh` | Sí, abajo |
-| **Sergio** (Windows 11) | `results/causal/` -- las 30 corridas del experimento causal homogéneo | Sí, abajo |
+| **Sergio** (Windows 11) | `results/machine-B/causal-ollama0.6.8/` -- las 30 corridas del experimento causal homogéneo | Sí, abajo |
 
 **El hueco de la primera fila sigue medio abierto.** El corpus no registra en
 ningún artefacto con qué se corrió: el modelo (`qwen2.5:7b-instruct`) aparece
@@ -85,7 +85,7 @@ turnos frente a 14, y 0 de 23 corridas agotando el tope frente a 11 de 30--
 probable sigue siendo el stack de inferencia (versión de Ollama o contexto
 efectivo), no el hardware.
 
-## Perfil de hardware -- Sergio (produjo `results/causal/`)
+## Perfil de hardware -- Sergio (produjo `results/machine-B/causal-ollama0.6.8/`)
 
 | | |
 |---|---|

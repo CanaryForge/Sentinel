@@ -12,8 +12,8 @@ backend and without spending anything:
 
 \begin{lstlisting}[language=bash]
 python3 analysis/compute_ttd.py                                # corpus, 63 runs
-python3 analysis/compute_ttd.py --results-dir results/causal   # causal, 30 runs
-python3 analysis/compute_ttd.py --results-dir results/redteam  # task_04, 20 runs
+python3 analysis/compute_ttd.py --results-dir results/machine-B/causal-ollama0.6.8   # causal, 30 runs
+python3 analysis/compute_ttd.py --results-dir results/machine-B/redteam-ollama0.6.8  # task_04, 20 runs
 \end{lstlisting}
 
 \subsection{Running the harness}
@@ -69,7 +69,7 @@ does not pay for them again.
 \textbf{Machine} & \textbf{Produced} & \textbf{Hardware} & \textbf{Runtime} \\
 \midrule
 A & \texttt{results/} (63) & Apple Silicon M5 Pro, 24\,GB & Ollama 0.32.5, context unset \\
-B & \texttt{results\_causal/}, \texttt{results\_redteam/} (50) & i7-14700K, RTX 3060, 32\,GB & Ollama 0.6.8, context 4096 \\
+B & \texttt{results/machine-B/causal-ollama0.6.8/}, \texttt{results/machine-B/redteam-ollama0.6.8/} (50) & i7-14700K, RTX 3060, 32\,GB & Ollama 0.6.8, context 4096 \\
 C & no model runs & Ryzen 3 3250U, 5.7\,GB & no Ollama installed \\
 \bottomrule
 \end{tabular}

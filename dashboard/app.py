@@ -34,7 +34,7 @@ from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-RESULTS_DIR = os.path.join(ROOT, "results", "corpus")
+RESULTS_DIR = os.path.join(ROOT, "results", "machine-A", "corpus")
 # Pasado este margen sin t1, la corrida no esta "en curso": esta interrumpida.
 CORTE_EN_CURSO_S = 900
 STATIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")

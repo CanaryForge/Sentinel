@@ -35,7 +35,7 @@ import time
 import yaml
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-RESULTS_DIR = os.path.join(ROOT, "results", "corpus")
+RESULTS_DIR = os.path.join(ROOT, "results", "machine-A", "corpus")
 
 
 def load_config(path):

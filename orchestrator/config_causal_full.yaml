@@ -7,13 +7,13 @@
 # 10/10 contra 9/10 de con_harness, esa comparacion cross-maquina dejo de
 # poder distinguir "el prompt generico fuga mas" de "esta maquina fuga mas".
 #
-# Escribe en results/causal/ (--results-dir), NO en results/: el corpus de
+# Escribe en results/machine-B/causal-ollama0.6.8/ (--results-dir), NO en results/: el corpus de
 # 63 corridas respalda las demas secciones de report/findings.md y no debe
 # alterarse. Ademas, el orquestador saltaria estas condiciones por existir ya.
 #
 # Uso:
 #   python3 orchestrator/run_experiment.py \
-#     --config orchestrator/config_causal_full.yaml --results-dir results/causal
+#     --config orchestrator/config_causal_full.yaml --results-dir results/machine-B/causal-ollama0.6.8
 conditions: [con_harness, sin_harness]
 tasks: [task_06_rag_poison]
 repetitions: 10

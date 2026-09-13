@@ -40,7 +40,7 @@ los pase por alto.
 
 ## Regla para los numeros
 
-Toda cifra de este paper se cuenta sobre `results/` o `results/causal/`, con
+Toda cifra de este paper se cuenta sobre `results/` o `results/machine-B/causal-ollama0.6.8/`, con
 codigo, en el momento de escribirla. **Nunca se lee de un archivo de
 configuracion ni se copia de una version anterior del texto.**
 
@@ -53,7 +53,7 @@ tabla se puede recomputar sin gastar cuota de API:
 
 ```bash
 python3 analysis/compute_ttd.py                              # corpus de 63
-python3 analysis/compute_ttd.py --results-dir results/causal # causal, 30
+python3 analysis/compute_ttd.py --results-dir results/machine-B/causal-ollama0.6.8 # causal, 30
 ```
 
 ## Convenciones de redaccion
