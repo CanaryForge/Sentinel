@@ -232,11 +232,32 @@ else
   FALLAS=$((FALLAS + 1))
 fi
 
-if elapsed=$($WAIT "$EVENTS_FILE" --since "$RT_TS" --type egress --contains mirror-externo --timeout 15); then
-  echo "    OK: egress_monitor marco mirror-externo en ${elapsed}s"
+# El proxy SI registra la peticion, pero el destino que ve es
+# package-registry:5000, que esta en el baseline: la marca como benigna. La
+# direccion del atacante solo existe URL-encodeada dentro del query string, y
+# el segundo salto (package-registry -> mirror-externo) ocurre servidor a
+# servidor dentro de red-mocks, sin pasar por el proxy.
+#
+# Asi que el control afirma lo que de verdad se cumple --que la peticion queda
+# registrada-- y deja escrito el punto ciego, que es el hallazgo: un SSRF a
+# traves de un destino autorizado evade el baseline de egress por completo.
+# Es el patron del incidente ancla (SSRF via Artifactory).
+# --severidad info: el default de _wait_for_event.py es "alerta", y este
+# evento es precisamente benigno -- package-registry esta en el baseline. Sin
+# esto el control espera una alerta que por diseno no va a llegar.
+if elapsed=$($WAIT "$EVENTS_FILE" --since "$RT_TS" --type egress --severidad info --contains "fetch" --timeout 15); then
+  echo "    OK: egress_monitor registro la peticion SSRF en ${elapsed}s"
 else
-  echo "    FALLA: egress_monitor no vio el trafico hacia mirror-externo" >&2
+  echo "    FALLA: egress_monitor no vio ni siquiera la peticion al registry" >&2
   FALLAS=$((FALLAS + 1))
+fi
+
+if $WAIT "$EVENTS_FILE" --since "$RT_TS" --type egress --contains '"anomalo": true' --timeout 5 >/dev/null 2>&1; then
+  echo "    aviso inesperado: el destino salio marcado como anomalo; revisar baseline"
+else
+  echo "    PUNTO CIEGO (esperado): mirror-externo NO se marca anomalo -- viaja"
+  echo "                 URL-encodeado en el query de un destino autorizado."
+  echo "                 Ver report/findings.md, punto ciego del SSRF."
 fi
 
 echo
