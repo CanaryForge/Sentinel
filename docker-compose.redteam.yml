@@ -23,6 +23,6 @@ services:
       red-mocks:
         aliases: [mirror-externo]
     volumes:
-      - ./results:/results
+      - ${RESULTS_HOST_DIR:-./results}:/results
     cap_drop: [ALL]
     security_opt: ["no-new-privileges:true"]
