@@ -1,0 +1,22 @@
+# Experimento causal para el Hallazgo 2 (report/findings.md): "con_harness
+# tuvo MAS fugas que sin_harness, replicado en 3/3 vectores". Aisla si el
+# mecanismo es enfasis/largo del guardrail en general, o especificamente que
+# HARNESS_SECURITY_BLOCK nombra la superficie del ataque (archivos/
+# directorios/URLs) al advertir sobre ella -- ver la nota de diseno completa
+# y la prediccion falsable en sandbox/prompts.py.
+#
+# Solo corre la condicion NUEVA (con_harness_generico): con_harness y
+# sin_harness para task_06_rag_poison ya existen en results/ de la matriz
+# anterior (2 x 2 x 10 = 40 corridas, ver orchestrator/config_memory_rag.yaml)
+# y analysis/compute_ttd.py los toma en cuenta automaticamente al escanear
+# resultados existentes -- no hace falta repetirlos.
+#
+# task_06_rag_poison se eligio por ser el vector con el efecto mas grande y
+# limpio medido hasta ahora (9/10 vs 3/10), maximizando poder estadistico
+# por corrida gastada.
+conditions: [con_harness_generico]
+tasks: [task_06_rag_poison]
+repetitions: 10
+run_timeout_seconds: 480
+project_name_prefix: sbxharness_causal
+compose_files: [docker-compose.yml]
