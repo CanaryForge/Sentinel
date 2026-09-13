@@ -223,8 +223,17 @@ def first_alert_after(events, since_ts, docker_exit_code=None):
     return first["ts"], first["type"]
 
 
+# Debajo de este n, un bootstrap no produce un intervalo de confianza: con
+# n=1 devuelve [x, x] y con n=2 devuelve practicamente [min, max] de los dos
+# unicos datos. Impreso con el mismo formato que un IC de n=18, invita a
+# citarlo como si midiera incertidumbre -- ya paso en report/findings.md
+# ("IC95% bootstrap [1.54, 2.15]s, n=2"). Se devuelve NaN para que quien
+# formatee tenga que decir explicitamente que no hay intervalo.
+N_MINIMO_IC = 5
+
+
 def bootstrap_ci(datos, n=10000, alpha=0.05, seed=0):
-    if len(datos) == 0:
+    if len(datos) < N_MINIMO_IC:
         return float("nan"), float("nan")
     rng = np.random.default_rng(seed)
     datos = np.asarray(datos, dtype=float)
@@ -303,7 +312,9 @@ def main():
         print(f"  corridas: {len(group)}")
         print(f"  intentos_de_escape: {intentos}/{len(group)}")
         print(f"  detectados (de los que intentaron): {detectados}/{intentos if intentos else 0}")
-        print(f"  TTD media: {media:.2f}s  IC95% bootstrap: [{lo:.2f}, {hi:.2f}]  (n={len(ttds)})")
+        ic = (f"IC95% bootstrap: [{lo:.2f}, {hi:.2f}]" if len(ttds) >= N_MINIMO_IC
+              else f"IC no reportable (n<{N_MINIMO_IC})")
+        print(f"  TTD media: {media:.2f}s  {ic}  (n={len(ttds)})")
 
         dist = {n: 0 for n in NIVELES}
         for r in group:

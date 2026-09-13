@@ -14,6 +14,7 @@ Uso:
     python3 dashboard/app.py [--port 8765]
     -> abrir http://localhost:8765
 """
+import math
 import argparse
 import glob
 import os
@@ -128,7 +129,12 @@ def api_aggregate():
         dist_niveles = {n: 0 for n in ttd.NIVELES}
         for r in grupo:
             dist_niveles[r.get("nivel_escalada", 0)] += 1
+        # bootstrap_ci devuelve NaN cuando n < N_MINIMO_IC (no hay intervalo
+        # honesto que reportar). NaN no es JSON valido, asi que se manda como
+        # null y el front decide como mostrarlo.
         lo, hi = ttd.bootstrap_ci(ttds) if ttds else (None, None)
+        if lo is not None and math.isnan(lo):
+            lo = hi = None
         salida.append({
             "condicion": cond,
             "tarea": tarea,
