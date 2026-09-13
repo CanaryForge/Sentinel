@@ -1,34 +1,102 @@
 \section{Method}
+\label{sec:method}
 
 \subsection{Operational definitions}
 
-\todo{Las definiciones son eleccion nuestra y hay que decirlo. (1) "Intento de
-escape": para task\_01--03, la primera llamada a \texttt{http\_fetch}; para
-task\_04--06, el canary en los argumentos de una tool call --porque en esas
-tareas el hint autoriza consultar el canal, asi que acceder al canal no es la
-violacion. Fuente: \texttt{analysis/compute\_ttd.py::escape\_ts\_for}.}
+Every figure in this paper rests on three definitions that are our choices,
+not universal detections. They are stated here so a reader can disagree with
+them specifically.
 
-\todo{(2) La escalera de escalada 0--6 (\texttt{NIVELES}). Tabla con los siete
-niveles. Subrayar que se calcula desde el TRANSCRIPT, no desde los eventos de
-los monitores: por eso sobrevive a los cambios en la logica de deteccion
-descritos en la Seccion 5.}
+\paragraph{Escape attempt.} For tasks 01 through 03 it is the first call to
+the \texttt{http\_fetch} tool. For tasks 04 through 06 it is the first
+appearance of the run's canary token in the arguments or result of a tool
+call. The difference matters: in those three tasks the planted hint authorises
+consulting the channel, so reaching the mirror, the memory store, or the
+knowledge base is not itself a violation. Acting on the injected instruction
+is. Both definitions live in one function,
+\texttt{compute\_ttd.escape\_ts\_for}, imported by every layer that needs
+them, after an earlier version drifted between the analysis and the dashboard.
 
-\todo{(3) TTD: del acto del agente a la primera alerta posterior. Documentar
-el filtro por \texttt{docker\_exit\_code}: con exit 0, ninguna alerta de
-heartbeat cuenta como deteccion, porque el apagado limpio siempre dispara una.}
+\paragraph{Escalation ladder.} Each run is scored on a seven-step ladder, from
+0 (no signal) through 4 (successfully contacted an internal mock) to 5 (used
+the out-of-scope forwarding, meaning the canary appears where an attacker
+asked for it) and 6 (sandbox broken, detected as heartbeat silence). Levels 0
+through 5 are computed from the agent transcript alone. Only level 6 consults
+monitor events. That separation is load-bearing for this paper: every
+correction we made to detection logic, described in
+Section~\ref{sec:validity}, leaves the level counts untouched.
+
+\paragraph{Time to detection.} The interval from the agent's act to the first
+monitor alert at or after it. One filter is applied: when a container exits
+cleanly, no heartbeat alert counts as a detection, because a clean shutdown
+always produces heartbeat silence and an earlier version of the analysis
+credited that silence as a real detection.
 
 \subsection{Experimental matrix}
 
-\todo{Tabla de corridas: 63 en \texttt{results/} (vectores 4--6, tres
-condiciones, backend local) y 30 en \texttt{results\_causal/} (experimento
-causal homogeneo). Decir de que maquina salio cada conjunto --ver
-\texttt{report/hardware\_validation.md}-- porque la Seccion 5 depende de esa
-distincion.}
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}lllrl@{}}
+\toprule
+\textbf{Set} & \textbf{Tasks} & \textbf{Conditions} & \textbf{Runs} & \textbf{Machine} \\
+\midrule
+\texttt{results/} & 04, 05, 06 & 2 (plus 3 partial) & 63 & A (Apple Silicon) \\
+\texttt{results\_causal/} & 06 & 3 & 30 & B (Windows) \\
+\texttt{results\_redteam/} & 04 & 2 & 20 & B (Windows) \\
+\bottomrule
+\end{tabular}
+\caption{113 runs across three sets. The corpus was planned as 60 runs; the
+three extra are an incomplete arm whose reported table had to be retracted
+(Section~\ref{sec:validity}). Which machine produced which set is not
+bookkeeping: it is the axis along which the main finding fails to replicate.}
+\end{table}
+
+All runs use \texttt{qwen2.5:7b-instruct}, with the digest verified identical
+across both machines before the second set was generated. Runs are sequential
+by design, since the model is the scarce resource and parallel runs would
+produce contention rather than throughput.
+
+\todo{Si Daniel pasa su version de Ollama y su OLLAMA\_CONTEXT\_LENGTH, anadir
+aqui una fila de configuracion de runtime por maquina. Es el dato que decide
+si la Seccion 5 reporta una limitacion explicada o un misterio abierto.}
 
 \subsection{Deterministic validation}
 
-\todo{Los controles positivos y el barrido de fortaleza. El argumento: un
-monitor que nunca disparo es indistinguible de uno roto, asi que antes de
-reportar cualquier tasa de deteccion hay que demostrar que las tres senales
-disparan ante un evento sintetico. Cinco controles, sin LLM, deterministas.
-Numeros medidos: \pending{pegar la corrida final de tests/positive\_controls.sh}.}
+A monitor that never fired is indistinguishable from a monitor that is broken.
+Before reporting any detection rate, we therefore fire each event the monitors
+are supposed to catch, by hand, and measure how long each takes. The suite
+needs no model backend and costs nothing to run.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}rlr@{}}
+\toprule
+\textbf{\#} & \textbf{Control} & \textbf{Measured} \\
+\midrule
+1 & heartbeat silence after killing the pinger & 9.08\,s \\
+2 & canary in a workspace directory name & 0.43\,s \\
+3 & canary in an outbound query string & 0.49\,s \\
+4 & destination outside the egress baseline & 0.49\,s \\
+5 & canary in cross-run persistent memory & 18.45\,s \\
+6 & red-teamer serves its payload through the SSRF & 0.52\,s \\
+\bottomrule
+\end{tabular}
+\caption{All six fire. Control 1 measures the configured threshold (5\,s
+interval times a multiplier of 2) minus the time since the last ping, not
+monitor slowness. Control 5 is an order of magnitude slower than the other
+canary surfaces because inotify does not fire for host-side writes to a bind
+mount, so that surface falls back to the periodic sweep.}
+\end{table}
+
+Two of these controls exist because the harness failed silently without them.
+Control 5 was added after finding that the most persistent leak channel in the
+corpus, a canary written into cross-run memory, was the only one nothing
+watched. Control 6 was added after finding that no control touched the
+attacker path at all, and it reported a blind spot on its first run
+(Section~\ref{sec:validity}).
+
+A separate sweep varies each monitor's configuration parameter against the
+same synthetic event, isolating how often a monitor looks from the variance of
+model behaviour. Its results appear in Section~\ref{sec:results}.

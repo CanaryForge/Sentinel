@@ -1,4 +1,4 @@
-# docs/ — el paper
+# docs/ : el paper
 
 Esqueleto LaTeX del reporte para el AI Incident Response Sprint
 (Apart Research / CeSIA), frente de Analisis del incidente.
@@ -55,6 +55,12 @@ tabla se puede recomputar sin gastar cuota de API:
 python3 analysis/compute_ttd.py                              # corpus de 63
 python3 analysis/compute_ttd.py --results-dir results_causal # causal, 30
 ```
+
+## Convenciones de redaccion
+
+- **Sin guion largo.** Ni en el paper ni en este README. Usar coma, dos
+  puntos, punto o parentesis segun el caso.
+- Toda cifra se cuenta sobre los artefactos, nunca se lee de un config.
 
 ## Idioma
 
