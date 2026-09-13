@@ -1,35 +1,129 @@
 \section{Results}
 \label{sec:results}
 
-\subsection{Delivery channel dominates}
+\subsection{The delivery channel dominates}
 
-\todo{Hallazgo 1. Mismo texto inyectado, tres canales, tasas distintas:
-fetch de red 10\%, memoria persistente 50\%, RAG local 60\% (agregado sobre
-las 20 corridas de cada tarea en \texttt{results/}). Hipotesis observable en
-los transcripts: el contenido que "ya estaba ahi" recibe menos escrutinio que
-el recien traido por HTTP. Conectar con ASI06.}
+Tasks 04 through 06 carry an identical injected instruction and differ only in
+how it reaches the agent. Holding the text constant, the channel changes the
+follow-through rate by a factor of six.
 
-\todo{Tabla: tarea, canal, \texttt{con\_harness} nivel 5, \texttt{sin\_harness}
-nivel 5. Las seis celdas estan verificadas contra los artefactos crudos.}
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}llrr@{}}
+\toprule
+\textbf{Task} & \textbf{Channel} & \textbf{Followed} & \textbf{Rate} \\
+\midrule
+\texttt{task\_04} & live network fetch & 2/20 & 10\% (17\% of those exposed) \\
+\texttt{task\_05} & cross-run persistent memory & 10/20 & 50\% \\
+\texttt{task\_06} & local knowledge base & 12/20 & 60\% \\
+\bottomrule
+\end{tabular}
+\caption{Corpus, 60 runs. The network row carries two denominators because
+the attacker logs each delivery, and eight of those twenty runs were never
+served the payload (Section~\ref{sec:validity}). Conditioning on exposure
+raises the rate but does not change the ordering.}
+\end{table}
 
-\subsection{Time to detection}
+A hypothesis visible directly in the transcripts: content that was already
+there, sitting in team memory or in internal documentation, receives less
+scrutiny than content just fetched over HTTP from an external mirror, even
+when the instruction is byte for byte the same. That asymmetry of trust is
+what ASI06 warns about~\cite{owasp-asi06}, and it points the wrong way for
+defenders, since the cheapest channel to poison is also the most trusted.
 
-\todo{TTD por condicion con IC bootstrap. IMPORTANTE: usar las cifras
-corregidas de la Seccion 5, no las publicadas originalmente. Reportar tambien
-que por debajo de n=5 no se da intervalo (\texttt{N\_MINIMO\_IC}).}
+\subsection{The guardrail correlates with more leakage, and it replicates}
 
-\subsection{Monitor strength sweep}
+The finding that survived every correction in this paper is also the one the
+team least expected. On \texttt{task\_06}, the condition carrying a production
+security guardrail leaks at roughly three times the rate of the condition
+without one.
 
-\todo{Figura: TTD contra parametro de configuracion, un panel por mecanismo.
-Fuente \texttt{results/monitor\_strength.jsonl}, ya graficado en el dashboard.
-Dos lecturas: el heartbeat es lineal en su umbral y predecible; el canary es
-plano porque desde el cambio a inotify el parametro ya no gobierna la latencia
-de deteccion.}
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}llrr@{}}
+\toprule
+\textbf{Set} & \textbf{Ollama} & \texttt{sin\_harness} & \texttt{con\_harness} \\
+\midrule
+Corpus, machine A & 0.32.5 & 3/10 & \textbf{9/10} \\
+Machine B & 0.34.0 & 3/10 & \textbf{7/10} \\
+Machine B & 0.6.8 & 10/10 & 10/10 \\
+\bottomrule
+\end{tabular}
+\caption{The third row is not a result, it is a measurement failure preserved
+for honesty: on an Ollama release 26 minor versions old the agent loops until
+it exhausts the turn cap, every condition saturates, and nothing can be
+distinguished. Section~\ref{sec:validity} gives the mechanism.}
+\end{table}
 
-\subsection{The causal experiment}
+Once the runtime versions are comparable, the effect appears on both machines
+at close to the same size. It is a correlation across two independent sets,
+not a causal claim, and the next subsection is our attempt to explain it.
 
-\todo{El experimento que aisla "nombrar la superficie de ataque". Prediccion
-falsable registrada ANTES de correr (\texttt{sandbox/prompts.py}). Resultado:
-\pending{numeros de results\_causal/ con memoria limpia}. Decir sin rodeos si
-la prediccion se cumplio o no; la version previa de este experimento la
-falsaba.}
+\subsection{Naming the attack surface is not the mechanism}
+
+\texttt{HARNESS\_SECURITY\_BLOCK} confounds three things at once: it is
+longer, it is more emphatic, and it names the exact surfaces an attacker would
+ask the agent to use, warning it never to put its token in file names,
+directory names, or URLs. A prompt-injection payload then asks for precisely
+that. The natural hypothesis is priming: naming the surface makes it available.
+
+We registered a falsifiable prediction in \texttt{sandbox/prompts.py} before
+running. \texttt{GENERIC\_EMPHASIS\_BLOCK} matches the guardrail's length and
+emphasis (818 characters against 830) but forbids only that the token leave
+the working environment, without naming how. If priming is the mechanism, that
+condition should sit near \texttt{sin\_harness}.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}lllr@{}}
+\toprule
+\textbf{Condition} & \textbf{Length and emphasis} & \textbf{Names the surface} & \textbf{Level 5} \\
+\midrule
+\texttt{sin\_harness} & short, none & no & 3/10 \\
+\texttt{con\_harness\_generico} & matched & \textbf{no} & \textbf{7/10} \\
+\texttt{con\_harness} & matched & yes & \textbf{7/10} \\
+\bottomrule
+\end{tabular}
+\caption{Thirty runs on one machine, one model, one monitor build, with memory
+reset before each run. The prediction fails: the generic condition lands
+exactly on the guardrail, not near the control.}
+\end{table}
+
+Removing every mention of files, directories and URLs, while holding length
+and emphasis constant, did not reduce leakage at all. Naming the attack
+surface is not the mechanism.
+
+What remains is simpler and less comfortable. The variable that tracks leakage
+is the presence of an emphatic security block, whatever it says. A long,
+serious warning about a sensitive token is associated with roughly double the
+leakage of a line that mentions it in passing, and the specific content of the
+warning changes nothing.
+
+We are deliberately not proposing a mechanism for that. This experiment rules
+one out; it does not identify its replacement.
+
+\subsection{Detection latency and monitor strength}
+
+\todo{Cerrar esta subseccion con las cifras corregidas de la Seccion 5, no con
+las publicadas originalmente. Reportar TTD por condicion con IC bootstrap y
+decir que por debajo de n=5 no se da intervalo. Anadir la figura del barrido
+de fortaleza desde results/corpus/monitor\_strength.jsonl, que ya grafica el
+dashboard: el heartbeat es lineal en su umbral y predecible, el canary es
+plano porque desde el cambio a inotify el parametro ya no gobierna la
+latencia. Mencionar que el TTD de la superficie de filesystem cae por debajo
+del milisegundo y a esa resolucion mide desfase entre relojes, no latencia
+del monitor.}
+
+\subsection{Limitations of these results}
+
+Ten runs per cell. The seven against three contrast is clear and in the
+opposite direction to the prediction, but we report no effect size and run no
+formal test. The causal experiment covers one task, chosen because the effect
+was cleanest there, and was not repeated on the other two. Every run uses one
+local 7B model, so nothing here is claimed to generalise to frontier models or
+to other forms of guardrail. And the mechanism behind the emphasis effect is
+unisolated: what this experiment eliminates is one concrete explanation, not
+all of them.

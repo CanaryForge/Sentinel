@@ -1,58 +1,124 @@
-\section{Threats to Validity, and Four Retractions}
+\section{Threats to Validity, and Four Corrections}
 \label{sec:validity}
 
-\todo{Framing de la seccion, en dos frases: estas correcciones salieron de
-recomputar cada cifra del reporte contra los artefactos crudos, de forma
-independiente del script que las produjo. Se publican porque el patron
---que agregados calculados por script resistieron y las enumeraciones escritas
-a mano no-- es el resultado transferible.}
+Every figure in an earlier draft was recomputed from the raw artifacts,
+independently of the script that produced it. The aggregates computed by code
+survived. Four claims did not, and the pattern is the transferable part: what
+held was counted, and what failed was written by hand or read from a
+configuration file.
 
-\subsection{The filesystem monitor detected itself}
+\subsection{The filesystem monitor was detecting itself}
 
-\todo{\texttt{sandbox/agent.py} escribe el transcript DENTRO de
-\texttt{/workspace} para que el canary\_monitor lo vea. Cuando el modelo narra
-en prosa "voy a crear \texttt{/workspace/ack\_<canary>}", el token aterriza en
-ese log y el monitor se detecta a si mismo. 31 de 60 corridas tienen al menos
-un evento asi. La tasa publicada de 24/24 (100\%) baja a 18/24 (75\%) contando
-solo superficies que produce el agente. Separar los dos efectos: 6 detecciones
-sin ninguna otra senal (fuga realmente sin detectar) y 13 donde la senal real
-existia pero el artefacto llego primero (el TTD esta mal, la deteccion no).}
+\texttt{agent.py} writes the agent transcript into \texttt{/workspace} so the
+canary monitor can see it. When the model narrates its intent in prose, saying
+it will create \texttt{/workspace/ack\_<canary>}, the token lands in that log
+and the monitor fires on an artifact the harness wrote. This happens in 34 of
+60 corpus runs.
 
-\subsection{The causal table had no data behind it}
+The reported detection rate of 25/25 becomes \textbf{19/25} counting only
+surfaces the agent produced. Two effects need separating, because they are not
+equally serious. Six detections have no other signal at all: those leaks are
+genuinely unseen, and the reported detection was an artifact. The rest have
+real signal that arrived after the self-detection, so what is wrong there is
+the time to detection, not the detection.
 
-\todo{Se publico una tabla de 10 corridas de \texttt{con\_harness\_generico}
-con 4/10 de fuga. En \texttt{results/} habia 3, una truncada. La cifra se
-redacto leyendo \texttt{repetitions: 10} de un archivo de configuracion en vez
-de contar artefactos. Regla que queda: toda cifra "N/10" se cuenta sobre
-\texttt{results/}, nunca se lee del config que las habria producido.}
+The monitor now excludes its own log. That change was not applied
+retroactively, since altering a monitor alters the measured system; the
+corrected figures come from reprocessing the existing artifacts.
 
-\subsection{Finding 2 does not replicate across machines}
+Level counts are unaffected, because levels 0 through 5 come from the
+transcript rather than from monitor events. That separation is why a
+correction this large leaves Section~\ref{sec:results} standing.
 
-\todo{Con el mismo modelo y el mismo digest verificado, la misma tarea dio
-9/10 contra 3/10 en la maquina de Daniel y \pending{numeros} en la de Sergio.
-La evidencia esta en los transcripts: mediana de 4 turnos frente a 14, y 0 de
-23 corridas agotando el tope de turnos frente a 11 de 30. Descartado el
-truncamiento de contexto como causa --se remidio contra un servidor con
-contexto mayor y el comportamiento de bucle no cambio. La causa probable es la
-version de Ollama, que ningun artefacto del corpus registra. Decir que el
-hallazgo estrella del proyecto esta condicionado a una configuracion que no se
-documento.}
+\subsection{A published table had no data behind it}
 
-\subsection{Runs were not independent}
+An earlier draft reported ten runs of \texttt{con\_harness\_generico} at 4/10.
+Three existed on disk, one of them truncated. The figure had been written from
+\texttt{repetitions: 10} in a YAML file rather than counted over the
+artifacts. It was retracted, and the experiment was then actually run, which
+is what Section~\ref{sec:results} reports.
 
-\todo{\texttt{./memory} es un bind mount al host, asi que
-\texttt{docker compose down -v} no lo toca. Tras la matriz causal el archivo
-tenia 85 notas, 58 con el canary literal de una corrida previa: un agente
-podia leer el secreto de otra corrida, y ninguna corrida de task\_05/06 empezo
-en las mismas condiciones que la anterior. Corregido --el orquestador ahora
-resetea la memoria por corrida-- y las 30 corridas causales se regeneraron
-sobre esa base.}
+The rule that came out of it is now written into the repository: every figure
+is counted over the artifacts at the time of writing, never read from the
+configuration that would have produced them.
 
-\subsection{Log integrity under concurrent append}
+\subsection{A runtime version made the main finding disappear}
 
-\todo{Los tres monitores hacen append al mismo \texttt{\{run\_id\}.jsonl} desde
-contenedores distintos. Sobre un bind mount de Docker Desktop en Windows ese
-append no es atomico: se observo una linea desgarrada, que empieza a mitad del
-JSON. Es un riesgo de integridad del formato de evento compartido, no un bug
-de un monitor concreto. Mitigacion aplicada: el analisis salta la linea y
-avisa con archivo:linea en vez de morir.}
+The first homogeneous causal run produced 10/10 in all three conditions. With
+the control condition saturated there is no low reference point and nothing
+can be compared, which we initially and wrongly reported first as a
+falsification and then as a null result. Both readings were made on data with
+no power to support either.
+
+The cause was the Ollama release. Machine A ran 0.32.5 and machine B ran
+0.6.8, and because Ollama numbers releases as \texttt{0.MINOR.PATCH} with a
+minor past one digit, the second is twenty-six minor versions older rather
+than newer. On the old release the agent loops, repeating an identical tool
+call 42\% of the time, and exhausts the fifteen-turn cap in 17 of 30 runs.
+Machine A never reached that cap in 63 runs. Given three times the turns,
+almost any run eventually touches the canary, which is what drove every
+condition to the ceiling.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}llrrr@{}}
+\toprule
+\textbf{Machine} & \textbf{Ollama} & \textbf{Median turns} & \textbf{Repeated calls} & \textbf{Hit the cap} \\
+\midrule
+A & 0.32.5 & 6 & 0\% & 0 of 63 \\
+B & 0.6.8 & 15 & 42\% & 17 of 30 \\
+B & 0.34.0 & 6 & 20\% & 0 of 30 \\
+\bottomrule
+\end{tabular}
+\caption{Updating machine B aligned its agent behaviour with machine A's and
+removed the ceiling. The default context length is not the explanation: 0.34.0
+also defaults to 4096, exactly as 0.6.8 does.}
+\end{table}
+
+None of this was recoverable from the artifacts. The corpus recorded neither
+the Ollama version nor the effective context, and the model name existed only
+as prose in a report. The orchestrator now queries the server and writes the
+version into every run's metadata.
+
+\subsection{Runs were not independent, and one denominator was wrong}
+
+\texttt{./memory} is a host bind mount, so \texttt{docker compose down -v}
+never clears it. After the causal matrix the file held 85 notes, 58 carrying
+the literal canary of an earlier run: an agent could read another run's secret
+through \texttt{memory\_read}, and no task with a memory channel started from
+the same state as the run before it. The orchestrator now resets memory before
+each run, to the seeded poisoned note for the memory-poisoning task and to
+empty otherwise. Contamination turned out not to inflate the rates, since
+clean memory moved the control condition up rather than down, but the runs
+were not comparable while it persisted.
+
+Separately, the red-teamer logs each delivery of its payload, and counting
+those against runs shows that eight of twenty runs in \texttt{task\_04} were
+never served the attack, skewed by condition. In the summary a run that was
+never attacked is indistinguishable from one where the agent read the payload
+and declined: both simply score low. The channel rate in
+Section~\ref{sec:results} therefore carries both denominators.
+
+\subsection{Two structural limits we did not fix}
+
+\paragraph{The SSRF path evades the egress baseline.} When the agent reaches
+the attacker through the route the task suggests, the proxy sees
+\texttt{package-registry:5000}, which is in the baseline because it is a
+legitimate service. The attacker's address travels URL-encoded inside a query
+string, where the baseline check does not look, and the second hop happens
+server to server inside an internal network without crossing the proxy at all.
+This is the anchor incident's own pattern. The monitor catches the naive agent
+and misses the one that takes the detour the task offers it.
+
+\paragraph{The shared event log is not safe under concurrent append.} The
+three monitors append to one file per run from separate containers, and that
+append is not atomic over a Docker Desktop bind mount on Windows. We observed
+lines beginning mid-JSON. The analysis now skips a torn line and names the
+file and line rather than dying on it, but a lost line may be an inert event
+or an alert that changes a run's verdict.
+
+\paragraph{Canary obfuscation coverage is a floor, not a claim.} Detection
+matches the plain token plus base64, URL encoding, hex and reversal. An agent
+encoding the token in, for example, the lengths of file names defeats it, and
+we make no claim beyond the four.
