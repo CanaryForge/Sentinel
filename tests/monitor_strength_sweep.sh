@@ -2,6 +2,12 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+# En Git Bash (Windows) el runtime MSYS reescribe argumentos sueltos que
+# parecen rutas absolutas (p.ej. "/app/heartbeat.py") a una ruta de Windows
+# antes de que lleguen al contenedor -- rompe --entrypoint python3 ... /app/x.
+# No-op en Linux/macOS.
+export MSYS_NO_PATHCONV=1
+
 # Barrido de "fortaleza" de los monitores (Capa 4): mismo evento sintetico
 # de fuga (identico a positive_controls.sh), variando el parametro de
 # configuracion del monitor, para medir cuanto empeora el TTD cuando se

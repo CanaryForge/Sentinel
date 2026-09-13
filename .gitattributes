@@ -1,0 +1,6 @@
+# Scripts que corren dentro de contenedores Linux (via shebang) o que Docker
+# ejecuta como entrypoint deben mantener LF siempre, incluso con
+# core.autocrlf=true en Windows -- CRLF rompe el shebang ("env: 'bash\r':
+# No such file or directory") y el contenedor sale con exit 127.
+*.sh text eol=lf
+Dockerfile text eol=lf
