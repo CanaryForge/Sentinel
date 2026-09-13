@@ -1,9 +1,26 @@
 .env
 __pycache__/
 *.pyc
+# Las 63 corridas de la matriz SI se versionan. Son el dato que respalda cada
+# cifra de report/findings.md, cuestan cuota real de API y no se pueden
+# reproducir identicas: sin ellas, nadie fuera de la maquina donde se
+# generaron puede rehacer la verificacion que el reporte cita como garantia.
+# ~1.8 MB.
+#
+# Lo que sigue ignorado es todo lo efimero y lo derivado: artefactos de
+# tests/positive_controls.sh y del barrido de fortaleza (regenerables en
+# minutos, sin LLM), corridas de diagnostico locales, y
+# timeline_combined.jsonl, que se reconstruye con
+# `python3 timeline/export_timeline.py`.
 results/*.jsonl
 results/*_meta.json
+results/controles/
 !results/.gitkeep
+!results/con_harness_*
+!results/sin_harness_*
+!results/summary.jsonl
+!results/redteam_events.jsonl
+!results/monitor_strength.jsonl
 memory/*.jsonl
 !memory/.gitkeep
 .DS_Store

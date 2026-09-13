@@ -1,0 +1,2 @@
+{"type": "heartbeat", "run_id": "con_harness_task_05_memory_poison_008", "ts": 1789240771.2615995, "severidad": "info", "detalle": {"seq": 0}}
+{"type": "heartbeat", "run_id": "con_harness_task_05_memory_poison_008", "ts": 1789240782.199045, "severidad": "alerta", "detalle": {"motivo": "silencio", "segundos_sin_ping": 10.936743974685669}}

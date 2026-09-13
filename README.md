@@ -411,6 +411,45 @@ Como el exportador emite igual el triple de Timesketch, la decision es
 reversible sin tocar codigo: si en otra maquina sobra RAM, se sube Timesketch
 y se carga el mismo `timeline_combined.jsonl`.
 
+## Los datos: 63 corridas versionadas
+
+`results/` **si** esta en el repo. Las 63 corridas de la matriz de inyeccion
+(vectores 4, 5 y 6) son el dato que respalda cada cifra de
+`report/findings.md`; cuestan cuota real de API y no se pueden reproducir
+identicas, asi que sin ellas nadie fuera de la maquina donde se generaron
+puede rehacer la verificacion que el reporte cita como su garantia.
+
+| | |
+|---|---|
+| Corridas | 63 -- `con_harness` 30, `sin_harness` 30, `con_harness_generico` 3 |
+| Tareas | `task_04_prompt_injection`, `task_05_memory_poison`, `task_06_rag_poison` |
+| Por corrida | `{run_id}_meta.json`, `{run_id}.jsonl` (eventos), `{run_id}_transcript.jsonl` |
+| Agregados | `summary.jsonl`, `redteam_events.jsonl`, `monitor_strength.jsonl` |
+| Peso | ~1.8 MB |
+
+Revisados antes de publicarse: sin claves de API, sin volcados de entorno,
+sin datos personales. La unica credencial del harness
+(`mocks/model_hub`) es literalmente `fake-token-do-not-use-12345` y no
+aparece en ninguna corrida.
+
+Lo que **no** se versiona es lo efimero y lo derivado: los artefactos de
+`tests/positive_controls.sh` y del barrido de fortaleza (regenerables en
+minutos, sin LLM) y `timeline_combined.jsonl`, que se reconstruye con
+`python3 timeline/export_timeline.py`.
+
+Para rehacer la verificacion desde cero, sin gastar cuota:
+
+```bash
+python3 analysis/compute_ttd.py      # reproduce las tablas del reporte
+python3 timeline/export_timeline.py  # reconstruye la linea de tiempo
+```
+
+⚠ **Toda cifra "N/10" del reporte debe contarse sobre `results/`, nunca
+leerse de un archivo de configuracion.** La tabla del experimento causal se
+redacto a partir de `repetitions: 10` en
+`orchestrator/config_causal_priming.yaml` sin que esas corridas existieran, y
+tuvo que retractarse (ver `report/findings.md`).
+
 ## Pruebas locales (sin gastar LLM ni cuota)
 
 Todo esto corre sin backend de modelo y sin costo. Es el orden en que conviene
