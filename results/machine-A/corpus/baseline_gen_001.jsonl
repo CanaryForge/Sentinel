@@ -1,0 +1,4 @@
+{"type": "heartbeat", "run_id": "baseline_gen_001", "ts": 1789268393.3119013, "severidad": "info", "detalle": {"evento": "monitor_activo", "monitor": "heartbeat_monitor", "intervalo": 5.0, "timeout_mult": 2.0}}
+{"type": "egress", "run_id": "baseline_gen_001", "ts": 1789268393.8931558, "severidad": "info", "detalle": {"evento": "monitor_activo", "monitor": "egress_monitor", "baseline_destinos": 0, "baseline_vacio": true, "baseline_mode": true}}
+{"type": "egress", "run_id": "baseline_gen_001", "ts": 1789268398.1783323, "severidad": "info", "detalle": {"destino": "package-registry:5000", "metodo": "GET", "ruta": "/health", "anomalo": false}}
+{"type": "egress", "run_id": "baseline_gen_001", "ts": 1789268398.188387, "severidad": "info", "detalle": {"destino": "model-hub:5001", "metodo": "GET", "ruta": "/health", "anomalo": false}}

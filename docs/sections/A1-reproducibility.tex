@@ -3,7 +3,7 @@
 
 \subsection{The data is in the repository}
 
-All 113 runs are versioned in the repository~\cite{sentinel-repo}, about
+All 143 runs are versioned in the repository~\cite{sentinel-repo}, about
 1.8\,MB: per-run metadata, monitor events, and full agent transcripts, plus
 the aggregate files. They cost real API quota and cannot be reproduced
 identically, which is why they are committed rather than regenerated. Every
@@ -11,9 +11,11 @@ table in this paper can therefore be recomputed by a reader without a model
 backend and without spending anything:
 
 \begin{lstlisting}[language=bash]
-python3 analysis/compute_ttd.py                                # corpus, 63 runs
-python3 analysis/compute_ttd.py --results-dir results_causal   # causal, 30 runs
-python3 analysis/compute_ttd.py --results-dir results_redteam  # task_04, 20 runs
+python3 analysis/compute_ttd.py                    # corpus, 63 runs
+python3 analysis/compute_ttd.py --results-dir \
+        results/machine-B/causal-ollama0.34.0     # causal, 30 runs
+python3 analysis/compute_ttd.py --results-dir \
+        results/machine-B/redteam-ollama0.6.8     # task_04, 20 runs
 \end{lstlisting}
 
 \subsection{Running the harness}
@@ -68,18 +70,20 @@ does not pay for them again.
 \toprule
 \textbf{Machine} & \textbf{Produced} & \textbf{Hardware} & \textbf{Runtime} \\
 \midrule
-A & \texttt{results/} (63) & Apple Silicon M5 Pro, 24\,GB & \pending{Ollama version} \\
-B & \texttt{results\_causal/}, \texttt{results\_redteam/} (50) & i7-14700K, RTX 3060, 32\,GB & Ollama 0.6.8, context 4096 \\
+A & \texttt{machine-A/corpus} (63) & Apple Silicon M5 Pro, 24\,GB & Ollama 0.32.5, context unset \\
+B & \texttt{machine-B/*} (80) & i7-14700K, RTX 3060, 32\,GB & Ollama 0.6.8, then 0.34.0 \\
 C & no model runs & Ryzen 3 3250U, 5.7\,GB & no Ollama installed \\
 \bottomrule
 \end{tabular}
-\caption{Machine A's runtime configuration was never recorded by any artifact,
-which is why Section~\ref{sec:validity} cannot explain the replication
-failure. The orchestrator now writes a backend block into every run's
-metadata, so no future run is unauditable this way.}
+\caption{Ollama numbers releases as \texttt{0.MINOR.PATCH} and its minor
+passed one digit some time ago, so 0.32.5 is twenty-six minor versions ahead
+of 0.6.8, not behind it: machine B ran the old one. Neither machine set a
+context length, so each used its version's default. Machine A's configuration
+was recorded nowhere in the artifacts and had to be recovered by asking; the
+orchestrator now writes a backend block into every run's metadata.}
 \end{table}
 
-\todo{Completar la fila de la maquina A cuando Daniel pase
-\texttt{ollama --version} y su \texttt{OLLAMA\_CONTEXT\_LENGTH}. Si el
-contexto resulta mayor que 4096, la Seccion 5 pasa de "sin explicar" a
-"limitacion conocida", que es un cambio sustantivo en como se lee el paper.}
+\todo{La diferencia de version de Ollama entre maquinas (0.32.5 contra 0.6.8)
+es la hipotesis principal para la no replicacion de la Seccion 5. El test que la
+cierra: actualizar la maquina B y repetir task\_06. Si no se corre a tiempo,
+reportarla como hipotesis con mecanismo, no como causa demostrada.}

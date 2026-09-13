@@ -1,0 +1,1 @@
+{"type": "canary", "run_id": "mstr_canary_3s_1789266879", "ts": 1789266884.164847, "severidad": "alerta", "detalle": {"superficie": "nombre_archivo_o_directorio", "ruta": "/CNRY-MSTR-15fa5ddd995e", "variantes": ["plano", "url"]}}

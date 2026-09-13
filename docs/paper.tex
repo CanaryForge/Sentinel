@@ -2,7 +2,7 @@
 % Incident Analysis track.
 %
 % Build:  ./build.sh      (latexmk, intermediates land in _build/)
-% Source of every number in this paper: results/ and results_causal/ in this
+% Source of every number in this paper: the results/ subdirectories of this
 % repository. Nothing here should be written from memory or from a config
 % file -- see docs/README.md, "Rule for numbers".
 \documentclass[11pt,a4paper]{article}
@@ -10,15 +10,22 @@
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage[english]{babel}
-% lmodern antes que microtype: la expansion de fuentes de microtype exige
-% fuentes escalables, y las Computer Modern por defecto son bitmap -- sin
-% esto pdflatex aborta con 'auto expansion is only possible with scalable
-% fonts'.
-\usepackage{lmodern}
+% Times en vez de Latin Modern: es la convencion de IEEE, y al ser mas
+% compacta cabe mas texto por pagina, lo que importa con un limite de 8.
+% newtx es la familia Times moderna; incluye matematicas coherentes, que
+% mathptmx y el viejo paquete times no dan.
+\usepackage{newtxtext,newtxmath}
 \usepackage{microtype}
 \usepackage[margin=2.5cm]{geometry}
 \usepackage{booktabs}
 \usepackage{graphicx}
+% Las figuras se dibujan en TikZ, no se exportan del panel: asi heredan la
+% tipografia del documento y una paleta de impresion, en vez de traer la
+% estetica oscura de una pantalla a una pagina en blanco.
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,fit,positioning,calc}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
 \usepackage{xcolor}
 \usepackage{listings}
 \usepackage{caption}
@@ -73,10 +80,12 @@ ocite{*} hace que las entradas aparezcan mientras el cuerpo todavia no
 % tiene \cite: sin esto bibtex aborta con 'I found no \citation commands'.
 % Quitarlo cuando cada referencia este citada de verdad en el texto.
 \nocite{*}
-\bibliographystyle{plain}
+\bibliographystyle{IEEEtran}
 \bibliography{refs}
 
 \appendix
 \input{sections/A1-reproducibility}
+\input{sections/A2-controls}
+\input{sections/A3-limits}
 
 \end{document}

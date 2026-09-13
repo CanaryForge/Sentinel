@@ -2,7 +2,7 @@ import os
 import json
 import glob
 
-def extract_cot_before_escape(results_dir="results", output_file="report/cot_analysis.md", context_turns=3):
+def extract_cot_before_escape(results_dir="results/machine-A/corpus", output_file="report/cot_analysis.md", context_turns=3):
     """
     Recorre los transcripts, identifica escapes (http_fetch) y extrae 
     el Chain of Thought (CoT) previo en un formato forense limpio y legible.

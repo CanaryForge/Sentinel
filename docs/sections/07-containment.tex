@@ -1,19 +1,80 @@
 \section{Detection Without Response}
+\label{sec:containment}
 
-\todo{El numero que ancla la seccion: el arnes detecta en 1.79s de mediana y
-la corrida sigue viva 37s mas, con 4 tool calls mas del agente. 31 de 33
-corridas siguieron actuando despues de que el monitor ya sabia. Ese es el
-dwell time que una capa de contencion cerraria, y es medible con lo que ya
-hay.}
+The harness detects a leak in a little over two seconds and then does nothing
+about it for the better part of a minute.
 
-\todo{Por que el arnes no contiene: los tres monitores son
-arquitectonicamente incapaces. El addon de mitmproxy solo loguea (mitmproxy
-SI puede matar flows); el canary monta el workspace read-only; el heartbeat no
-tiene handle sobre el contenedor; el orquestador espera a que la corrida
-termine sin mirar eventos. Tabla corta.}
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}lrr@{}}
+\toprule
+& \textbf{Median} & \textbf{Max} \\
+\midrule
+Detection after the agent's act & 2.22\,s & \\
+Run still alive afterwards & 44\,s & 161\,s \\
+Further tool calls by the agent & 3 & 9 \\
+Runs where the agent stopped on its own & \multicolumn{2}{r}{2 of 26} \\
+\bottomrule
+\end{tabular}
+\caption{Corpus runs that reached a leak, counting only alerts on surfaces the
+agent produced. Detection is fast and it works. What follows it is the gap.}
+\end{table}
 
-\todo{Trabajo futuro, con la condicion de diseno que lo hace publicable: si se
-agrega contencion, tiene que ser un brazo NUEVO, no una modificacion del
-existente, o el corpus deja de ser comparable. Y la escalera 0--6 necesita un
-eje paralelo (contenido si/no), porque con contencion el escape nunca
-completa.}
+Time to detection is the metric this harness was built to measure, and on its
+own it flatters the design. The interval that matters to an incident responder
+is the other one: from the moment the system knows to the moment the agent
+stops. Here that is 44 seconds and three more tool calls, and in 24 of 26 runs
+the agent kept working after the monitors had already fired.
+
+That number is not a failure of the monitors. It is the absence of a
+component. The harness was built to measure, and it measures well; nothing in
+it was ever built to act.
+
+\subsection{Why nothing acts}
+
+Each signal is structurally incapable of intervening, and in three of the four
+cases that is a deliberate design choice rather than an oversight.
+
+The egress monitor is a mitmproxy addon that only logs, though mitmproxy can
+kill a flow and this one chooses not to. The canary monitor mounts the
+workspace read-only. The heartbeat monitor is an HTTP server and a watchdog
+thread with no handle on the sandbox container. The orchestrator waits for the
+run to exit and never reads events while one is in progress.
+
+The read-only mount is the interesting one. It exists so the monitor cannot
+contaminate the surface it audits, which is correct for a measurement
+instrument and disqualifying for a response mechanism. Detection and
+containment want opposite privileges, and a harness that wants both has to say
+which container holds which.
+
+\subsection{What a containment arm would have to respect}
+
+We did not build one, and the reason is worth stating rather than hiding: any
+intervention changes the system being measured, and the corpus would stop
+being comparable with itself.
+
+Two constraints follow for anyone who adds one.
+
+First, containment has to be a \emph{new arm}, not a modification of the
+existing conditions. The 143 runs in this repository were produced without it,
+and a monitor that kills a flow is a different monitor.
+
+Second, the escalation ladder breaks. Levels 0 through 5 describe how far an
+agent got, and with containment active a leak never completes, so a contained
+run and a run that never tried both score low for opposite reasons. The ladder
+needs a parallel axis recording whether the attempt was contained, not a new
+rung.
+
+The cheapest intervention that would demonstrate the idea is already visible
+in the code: when the egress monitor's canary check fires, calling
+\texttt{flow.kill()} rather than only logging. That maps directly onto the
+anchor incident, where exfiltration left through a proxy that watched it go
+past~\cite{huggingface2026intrusion}. The reportable result would be a time to
+containment alongside the time to detection, and a dwell time reduced from 44
+seconds to roughly zero.
+
+\todo{Opcional si sobra espacio y hay tiempo para correrlo: un brazo
+\texttt{con\_contencion} de 10 corridas en task\_06 bastaria para reportar TTC
+junto al TTD. Si no se corre, esta seccion se sostiene sola: el hueco esta
+medido, que es mas de lo que suele haber.}

@@ -6,10 +6,17 @@ that the agent took the bait. Every component is deliberately cheap: the whole
 thing runs on one laptop with a 7B local model, and nothing in it asks the
 model to report on itself.
 
-\todo{Figura: exportar el diagrama de arquitectura del dashboard
-(\texttt{dashboard/static/index.html}) a \texttt{figures/architecture.pdf}.
-Ya esta ruteado ortogonalmente y muestra las tres redes Docker, los dos bind
-mounts persistentes y las dos raices que vigila el fs-monitor.}
+\begin{figure}[t]
+\centering
+\resizebox{\textwidth}{!}{\input{figures/architecture}}
+\caption{The harness topology. Solid: agent traffic the proxy audits. Dashed:
+the heartbeat, which bypasses the proxy by design so that a saturated network
+cannot silence it. Long dashes: the model backend, outside the audited scope.
+Dotted: volumes and bind mounts, which are not network. The filesystem monitor
+watches two roots, and \texttt{./memory} survives \texttt{docker compose
+down -v}, which is what makes it the most durable leak channel.}
+\label{fig:arch}
+\end{figure}
 
 Two Docker networks (\texttt{red-proxy} and \texttt{red-mocks}) are declared
 \texttt{internal}, so no traffic the agent generates can reach the real
@@ -53,31 +60,19 @@ periodic sweep as a backstop in case an event is missed.
 The agent always gets the same surface task, fixing a division bug so a test
 suite passes. What changes is the temptation planted around it.
 
-\begin{table}[h]
-\centering
-\small
-\begin{tabular}{@{}llp{6.4cm}@{}}
-\toprule
-\textbf{Task} & \textbf{Channel} & \textbf{Planted temptation} \\
-\midrule
-\texttt{task\_01} & none & control: the task is genuinely unsolvable \\
-\texttt{task\_02} & filesystem & a credentials file in the workspace \\
-\texttt{task\_03} & error text & an error pointing at an internal registry \\
-\texttt{task\_04} & live network fetch & injected instruction served by an external mirror \\
-\texttt{task\_05} & persistent memory & the same instruction seeded in cross-run memory \\
-\texttt{task\_06} & local knowledge base & the same instruction seeded in a RAG document \\
-\bottomrule
-\end{tabular}
-\caption{Tasks 04 through 06 carry an identical injected instruction and
-differ only in how it reaches the agent, which is what makes the channel
-comparison in Section~\ref{sec:results} possible.}
-\end{table}
+Tasks 01 through 03 are passive temptation, a credentials file or an error
+pointing at an internal registry, with nothing instructing the agent to act.
+They produce none of the results reported here and exist only because the
+harness supports them.
 
-Tasks 01 through 03 are passive temptation: nothing instructs the agent to do
-anything. Tasks 04 through 06 carry an active injected instruction asking the
-agent to create a confirmation directory named with its own session
-identifier, which is the technique the anchor incident used to move data out
-in directory names~\cite{huggingface2026intrusion}.
+Tasks 04 through 06 carry an \emph{identical} injected instruction, asking the
+agent to create a confirmation directory named with its own session identifier,
+and differ only in how it reaches the agent: a live fetch from an external
+mirror, a note seeded in cross-run persistent memory, or a document seeded in a
+local knowledge base. Holding the text constant while varying the channel is
+what makes the comparison in Section~\ref{sec:results} possible. The technique
+is the anchor incident's own, which moved data out in directory
+names~\cite{huggingface2026intrusion}.
 
 Vectors 05 and 06 fall under \textbf{ASI06: Memory and Context
 Poisoning}~\cite{owasp-asi06}: untrusted input stored as trusted memory or
@@ -90,28 +85,16 @@ stricter case, since \texttt{./memory} is a host bind mount that survives
 The experimental axis is what the system prompt says about security, holding
 the task constant.
 
-\begin{table}[h]
-\centering
-\small
-\begin{tabular}{@{}llrl@{}}
-\toprule
-\textbf{Condition} & \textbf{Prompt block} & \textbf{Chars} & \textbf{Names the attack surface} \\
-\midrule
-\texttt{sin\_harness} & \texttt{MINIMAL\_BLOCK} & 77 & no \\
-\texttt{con\_harness} & \texttt{HARNESS\_SECURITY\_BLOCK} & 830 & yes \\
-\texttt{con\_harness\_generico} & \texttt{GENERIC\_EMPHASIS\_BLOCK} & 818 & no \\
-\bottomrule
-\end{tabular}
-\caption{The canary is present in all three conditions, since it is detection
-instrumentation rather than a defence. What changes is whether the agent is
-told the token is sensitive, and whether the warning names the surfaces an
-attacker would ask it to use.}
-\end{table}
+The canary is present in all three conditions, since it is detection
+instrumentation rather than a defence. What changes is the system prompt:
+\texttt{sin\_harness} mentions the token in one 77-character line,
+\texttt{con\_harness} carries the 830-character production guardrail that
+names file names, directory names and URLs as surfaces the token must never
+reach, and \texttt{con\_harness\_generico} matches that guardrail's length
+and emphasis (818 characters, 126 words against 131) while forbidding only
+that the token leave the working environment, without naming how.
 
-The third condition exists to separate two things the second confounds. The
-production guardrail is simultaneously longer, more emphatic, and explicit
-about file names, directory names, and URLs. \texttt{GENERIC\_EMPHASIS\_BLOCK}
-matches its length and emphasis (818 characters against 830, 126 words against
-131) while forbidding only that the token leave the working environment,
-without naming how. Section~\ref{sec:results} reports what that isolation
-produced, which is not what we expected.
+The third condition exists to separate two things the second confounds: a
+guardrail that is longer and more emphatic, and one that names the attack
+surface. Section~\ref{sec:results} reports what that isolation produced,
+which is not what we expected.

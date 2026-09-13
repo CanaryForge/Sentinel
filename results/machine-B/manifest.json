@@ -1,0 +1,10 @@
+{
+  "maquina": "B",
+  "operador": "Sergio",
+  "hardware": "Intel i7-14700K, RTX 3060, 32 GB, Windows 11",
+  "ollama": "0.6.8 hasta 2026-09-13 12:00, 0.34.0 despues",
+  "ollama_context_length": "sin fijar, 4096 en ambas versiones",
+  "modelo": "qwen2.5:7b-instruct",
+  "digest": "845dbda0ea48",
+  "nota": "Cada subdirectorio lleva la version en el nombre porque entre 0.6.8 y 0.34.0 el agente cambia de comportamiento lo bastante como para que los dos conjuntos NO sean comparables entre si."
+}
