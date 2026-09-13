@@ -48,13 +48,36 @@ a quedar sin procedencia. Las 63 del corpus son anteriores a ese cambio.
 | Equipo | Mac, Apple Silicon **M5 Pro** |
 | RAM | **24 GB** unificada |
 | Modelo | `qwen2.5:7b-instruct`, digest `845dbda0ea48` (confirmado contra el tag) |
-| Ollama | **pendiente** -- versión y `OLLAMA_CONTEXT_LENGTH` sin confirmar |
+| Ollama | **0.32.5** |
+| `OLLAMA_CONTEXT_LENGTH` | sin fijar (default de su version) |
 
 Reportado verbalmente por Daniel, no leído de un artefacto: queda anotado como
-lo que es. Los dos datos que faltan son justo los que decidirían si el
-Hallazgo 2 replica fuera de su máquina, así que la pregunta sigue abierta.
+lo que es.
 
-Lo que sí se puede afirmar ya: **24 GB de memoria unificada y GPU de Apple
+**Con la version confirmada, la diferencia entre maquinas deja de ser un
+misterio.** Ollama numera `0.MINOR.PATCH` y su minor pasó de un digito hace
+tiempo, asi que **0.32.5 no es anterior a 0.6.8: son 26 versiones menores de
+diferencia, y la maquina B es la vieja.** Lo confirma el propio updater de esa
+maquina, que tiene descargado el instalador de la v0.34.0.
+
+Ninguno de los dos fijo `OLLAMA_CONTEXT_LENGTH`, asi que cada uno corrio con
+el default de su version. La maquina B reporta 4096 en su arranque; el default
+de 0.32.5 no se midio aqui.
+
+Entre esas dos versiones cambian la plantilla de chat, el manejo de tool calls,
+los parametros de sampling por defecto y el contexto por defecto: exactamente
+el conjunto que explicaria por que los agentes de la maquina B iteran hasta el
+tope de 15 turnos (11 de 30 corridas) y los de la maquina A convergen con una
+mediana de 4 turnos y nunca lo tocan (0 de 23).
+
+**Esto es una hipotesis con un mecanismo plausible, no una causa demostrada.**
+El test que la cierra es barato y esta pendiente: actualizar Ollama en la
+maquina B a una version comparable y repetir `task_06`. Si los agentes pasan a
+converger y `sin_harness` baja del techo, la no replicacion del Hallazgo 2 pasa
+de ser un resultado inexplicado a ser un artefacto de version del runtime, que
+es una limitacion muy distinta de reportar.
+
+Lo que tambien se puede afirmar, y es independiente de la version: **24 GB de memoria unificada y GPU de Apple
 Silicon no son un equipo limitado para un modelo de 7B**, así que la
 divergencia de comportamiento entre su máquina y la de Sergio --mediana de 4
 turnos frente a 14, y 0 de 23 corridas agotando el tope frente a 11 de 30--
