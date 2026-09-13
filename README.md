@@ -393,7 +393,14 @@ con SQL. Las dos conviven; ninguna reemplaza a la otra.
 ### Generar la linea de tiempo
 
 ```bash
+# Un solo conjunto (por defecto, el corpus)
 python3 timeline/export_timeline.py
+
+# El incidente completo: los cuatro conjuntos en una sola linea de tiempo,
+# cada evento etiquetado con su `conjunto` de origen
+python3 timeline/export_timeline.py --results-dir   results/machine-A/corpus   results/machine-B/causal-ollama0.34.0   results/machine-B/causal-ollama0.6.8   results/machine-B/redteam-ollama0.6.8
+
+python3 timeline/push_timeline.py   --input results/timeline_combined.jsonl --stream sentinel_timeline
 ```
 
 Lee todo lo que haya en `results/` (mas `memory/notes.jsonl`) y escribe
