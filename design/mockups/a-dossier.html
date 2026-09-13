@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="en" data-direction="dossier">
+<head>
+<meta charset="utf-8">
+<title>Sentinel, Direction A, Forensic Dossier</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Raleway:wght@300;400;500;600&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --primary-300:#e1cfa2; --primary-400:#e4bd5e; --primary-500:#b8860b;
+  --primary-600:#9a6f05; --primary-700:#7a5803; --primary-900:#382902;
+  --neutral-400:#a7a59f; --neutral-500:#817d74; --neutral-600:#615e56;
+  --neutral-700:#47443e;
+  --bg:#11100e; --surface:#1b1a18; --elevated:#2e2d28;
+  --border:#2e2d28; --border-subtle:#47443e;
+  --text:#f9f9f8; --text-2:#d5d4d2; --text-muted:#817d74;
+  --error-500:#de2e21; --error-400:#d97069;
+  --success-500:#24bc5c; --info-500:#2c7cdd;
+  --display:"Cormorant Garamond",Georgia,serif;
+  --body:"Raleway",system-ui,sans-serif;
+  --mono:"Courier Prime",ui-monospace,monospace;
+  --r:2px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--body);font-weight:300;
+  font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+
+/* ---- shell: wide left rail, content column, no cards ---- */
+.shell{display:grid;grid-template-columns:220px minmax(0,1fr);min-height:100vh}
+.rail{border-right:1px solid var(--border);padding:32px 24px;position:sticky;top:0;height:100vh}
+.brand{display:flex;align-items:center;gap:12px;margin-bottom:48px}
+.brand svg{width:32px;height:32px;flex:none}
+.brand-name{font-family:var(--display);font-size:24px;font-weight:500;letter-spacing:.01em}
+.brand-sub{font-family:var(--mono);font-size:10px;color:var(--text-muted);
+  letter-spacing:.12em;text-transform:uppercase;margin-top:2px}
+.rail nav{display:flex;flex-direction:column;gap:2px}
+.rail nav a{font-size:13px;color:var(--text-muted);text-decoration:none;padding:7px 10px;
+  border-left:2px solid transparent;transition:color .18s,border-color .18s}
+.rail nav a:hover{color:var(--text-2)}
+.rail nav a[aria-current]{color:var(--text);border-left-color:var(--primary-500)}
+.rail-foot{position:absolute;bottom:32px;left:24px;right:24px;
+  font-family:var(--mono);font-size:10px;color:var(--neutral-600);line-height:1.7}
+
+.col{padding:64px 72px 120px;max-width:1180px}
+
+/* ---- masthead ---- */
+.masthead{border-bottom:1px solid var(--border);padding-bottom:40px;margin-bottom:56px}
+.masthead h1{font-family:var(--display);font-size:56px;font-weight:400;line-height:1.08;
+  letter-spacing:-.01em;max-width:20ch}
+.masthead h1 em{font-style:italic;color:var(--primary-400);line-height:1.12;padding-bottom:2px}
+.masthead p{margin-top:20px;max-width:62ch;color:var(--text-2);font-size:16px}
+.kicker{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--primary-500);margin-bottom:20px}
+
+/* ---- figures: huge serif numerals on hairlines, no boxes ---- */
+.figures{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-bottom:72px;
+  border-top:1px solid var(--border)}
+.fig{padding:28px 28px 28px 0;border-right:1px solid var(--border)}
+.fig:last-child{border-right:none}
+.fig .n{font-family:var(--display);font-size:72px;font-weight:300;line-height:.92;
+  letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.fig .n.gold{color:var(--primary-400)}
+.fig .k{font-size:13px;color:var(--text-2);margin-top:12px;max-width:22ch}
+.fig .note{font-family:var(--mono);font-size:10.5px;color:var(--neutral-600);margin-top:6px}
+
+/* ---- section rhythm ---- */
+section{margin-bottom:88px}
+.sec-head{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin-bottom:32px;
+  padding-bottom:16px;border-bottom:1px solid var(--border)}
+.sec-head h2{font-family:var(--display);font-size:34px;font-weight:400;letter-spacing:-.005em}
+.sec-head p{color:var(--text-muted);font-size:14px;max-width:68ch}
+
+/* ---- finding: pull-quote style lead, data beneath ---- */
+.finding{border-left:2px solid var(--primary-600);padding-left:28px;margin-bottom:36px}
+.finding .lead{font-family:var(--display);font-size:25px;font-weight:400;line-height:1.35;
+  max-width:44ch;color:var(--text)}
+.finding .lead b{font-weight:600;color:var(--primary-300)}
+.finding .body{margin-top:14px;color:var(--text-2);font-size:14.5px;max-width:66ch}
+
+/* ---- ladder: hairline stacked bars, gold is the leak level ---- */
+.ladder{display:flex;flex-direction:column}
+.lrow{display:grid;grid-template-columns:260px 1fr 84px;gap:24px;align-items:center;
+  padding:16px 0;border-bottom:1px solid var(--border)}
+.lrow:first-child{border-top:1px solid var(--border)}
+.lname{font-family:var(--mono);font-size:11.5px;color:var(--text-2);line-height:1.5}
+.lname span{display:block;color:var(--neutral-500);font-size:10.5px}
+.lbar{display:flex;height:16px;border-radius:var(--r);overflow:hidden;background:var(--surface)}
+.lbar i{display:block;height:100%}
+.lttd{font-family:var(--mono);font-size:12px;text-align:right;color:var(--text-2);
+  font-variant-numeric:tabular-nums}
+.lttd span{display:block;font-size:10px;color:var(--neutral-600)}
+.legend{display:flex;flex-wrap:wrap;gap:18px;margin-top:20px;font-family:var(--mono);font-size:10.5px;
+  color:var(--neutral-500)}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:1px;margin-right:6px;
+  vertical-align:middle}
+
+/* ---- surfaces: asymmetric 2fr/1fr, no cards ---- */
+.split{display:grid;grid-template-columns:1.6fr 1fr;gap:56px;align-items:start}
+.srow{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:baseline;
+  padding:14px 0;border-bottom:1px solid var(--border)}
+.srow:first-child{border-top:1px solid var(--border)}
+.slabel{font-size:14px;color:var(--text-2)}
+.sval{font-family:var(--display);font-size:30px;font-weight:400;font-variant-numeric:tabular-nums;
+  line-height:1}
+.sval.gold{color:var(--primary-400)}
+.sval.dim{color:var(--neutral-500)}
+.aside h3{font-family:var(--display);font-size:19px;font-weight:500;margin-bottom:10px}
+.aside p{font-size:13.5px;color:var(--text-muted);line-height:1.65}
+.aside .warn{border-left:2px solid var(--error-500);padding-left:16px;margin-top:20px}
+.aside .warn strong{color:var(--error-400);font-weight:500}
+
+/* ---- routing: plain rows, status by type not by dot ---- */
+.route{display:grid;grid-template-columns:1fr 90px 90px 150px;gap:16px;padding:14px 0;
+  border-bottom:1px solid var(--border);align-items:center;font-size:13.5px}
+.route:first-of-type{border-top:1px solid var(--border)}
+.route .d{font-family:var(--mono);font-size:12.5px}
+.route .num{font-family:var(--mono);font-size:12.5px;text-align:right;
+  font-variant-numeric:tabular-nums;color:var(--text-2)}
+.route .num.hot{color:var(--error-400)}
+.tag{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+  padding:3px 9px;border-radius:var(--r);border:1px solid var(--border-subtle);
+  color:var(--neutral-400);justify-self:start}
+.tag.undeclared{border-color:var(--error-500);color:var(--error-400)}
+.rhead{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--neutral-600);padding-bottom:8px}
+
+/* ---- tools ---- */
+.tools{display:grid;grid-template-columns:1fr 1fr;gap:56px}
+.trow{display:grid;grid-template-columns:132px 1fr 48px;gap:14px;align-items:center;padding:7px 0}
+.tname{font-family:var(--mono);font-size:12px;color:var(--text-2)}
+.tname.bad{color:var(--error-400)}
+.ttrack{height:6px;background:var(--surface);border-radius:var(--r);overflow:hidden}
+.ttrack i{display:block;height:100%;background:var(--primary-600)}
+.ttrack i.bad{background:var(--error-500)}
+.tnum{font-family:var(--mono);font-size:11.5px;text-align:right;color:var(--neutral-500);
+  font-variant-numeric:tabular-nums}
+
+/* ---- deep link out to OpenObserve ---- */
+.oo{display:inline-flex;align-items:center;gap:9px;font-family:var(--mono);font-size:11.5px;
+  letter-spacing:.04em;color:var(--primary-400);text-decoration:none;padding:9px 16px;
+  border:1px solid var(--primary-700);border-radius:var(--r);
+  background:linear-gradient(135deg,#b8860b15,#7a580308);transition:border-color .18s,color .18s}
+.oo:hover{border-color:var(--primary-500);color:var(--primary-300)}
+.oo:active{transform:translateY(1px)}
+.oo-row{display:flex;gap:12px;margin-top:28px;flex-wrap:wrap}
+
+.footnote{font-family:var(--mono);font-size:11px;color:var(--neutral-600);line-height:1.8;
+  border-top:1px solid var(--border);padding-top:24px;max-width:76ch}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <aside class="rail">
+    <div class="brand">
+      <svg viewBox="0 0 64 64" aria-hidden="true">
+        <path fill="#e4bd5e" d="M44 12c4 0 7 2.6 8.4 5.6L48 19l4.6 1.2C51.4 25 47 28 41.6 28H36l-2.6 5H30l8-21c1.2-.6 3-0 6 0z"/>
+        <circle cx="45.5" cy="18" r="1.6" fill="#11100e"/>
+        <path fill="#b8860b" d="M10 34h44c0 5-4 8.5-9 9.4V52h4v4H21v-4h4v-8.6C18 42 13 39 10 34z"/>
+      </svg>
+      <div>
+        <div class="brand-name">Sentinel</div>
+        <div class="brand-sub">CanaryForge</div>
+      </div>
+    </div>
+    <nav>
+      <a href="#" aria-current="page">Incident analysis</a>
+      <a href="#surfaces">Detection surfaces</a>
+      <a href="#routing">Egress routing</a>
+      <a href="#tools">Tool sequences</a>
+      <a href="#live">Live run</a>
+    </nav>
+    <div class="rail-foot">
+      150 runs<br>4 corpora<br>4,829 events
+    </div>
+  </aside>
+
+  <main class="col">
+
+    <div class="masthead">
+      <div class="kicker">Incident analysis</div>
+      <h1>Detection lands in about a second. It just <em>lands in the wrong place.</em></h1>
+      <p>Across 150 runs of an LLM agent tempted out of its sandbox, three model-independent
+         monitors caught 79 of 85 escape attempts. The interesting part is not the rate. It is
+         which surface did the catching, and how much of it the harness caught on itself.</p>
+    </div>
+
+    <div class="figures">
+      <div class="fig">
+        <div class="n">150</div>
+        <div class="k">runs analysed</div>
+        <div class="note">across 4 corpora</div>
+      </div>
+      <div class="fig">
+        <div class="n">85</div>
+        <div class="k">reached a real escape attempt</div>
+        <div class="note">level 5 on the 0 to 6 ladder</div>
+      </div>
+      <div class="fig">
+        <div class="n gold">79</div>
+        <div class="k">detected by a monitor</div>
+        <div class="note">6 attempts went unseen</div>
+      </div>
+      <div class="fig">
+        <div class="n">73</div>
+        <div class="k">detected on a surface the agent produced</div>
+        <div class="note">the other 6 were the harness</div>
+      </div>
+    </div>
+
+    <section>
+      <div class="sec-head">
+        <h2>What each condition did</h2>
+        <p>Escalation ladder from level 0, no signal at all, to level 6, sandbox broken and the
+           heartbeat gone. Gold is level 5, the point where the agent used a relay that was never
+           in scope. Nothing reached level 6.</p>
+      </div>
+      <div class="ladder" id="ladder"></div>
+      <div class="legend" id="legend"></div>
+      <div class="oo-row">
+        <a class="oo" id="oo-all" href="#">Open every escape in OpenObserve</a>
+        <a class="oo" id="oo-det" href="#">Open every detection</a>
+      </div>
+    </section>
+
+    <section id="surfaces">
+      <div class="sec-head">
+        <h2>Where the canary actually showed up</h2>
+        <p>The canary token is planted once and watched everywhere. Counting where it surfaced
+           says more about the shape of the leak than the detection rate does.</p>
+      </div>
+
+      <div class="finding">
+        <div class="lead">The channel that carried the most signal was not file content
+          or network traffic. It was <b>the names of files and directories.</b></div>
+        <div class="body">63 detections came from a filename or a directory name, against a single
+          one from outbound traffic. This is the same channel as the July 2026 incident: agents
+          passing state to each other in path names, where nothing was watching in real time.</div>
+      </div>
+
+      <div class="split">
+        <div>
+          <div class="srow"><div class="slabel">File or directory name</div><div class="sval gold">63</div></div>
+          <div class="srow"><div class="slabel">File content</div><div class="sval">81</div></div>
+          <div class="srow"><div class="slabel">Outbound traffic</div><div class="sval dim">1</div></div>
+        </div>
+        <div class="aside">
+          <h3>Read the file-content number twice</h3>
+          <p>Of those 81 content hits, 40 landed on <span style="font-family:var(--mono);font-size:12px">agent_transcript.jsonl</span>,
+             which is the log the harness writes itself. The monitor was detecting its own
+             paperwork.</p>
+          <div class="warn">
+            <strong>41 of 81</strong> content detections were actually produced by the agent.
+            The panel counts those separately everywhere, and so should any figure quoted
+            from this corpus.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="routing">
+      <div class="sec-head">
+        <h2>Egress routing, declared against observed</h2>
+        <p>Declared topology is parsed live from the compose files. Observed destinations come
+           from every egress event the proxy recorded.</p>
+      </div>
+      <div class="route rhead">
+        <div>Destination</div><div style="text-align:right">Requests</div>
+        <div style="text-align:right">Alerts</div><div>In compose</div>
+      </div>
+      <div id="routes"></div>
+      <div class="finding" style="margin-top:36px">
+        <div class="lead">A request to an <b>authorised</b> destination can still carry the
+          attacker's real address in its query string.</div>
+        <div class="body">The egress monitor flags the destination node, not the contents of the
+          path. An SSRF aimed through package-registry looks identical to a legitimate fetch of
+          the same service if you only read the destination column.</div>
+      </div>
+    </section>
+
+    <section id="tools">
+      <div class="sec-head">
+        <h2>What the agent reached for</h2>
+        <p>Tool calls across all 150 runs, and the transitions that preceded a real leak.</p>
+      </div>
+      <div class="tools">
+        <div id="toolbars"></div>
+        <div>
+          <div class="aside" style="margin-bottom:28px">
+            <h3>Tools the model invented</h3>
+            <p>Three names were called that do not exist in
+               <span style="font-family:var(--mono);font-size:12px">sandbox/agent.py</span>.
+               The dispatcher resolves them to an error string and the agent carries on.
+               <span style="font-family:var(--mono);font-size:12px;color:var(--error-400)">mkdir</span>
+               was called 67 times. That is not noise, it is a capability the model assumed it had.</p>
+          </div>
+          <div class="aside">
+            <h3>Transitions that preceded a leak</h3>
+            <div id="trans" style="margin-top:12px"></div>
+          </div>
+        </div>
+      </div>
+      <div class="oo-row">
+        <a class="oo" id="oo-tools" href="#">Inspect tool events in OpenObserve</a>
+      </div>
+    </section>
+
+    <div class="footnote">
+      Aggregates recomputed live from the artefacts in results/machine-A and results/machine-B.
+      Event-by-event detail is deliberately not rebuilt here: OpenObserve holds all 4,829
+      normalised events and every link on this page opens it with the filter already applied.
+    </div>
+
+  </main>
+</div>
+
+<script src="_data.js"></script>
+<script>
+const S = window.SENTINEL;
+const LVL_COLORS = {
+  0:"#47443e", 1:"#615e56", 2:"#817d74", 3:"#2c7cdd", 4:"#e1cfa2", 5:"#b8860b", 6:"#de2e21"
+};
+
+// ladder
+document.getElementById("ladder").innerHTML = S.groups.map(g => {
+  const total = Object.values(g.dist).reduce((a,b)=>a+b,0) || 1;
+  const bars = Object.keys(g.dist).filter(k=>g.dist[k]>0).map(k =>
+    `<i style="width:${(g.dist[k]/total*100).toFixed(2)}%;background:${LVL_COLORS[k]}"
+        title="level ${k}, ${S.levels.labels[k]}: ${g.dist[k]}"></i>`).join("");
+  return `<div class="lrow">
+    <div class="lname">${g.condition}<span>${g.task}</span></div>
+    <div class="lbar">${bars}</div>
+    <div class="lttd">${g.ttd.toFixed(2)}s<span>mean ttd</span></div>
+  </div>`;
+}).join("");
+
+document.getElementById("legend").innerHTML = Object.keys(S.levels.labels)
+  .filter(k => S.levels.distribution[k] > 0)
+  .map(k => `<span><i style="background:${LVL_COLORS[k]}"></i>${k}, ${S.levels.labels[k]}</span>`)
+  .join("");
+
+// routing
+document.getElementById("routes").innerHTML = S.routing.map(r => `
+  <div class="route">
+    <div class="d">${r.dest}</div>
+    <div class="num">${r.hits}</div>
+    <div class="num ${r.alerts ? "hot" : ""}">${r.alerts}</div>
+    <div class="tag ${r.declared ? "" : "undeclared"}">${r.declared ? "declared" : "not declared"}</div>
+  </div>`).join("");
+
+// tools
+const max = Math.max(...Object.values(S.tools.counts));
+document.getElementById("toolbars").innerHTML = Object.entries(S.tools.counts)
+  .sort((a,b)=>b[1]-a[1]).map(([name,n]) => {
+    const bad = name in S.tools.invalid;
+    return `<div class="trow">
+      <div class="tname ${bad?"bad":""}">${name}</div>
+      <div class="ttrack"><i class="${bad?"bad":""}" style="width:${(n/max*100).toFixed(1)}%"></i></div>
+      <div class="tnum">${n}</div>
+    </div>`;
+  }).join("");
+
+document.getElementById("trans").innerHTML = S.tools.leakTransitions.map(([t,n]) =>
+  `<div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:11.5px;
+     padding:5px 0;color:var(--text-2)"><span>${t}</span><span style="color:var(--neutral-500)">${n}</span></div>`
+).join("");
+
+// deep links
+document.getElementById("oo-all").href  = ooLink("SELECT * FROM sentinel_timeline WHERE timestamp_desc = 'Escape real' ORDER BY _timestamp");
+document.getElementById("oo-det").href  = ooLink("SELECT * FROM sentinel_timeline WHERE timestamp_desc = 'Deteccion' ORDER BY _timestamp");
+document.getElementById("oo-tools").href = ooLink("SELECT * FROM sentinel_timeline WHERE source = 'transcript' ORDER BY _timestamp");
+</script>
+</body>
+</html>

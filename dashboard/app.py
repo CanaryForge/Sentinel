@@ -71,14 +71,16 @@ app = Flask(__name__, static_folder=None)
 # nombre) -- por eso todo lo que cruza corpus usa la clave compuesta
 # (corpus, run_id), nunca run_id solo.
 CORPUS_DIRS = {
-    "corpus": RESULTS_DIR,
-    "causal": os.path.join(ROOT, "results_causal"),
-    "redteam": os.path.join(ROOT, "results_redteam"),
+    "machine-A/corpus": RESULTS_DIR,
+    "machine-B/causal-ollama0.34.0": os.path.join(ROOT, "results", "machine-B", "causal-ollama0.34.0"),
+    "machine-B/causal-ollama0.6.8": os.path.join(ROOT, "results", "machine-B", "causal-ollama0.6.8"),
+    "machine-B/redteam-ollama0.6.8": os.path.join(ROOT, "results", "machine-B", "redteam-ollama0.6.8"),
 }
 CORPUS_LABELS = {
-    "corpus": "matriz base (vectores 4, 5, 6)",
-    "causal": "experimento causal (repeticion homogenea)",
-    "redteam": "vector 4, matriz separada",
+    "machine-A/corpus": "Base matrix (vectors 4, 5, 6)",
+    "machine-B/causal-ollama0.34.0": "Causal experiment, Ollama 0.34.0",
+    "machine-B/causal-ollama0.6.8": "Causal experiment, Ollama 0.6.8",
+    "machine-B/redteam-ollama0.6.8": "Vector 4, separate matrix",
 }
 
 # ttd.RESULTS_DIR es un global mutable de un modulo importado, y este
@@ -90,15 +92,44 @@ CORPUS_LABELS = {
 _ttd_lock = threading.Lock()
 
 
+# analyze_run() vuelve a leer y reprocesar los tres artefactos de una corrida
+# en cada llamada, y los seis endpoints de /api/incidente/ recorren los cuatro
+# corpus enteros -- el mismo run se reanaliza una vez por endpoint. La clave
+# del memo incluye el mtime de los tres archivos que analyze_run() lee, asi
+# que una corrida que el arnes acaba de escribir invalida su propia entrada
+# sin TTL ni invalidacion manual: si el disco no cambio, el resultado tampoco.
+_analysis_memo: dict = {}
+
+
+def _run_fingerprint(dirpath: str, run_id: str) -> tuple:
+    marcas = []
+    for sufijo in ("_meta.json", ".jsonl", "_transcript.jsonl"):
+        try:
+            marcas.append(os.stat(os.path.join(dirpath, run_id + sufijo)).st_mtime_ns)
+        except OSError:
+            marcas.append(None)
+    return tuple(marcas)
+
+
 def analyze_run_in(corpus: str, run_id: str) -> dict:
     dirpath = CORPUS_DIRS[corpus]
+    clave = (corpus, run_id)
+    huella = _run_fingerprint(dirpath, run_id)
     with _ttd_lock:
+        cacheado = _analysis_memo.get(clave)
+        if cacheado is not None and cacheado[0] == huella:
+            # Copia, no la entrada viva: api_runs() le pega "en_curso" e
+            # "interrumpida" encima al dict que recibe, y si eso aterrizara
+            # sobre el memo la corrida quedaria "en curso" para siempre.
+            return dict(cacheado[1])
         prev = ttd.RESULTS_DIR
         ttd.RESULTS_DIR = dirpath
         try:
-            return ttd.analyze_run(run_id)
+            resultado = ttd.analyze_run(run_id)
         finally:
             ttd.RESULTS_DIR = prev
+        _analysis_memo[clave] = (huella, resultado)
+        return dict(resultado)
 
 
 def _monitor_jsonl_paths(dirpath: str):
