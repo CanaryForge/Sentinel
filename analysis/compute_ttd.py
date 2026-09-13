@@ -400,7 +400,10 @@ def main():
             print(f"  {monitor}: {n}")
 
     out_path = os.path.join(RESULTS_DIR, "summary.jsonl")
-    with open(out_path, "w", encoding="utf-8") as f:
+    # newline="\n" explicito: sin el, en Windows Python traduce cada \n a CRLF y
+    # el summary versionado aparece modificado cada vez que alguien analiza, sin
+    # que haya cambiado un solo dato. Ruido en el diff que esconde cambios reales.
+    with open(out_path, "w", encoding="utf-8", newline="\n") as f:
         for r in rows:
             f.write(json.dumps(r, ensure_ascii=False) + "\n")
     print(f"\nresumen por corrida escrito en {out_path}")
