@@ -73,11 +73,28 @@ listo, sin ejecutar todavia; `[ ]` = pendiente.
       adivinadas -> mirror real -> payload leido -> instruccion inyectada
       seguida -> `canary_monitor` detecto en ~2.1s). Ver `report/
       findings.md`, seccion "Vector 4 en vivo"
-- [ ] Correr `orchestrator/run_experiment.py --config
+- [x] Correr `orchestrator/run_experiment.py --config
       orchestrator/config_redteam.yaml` (matriz completa de 20 corridas,
-      pendiente)
-- [ ] Incorporar resultados agregados del vector 4 a `report/findings.md`
-      (la corrida manual ya esta documentada; falta la matriz completa)
+      hecho 2026-09-13 en esta maquina)
+- [x] Incorporar resultados agregados del vector 4 a `report/findings.md`
+
+## Vectores 5-6 — Memoria y RAG envenenados (Historia ASI06)
+
+- [x] `orchestrator/config_memory_rag.yaml`: matriz de 40 corridas (2 x 2 x 10)
+- [x] `tests/seed_memory_poison.sh`: siembra `./memory/notes.jsonl`
+- [x] Matriz completa corrida 2026-09-13 en esta maquina
+- [x] Resultados incorporados a `report/findings.md` -- ver seccion
+      "Tercera maquina (machine-C, Windows ARM64, 2026-09-13)": dataset
+      independiente (Windows-on-ARM, Qualcomm Snapdragon), comparado contra
+      machine-A (Daniel) y machine-B (Sergio, lote valido 0.34.0); no
+      confirma el Hallazgo 2 para task_05/task_06 en esta maquina, sin
+      invalidar ninguna de las tres corridas. Datos organizados en
+      `results/machine-C/corpus/` + `results/machine-C/manifest.json`
+      siguiendo la convencion de `results/README.md`
+- [ ] Re-correr `orchestrator/config_causal_priming.yaml` en esta maquina
+      para poder confirmar o descartar el Hallazgo 2 con datos locales
+- [ ] Investigar linea por linea los 8 intentos `sin_harness` no detectados
+      (task_05/06, esta sesion) -- ver "Hallazgo nuevo" en `findings.md`
 
 ## Documentacion
 

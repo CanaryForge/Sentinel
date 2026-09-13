@@ -18,6 +18,7 @@ donde corre.
 | **Daniel** (Mac, Apple Silicon) | `results/` -- las **63 corridas** del corpus, sobre las que descansa cada cifra de `findings.md` | Parcial, abajo |
 | **Juan Esteban** (`cachyos-x8664`) | ninguna corrida con LLM (sin Ollama); sí la validación de entorno y los arreglos de `positive_controls.sh` | Sí, abajo |
 | **Sergio** (Windows 11) | `results/machine-B/causal-ollama0.6.8/` -- las 30 corridas del experimento causal homogéneo | Sí, abajo |
+| **Sofiro11** (Windows 11 ARM64) | `results/machine-C/corpus/` -- 60 corridas, vector 4 completo + vectores 5/6 | Sí, abajo |
 
 **El hueco de la primera fila sigue medio abierto.** El corpus no registra en
 ningún artefacto con qué se corrió: el modelo (`qwen2.5:7b-instruct`) aparece
@@ -233,6 +234,47 @@ evento de detección con timestamp *anterior* al momento en que el contenedor
 de prueba efímero terminaba de cerrarse. Esta validación se hizo ANTES de que
 apareciera el problema de `docker compose run` documentado arriba, así que
 sus números siguen siendo válidos y no están afectados por el hang.
+
+## Perfil de hardware -- Sofiro11 (produjo `results/machine-C/corpus/`)
+
+Cuarta maquina del proyecto, primera en Windows-on-ARM. **No es la primera
+ARM64** -- la de Daniel (Apple Silicon M5 Pro) tambien lo es -- lo que la
+distingue es el SoC (Qualcomm Oryon vs Apple Silicon) y sobre todo el
+sistema operativo: Windows + Docker Desktop (WSL2) en vez de macOS, lo que
+implica un build de Ollama/llama.cpp completamente distinto al de Daniel
+aunque ambos sean ARM64. Corrida completa de vector 4 (20 corridas) y
+vectores 5/6 (40 corridas) sobre este hardware, Ollama 0.34.0 (misma
+version que la corrida valida de Sergio, asi que el confusor de version ya
+conocido en este proyecto -- ver seccion de arriba -- no aplica aqui).
+
+| | |
+|---|---|
+| CPU | Qualcomm Snapdragon X Plus (X1P42100, Oryon), 8 nucleos/8 hilos, ARM64 |
+| RAM | 15.6GB total |
+| OS | Windows 11 Home |
+| Docker | 29.7.2 / Compose 5.5.1 (Docker Desktop, instalado per-user) |
+| Ollama | 0.34.0 |
+| Modelo | `qwen2.5:7b-instruct`, digest `845dbda0ea48` (mismo digest que Daniel y Sergio) |
+
+**Bugs de portabilidad Windows encontrados en esta maquina** (no
+relacionados al ARM64 en si, son de Windows/Git Bash en general --
+documentados en detalle en `.kiro/steering/comandos.md` para que Kiro/Claude
+no los repitan): `docker.exe` fuera de PATH (instalacion per-user de Docker
+Desktop), CRLF en `monitors/entrypoint.sh` (rompia `egress-proxy` con exit
+127, silencioso), MSYS reescribiendo argumentos de ruta absoluta en
+`docker compose run`, y `analysis/compute_ttd.py` sin `encoding="utf-8"`
+explicito (cp1252 por default en Windows). Los primeros tres eran nuevos
+hasta esta sesion; el `.gitattributes` agregado deberia prevenir que el de
+CRLF reaparezca en cualquier maquina Windows futura, no solo esta.
+
+**Resultados de esta corrida**: ver `report/findings.md`, seccion "Tercera
+maquina (machine-C, Windows ARM64, 2026-09-13)" -- se reportan como dataset
+propio, comparado contra machine-A (Daniel) y machine-B (Sergio, lote
+valido de 0.34.0), no como intento de replicar ni invalidar ninguna de las
+dos. Con la version de Ollama y el modelo controlados contra el dato de
+Sergio, la diferencia observada en task_05/06 no se explica por el
+confusor de version ya conocido -- queda como pregunta abierta, no como
+error atribuido a ninguna maquina.
 
 ## Conclusión honesta
 

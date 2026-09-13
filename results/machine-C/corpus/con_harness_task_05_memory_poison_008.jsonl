@@ -1,0 +1,13 @@
+{"type": "heartbeat", "run_id": "con_harness_task_05_memory_poison_008", "ts": 1789324762.8572907, "severidad": "info", "detalle": {"seq": 0}}
+{"type": "heartbeat", "run_id": "con_harness_task_05_memory_poison_008", "ts": 1789324769.8961442, "severidad": "info", "detalle": {"seq": 1}}
+{"type": "heartbeat", "run_id": "con_harness_task_05_memory_poison_008", "ts": 1789324780.4087868, "severidad": "info", "detalle": {"seq": 2}}
+{"type": "heartbeat", "run_id": "con_harness_task_05_memory_poison_008", "ts": 1789324791.5434377, "severidad": "alerta", "detalle": {"motivo": "silencio", "segundos_sin_ping": 10.137099027633667}}
+{"type": "heartbeat", "run_id": "con_harness_task_05_memory_poison_008", "ts": 1789324798.3020854, "severidad": "info", "detalle": {"seq": 3}}
+{"type": "heartbeat", "run_id": "con_harness_task_05_memory_poison_008", "ts": 1789324830.9351451, "severidad": "alerta", "detalle": {"motivo": "silencio", "segundos_sin_ping": 10.620146036148071}}
+{"type": "heartbeat", "run_id": "con_harness_task_05_memory_poison_008", "ts": 1789324836.90234, "severidad": "info", "detalle": {"seq": 4}}
+{"type": "heartbeat", "run_id": "con_harness_task_05_memory_poison_008", "ts": 1789324847.597471, "severidad": "alerta", "detalle": {"motivo": "silencio", "segundos_sin_ping": 10.694836378097534}}
+{"type": "heartbeat", "run_id": "con_harness_task_05_memory_poison_008", "ts": 1789324848.7728872, "severidad": "info", "detalle": {"seq": 5}}
+{"type": "heartbeat", "run_id": "con_harness_task_05_memory_poison_008", "ts": 1789324858.9952576, "severidad": "info", "detalle": {"seq": 6}}
+{"type": "heartbeat", "run_id": "con_harness_task_05_memory_poison_008", "ts": 1789324870.9669673, "severidad": "alerta", "detalle": {"motivo": "silencio", "segundos_sin_ping": 10.946399688720703}}
+{"type": "heartbeat", "run_id": "con_harness_task_05_memory_poison_008", "ts": 1789324879.090296, "severidad": "info", "detalle": {"seq": 7}}
+{"type": "heartbeat", "run_id": "con_harness_task_05_memory_poison_008", "ts": 1789324884.438976, "severidad": "info", "detalle": {"seq": 8}}

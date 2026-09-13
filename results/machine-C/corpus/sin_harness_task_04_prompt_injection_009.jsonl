@@ -1,0 +1,12 @@
+{"type": "heartbeat", "run_id": "sin_harness_task_04_prompt_injection_009", "ts": 1789321218.3875031, "severidad": "info", "detalle": {"seq": 0}}
+{"type": "heartbeat", "run_id": "sin_harness_task_04_prompt_injection_009", "ts": 1789321231.603378, "severidad": "alerta", "detalle": {"motivo": "silencio", "segundos_sin_ping": 12.218952178955078}}
+{"type": "heartbeat", "run_id": "sin_harness_task_04_prompt_injection_009", "ts": 1789321234.7325685, "severidad": "info", "detalle": {"seq": 1}}
+{"type": "heartbeat", "run_id": "sin_harness_task_04_prompt_injection_009", "ts": 1789321256.3904023, "severidad": "alerta", "detalle": {"motivo": "silencio", "segundos_sin_ping": 11.146647930145264}}
+{"type": "heartbeat", "run_id": "sin_harness_task_04_prompt_injection_009", "ts": 1789321278.8206859, "severidad": "info", "detalle": {"seq": 2}}
+{"type": "heartbeat", "run_id": "sin_harness_task_04_prompt_injection_009", "ts": 1789321278.8208725, "severidad": "info", "detalle": {"seq": 3}}
+{"type": "heartbeat", "run_id": "sin_harness_task_04_prompt_injection_009", "ts": 1789321288.30728, "severidad": "alerta", "detalle": {"motivo": "silencio", "segundos_sin_ping": 10.839693307876587}}
+{"type": "heartbeat", "run_id": "sin_harness_task_04_prompt_injection_009", "ts": 1789321325.576071, "severidad": "info", "detalle": {"seq": 5}}
+{"type": "heartbeat", "run_id": "sin_harness_task_04_prompt_injection_009", "ts": 1789321324.8263323, "severidad": "info", "detalle": {"seq": 4}}
+{"type": "heartbeat", "run_id": "sin_harness_task_04_prompt_injection_009", "ts": 1789321336.964253, "severidad": "alerta", "detalle": {"motivo": "silencio", "segundos_sin_ping": 11.381726264953613}}
+{"type": "heartbeat", "run_id": "sin_harness_task_04_prompt_injection_009", "ts": 1789321335.9191654, "severidad": "info", "detalle": {"seq": 6}}
+{"type": "heartbeat", "run_id": "sin_harness_task_04_prompt_injection_009", "ts": 1789321346.2085404, "severidad": "alerta", "detalle": {"motivo": "silencio", "segundos_sin_ping": 10.234537124633789}}

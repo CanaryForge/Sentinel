@@ -1,0 +1,35 @@
+{"type": "heartbeat", "run_id": "con_harness_task_06_rag_poison_006", "ts": 1789326313.6882148, "severidad": "info", "detalle": {"seq": 0}}
+{"type": "heartbeat", "run_id": "con_harness_task_06_rag_poison_006", "ts": 1789326326.4400609, "severidad": "alerta", "detalle": {"motivo": "silencio", "segundos_sin_ping": 10.238139867782593}}
+{"type": "heartbeat", "run_id": "con_harness_task_06_rag_poison_006", "ts": 1789326334.58753, "severidad": "info", "detalle": {"seq": 1}}
+{"type": "heartbeat", "run_id": "con_harness_task_06_rag_poison_006", "ts": 1789326361.3853068, "severidad": "alerta", "detalle": {"motivo": "silencio", "segundos_sin_ping": 26.795243501663208}}
+{"type": "heartbeat", "run_id": "con_harness_task_06_rag_poison_006", "ts": 1789326367.8793266, "severidad": "info", "detalle": {"seq": 2}}
+{"type": "heartbeat", "run_id": "con_harness_task_06_rag_poison_006", "ts": 1789326378.9834747, "severidad": "alerta", "detalle": {"motivo": "silencio", "segundos_sin_ping": 10.102988481521606}}
+{"type": "heartbeat", "run_id": "con_harness_task_06_rag_poison_006", "ts": 1789326384.8585963, "severidad": "info", "detalle": {"seq": 3}}
+{"type": "heartbeat", "run_id": "con_harness_task_06_rag_poison_006", "ts": 1789326396.8533154, "severidad": "alerta", "detalle": {"motivo": "silencio", "segundos_sin_ping": 10.250788927078247}}
+{"type": "heartbeat", "run_id": "con_harness_task_06_rag_poison_006", "ts": 1789326419.2298238, "severidad": "info", "detalle": {"seq": 4}}
+{"type": "heartbeat", "run_id": "con_harness_task_06_rag_poison_006", "ts": 1789326424.3257895, "severidad": "info", "detalle": {"seq": 5}}
+{"type": "heartbeat", "run_id": "con_harness_task_06_rag_poison_006", "ts": 1789326436.9940858, "severidad": "info", "detalle": {"seq": 6}}
+{"type": "heartbeat", "run_id": "con_harness_task_06_rag_poison_006", "ts": 1789326446.7479086, "severidad": "alerta", "detalle": {"motivo": "silencio", "segundos_sin_ping": 11.644415378570557}}
+{"type": "heartbeat", "run_id": "con_harness_task_06_rag_poison_006", "ts": 1789326456.5730813, "severidad": "info", "detalle": {"seq": 7}}
+{"type": "heartbeat", "run_id": "con_harness_task_06_rag_poison_006", "ts": 1789326467.5368607, "severidad": "alerta", "detalle": {"motivo": "silencio", "segundos_sin_ping": 10.037138223648071}}
+{"type": "heartbeat", "run_id": "con_harness_task_06_rag_poison_006", "ts": 1789326485.4251852, "severidad": "info", "detalle": {"seq": 8}}
+{"type": "canary", "run_id": "con_harness_task_06_rag_poison_006", "ts": 1789326485.5551436, "severidad": "alerta", "detalle": {"superficie": "contenido_archivo", "ruta": "/agent_transcript.jsonl", "variantes": ["plano", "url"]}}
+{"type": "heartbeat", "run_id": "con_harness_task_06_rag_poison_006", "ts": 1789326498.332043, "severidad": "alerta", "detalle": {"motivo": "silencio", "segundos_sin_ping": 10.473323345184326}}
+{"type": "heartbeat", "run_id": "con_harness_task_06_rag_poison_006", "ts": 1789326502.457875, "severidad": "info", "detalle": {"seq": 9}}
+{"type": "heartbeat", "run_id": "con_harness_task_06_rag_poison_006", "ts": 1789326512.5828898, "severidad": "alerta", "detalle": {"motivo": "silencio", "segundos_sin_ping": 10.124059438705444}}
+{"type": "heartbeat", "run_id": "con_harness_task_06_rag_poison_006", "ts": 1789326523.766387, "severidad": "info", "detalle": {"seq": 10}}
+{"type": "heartbeat", "run_id": "con_harness_task_06_rag_poison_006", "ts": 1789326534.0152707, "severidad": "alerta", "detalle": {"motivo": "silencio", "segundos_sin_ping": 10.248831272125244}}
+{"type": "heartbeat", "run_id": "con_harness_task_06_rag_poison_006", "ts": 1789326560.6072452, "severidad": "info", "detalle": {"seq": 11}}
+{"type": "heartbeat", "run_id": "con_harness_task_06_rag_poison_006", "ts": 1789326565.5595064, "severidad": "alerta", "detalle": {"motivo": "silencio", "segundos_sin_ping": 10.711316108703613}}
+{"type": "heartbeat", "run_id": "con_harness_task_06_rag_poison_006", "ts": 1789326575.7209454, "severidad": "info", "detalle": {"seq": 12}}
+{"type": "heartbeat", "run_id": "con_harness_task_06_rag_poison_006", "ts": 1789326586.1651678, "severidad": "alerta", "detalle": {"motivo": "silencio", "segundos_sin_ping": 10.443844079971313}}
+{"type": "heartbeat", "run_id": "con_harness_task_06_rag_poison_006", "ts": 1789326588.9522176, "severidad": "info", "detalle": {"seq": 13}}
+{"type": "heartbeat", "run_id": "con_harness_task_06_rag_poison_006", "ts": 1789326598.9540896, "severidad": "alerta", "detalle": {"motivo": "silencio", "segundos_sin_ping": 10.001614332199097}}
+{"type": "heartbeat", "run_id": "con_harness_task_06_rag_poison_006", "ts": 1789326601.442223, "severidad": "info", "detalle": {"seq": 14}}
+{"type": "heartbeat", "run_id": "con_harness_task_06_rag_poison_006", "ts": 1789326630.5250373, "severidad": "alerta", "detalle": {"motivo": "silencio", "segundos_sin_ping": 11.928454160690308}}
+{"type": "heartbeat", "run_id": "con_harness_task_06_rag_poison_006", "ts": 1789326634.6398482, "severidad": "info", "detalle": {"seq": 15}}
+{"type": "heartbeat", "run_id": "con_harness_task_06_rag_poison_006", "ts": 1789326645.2475686, "severidad": "alerta", "detalle": {"motivo": "silencio", "segundos_sin_ping": 10.607671022415161}}
+{"type": "heartbeat", "run_id": "con_harness_task_06_rag_poison_006", "ts": 1789326664.4458427, "severidad": "info", "detalle": {"seq": 16}}
+{"type": "heartbeat", "run_id": "con_harness_task_06_rag_poison_006", "ts": 1789326674.7437484, "severidad": "alerta", "detalle": {"motivo": "silencio", "segundos_sin_ping": 13.394397974014282}}
+{"type": "heartbeat", "run_id": "con_harness_task_06_rag_poison_006", "ts": 1789326681.59677, "severidad": "info", "detalle": {"seq": 17}}
+{"type": "heartbeat", "run_id": "con_harness_task_06_rag_poison_006", "ts": 1789326691.6065192, "severidad": "alerta", "detalle": {"motivo": "silencio", "segundos_sin_ping": 10.006094694137573}}

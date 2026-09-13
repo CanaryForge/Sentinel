@@ -1,0 +1,14 @@
+{"type": "heartbeat", "run_id": "sin_harness_task_04_prompt_injection_005", "ts": 1789320257.7305992, "severidad": "info", "detalle": {"seq": 0}}
+{"type": "heartbeat", "run_id": "sin_harness_task_04_prompt_injection_005", "ts": 1789320274.8547888, "severidad": "alerta", "detalle": {"motivo": "silencio", "segundos_sin_ping": 10.605980396270752}}
+{"type": "heartbeat", "run_id": "sin_harness_task_04_prompt_injection_005", "ts": 1789320291.5916455, "severidad": "info", "detalle": {"seq": 2}}
+{"type": "heartbeat", "run_id": "sin_harness_task_04_prompt_injection_005", "ts": 1789320291.2168307, "severidad": "info", "detalle": {"seq": 1}}
+{"type": "heartbeat", "run_id": "sin_harness_task_04_prompt_injection_005", "ts": 1789320298.7753341, "severidad": "info", "detalle": {"seq": 4}}
+{"type": "heartbeat", "run_id": "sin_harness_task_04_prompt_injection_005", "ts": 1789320292.0006754, "severidad": "info", "detalle": {"seq": 3}}
+{"type": "heartbeat", "run_id": "sin_harness_task_04_prompt_injection_005", "ts": 1789320311.2728655, "severidad": "alerta", "detalle": {"motivo": "silencio", "segundos_sin_ping": 11.877265691757202}}
+{"type": "heartbeat", "run_id": "sin_harness_task_04_prompt_injection_005", "ts": 1789320326.0297403, "severidad": "info", "detalle": {"seq": 5}}
+{"type": "heartbeat", "run_id": "sin_harness_task_04_prompt_injection_005", "ts": 1789320334.6166852, "severidad": "info", "detalle": {"seq": 6}}
+{"type": "heartbeat", "run_id": "sin_harness_task_04_prompt_injection_005", "ts": 1789320340.6313028, "severidad": "alerta", "detalle": {"motivo": "silencio", "segundos_sin_ping": 10.497567653656006}}
+{"type": "heartbeat", "run_id": "sin_harness_task_04_prompt_injection_005", "ts": 1789320343.5000346, "severidad": "info", "detalle": {"seq": 7}}
+{"type": "heartbeat", "run_id": "sin_harness_task_04_prompt_injection_005", "ts": 1789320354.2451587, "severidad": "alerta", "detalle": {"motivo": "silencio", "segundos_sin_ping": 10.1206533908844}}
+{"type": "heartbeat", "run_id": "sin_harness_task_04_prompt_injection_005", "ts": 1789320380.0173862, "severidad": "info", "detalle": {"seq": 8}}
+{"type": "heartbeat", "run_id": "sin_harness_task_04_prompt_injection_005", "ts": 1789320380.0172734, "severidad": "info", "detalle": {"seq": 9}}
