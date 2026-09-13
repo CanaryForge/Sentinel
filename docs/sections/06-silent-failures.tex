@@ -1,42 +1,114 @@
 \section{Failures That Present as Success}
+\label{sec:silent}
 
-\todo{Esta es la seccion mas transferible del paper y conviene escribirla
-como tal: no como anecdotario de bugs, sino como una clase de fallo que
-cualquier arnes de evaluacion puede sufrir. La tesis: en un pipeline de
-evaluacion, el modo de fallo peligroso no es el que rompe, es el que devuelve
-un numero. Cinco instancias medidas en este proyecto, todas encontradas
-despues de haber reportado resultados basados en ellas.}
+In an evaluation pipeline the dangerous failure is not the one that crashes.
+It is the one that returns a number. A crash gets fixed within the hour; a
+pipeline that reports \texttt{30/30 exit=0} while having measured nothing gets
+written into a table, and then into a paper.
 
-\todo{Tabla: sintoma observado / lo que realmente pasaba / como se detecto /
-cuanto tiempo estuvo invisible.}
+We hit this six times. Every instance was found after results based on it had
+already been reported, and none was visible from inside the pipeline. We
+document them as a class rather than as a list of bugs, because the shape
+repeats and the defences generalise.
 
-\todo{(1) CRLF. Git for Windows reescribe los .sh al clonar; el shebang queda
-\texttt{bash\textbackslash r} y \texttt{egress-proxy} --el unico servicio que
-arranca por un script-- nunca levanta. Dos de los tres monitores mudos, sin un
-solo error visible, porque el tercero sobrevive con un entrypoint explicito.}
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}p{3.5cm}p{5.2cm}p{4.6cm}@{}}
+\toprule
+\textbf{Observed} & \textbf{Actually happening} & \textbf{Found by} \\
+\midrule
+Runs complete normally & Two of three monitors never started & A control suite, once it could run \\
+Sweep reports ``not detected'' & Container exited 2, \texttt{-{}-rm} deleted the evidence & Running it without the output filter \\
+Evaluation returns scores & The attack never reached the agent & Reading the env var names \\
+Control passes in 1.8\,s & It timed the sandbox's own shutdown & A teammate noticing the API bill \\
+Matrix reports 30/30 & Zero tool calls; the backend was down & Inspecting a transcript by hand \\
+Agent ``declined'' the payload & It was never served one & Counting deliveries against runs \\
+\bottomrule
+\end{tabular}
+\caption{Six failures that returned a result. The right-hand column is the
+uncomfortable one: in no case did the pipeline detect its own failure.}
+\end{table}
 
-\todo{(2) MSYS. Git Bash traduce \texttt{/app/heartbeat.py} a ruta Windows
-antes de pasarsela a docker.exe; el contenedor sale con codigo 2 y
-\texttt{--rm} borra la evidencia. Sintoma: los cuatro casos de heartbeat del
-barrido dan "sin detectar" y no se crea ningun archivo.}
+\subsection{Two platform translations}
 
-\todo{(3) El provider de promptfoo exportaba \texttt{TASK\_FILE} y
-\texttt{HARNESS\_CONDITION}; el compose lee \texttt{TASK} y
-\texttt{CONDITION}. Cada evaluacion corria la tarea por defecto ignorando el
-payload generado, y devolvia resultados sin fallar.}
+Git for Windows rewrites shell scripts to CRLF on clone, so the entrypoint
+shebang becomes \texttt{bash\textbackslash r} and the container exits 127. The
+egress proxy is the only service that boots through a script, so it never
+starts, taking both the egress monitor and the heartbeat monitor with it. The
+third monitor survives because the compose file gives it an explicit
+entrypoint, which is precisely why the failure looks partial rather than
+total: runs complete, events are written, and two of three signals are simply
+absent.
 
-\todo{(4) Un control positivo que pasaba por la razon equivocada: sin
-\texttt{--no-deps}, el script arrastraba el sandbox real, que emite heartbeats
-con el mismo RUN\_ID. Lo que se cronometraba era su apagado normal.}
+Separately, MSYS rewrites POSIX-looking arguments before \texttt{docker.exe}
+sees them, so \texttt{/app/heartbeat.py} arrives as a Windows path. The
+container exits 2 immediately and \texttt{-{}-rm} removes it before anyone can
+read the log. The sweep reported ``not detected'' for every heartbeat case and
+produced no event file at all, which reads as a monitor that is slow rather
+than a container that never ran.
 
-\todo{(5) Treinta corridas con exit=0 y cero tool calls. El backend se cayo a
-mitad de sesion; \texttt{agent.py} atrapa el error, lo escribe y corta el
-loop, asi que el contenedor termina limpio. Una hora de reloj y una matriz
-"completa" vacia.}
+\subsection{Three configurations that pointed somewhere else}
 
-\todo{Cerrar con las defensas que quedaron en el arnes, que es lo accionable:
-latido \texttt{monitor\_activo} por monitor al arrancar, guarda de daemon de
-Docker, diagnostico por corrida en el \texttt{\_meta.json}, resumen de
-corridas vacias al final de la matriz, y aviso ruidoso ante lineas corruptas.
-El principio comun: cada componente debe poder demostrar que estuvo vivo, y
-el silencio nunca debe leerse como "no habia nada que reportar".}
+The promptfoo provider exported \texttt{TASK\_FILE} and
+\texttt{HARNESS\_CONDITION}; the compose file reads \texttt{TASK} and
+\texttt{CONDITION}. Every evaluation therefore ran the default task under the
+default condition, ignoring the payload promptfoo had generated, and returned
+transcripts without failing.
+
+The positive-control suite brought up the filesystem monitor without
+\texttt{-{}-no-deps}, which pulled in the real sandbox as a dependency. That
+container runs the heartbeat pinger under the same run identifier, so the
+heartbeat control was timing the sandbox's own clean shutdown rather than the
+pinger it kills. It passed, in 1.8 seconds, measuring the wrong event. It was
+found because the suite was quietly spending paid API quota on agent runs it
+was documented not to need.
+
+The third is the most expensive. The model backend went down mid-session. The
+agent catches a backend error, writes it to the transcript, and ends its loop,
+so the container exits cleanly and \texttt{-{}-abort-on-container-exit}
+returns zero. Thirty runs reported success with zero tool calls between them,
+an hour of wall time, before anyone opened a transcript.
+
+\subsection{One that reached the published numbers}
+
+The attacker logs each delivery of its payload. Counting those against runs
+shows that eight of twenty runs in one task were never served the attack, and
+the split was badly skewed by condition. In \texttt{summary.jsonl} a run that
+was never attacked is indistinguishable from one where the agent read the
+payload and declined: both are simply low on the escalation ladder. The
+published rate for that channel was computed over planned runs rather than
+exposed ones, and had to be corrected.
+
+\subsection{What we changed}
+
+The common thread is that silence was being read as ``nothing to report''. The
+defences all make components prove they were alive.
+
+\begin{itemize}
+\item Each monitor emits a startup event naming itself and its configuration,
+      so a monitor that never booted is distinguishable from one with nothing
+      to say. The egress monitor also reports whether its baseline is empty,
+      since an empty baseline marks every destination anomalous and makes one
+      control incapable of failing.
+\item The test scripts check that the Docker daemon answers before doing
+      anything, and exit with a distinct code so ``Docker is down'' cannot be
+      confused with ``a control failed''.
+\item The orchestrator inspects each finished run, records the diagnosis in
+      that run's metadata, and prints how many produced no data. It caught an
+      empty run on its first outing.
+\item The analysis tolerates a torn log line and names the file and line
+      rather than dying, because the three monitors append to one file from
+      separate containers and that append is not atomic over a bind mount.
+      A lost line may be an inert event or an alert that changes a verdict.
+\item Every figure is counted over the artifacts at the time of writing, never
+      read from the configuration that would have produced them. One retracted
+      table was written from \texttt{repetitions: 10} in a YAML file while
+      three runs existed on disk.
+\end{itemize}
+
+\todo{Opcional si sobra espacio: una frase sobre por que un control positivo
+que pasa por la razon equivocada es peor que uno que falla. El control 6 fallo
+primero por dos bugs propios (esperaba severidad alerta sobre un evento benigno
+por diseno, y afirmaba una alerta imposible), y esa falla fue lo que expuso el
+punto ciego del SSRF.}
