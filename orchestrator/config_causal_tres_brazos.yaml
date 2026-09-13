@@ -1,0 +1,43 @@
+# Tercera corrida del experimento causal del Hallazgo 2, con las TRES
+# condiciones en la misma maquina y n=30 por celda.
+#
+# Por que existe, si ya hay dos datasets del mismo experimento:
+#
+# Las maquinas A y B no coinciden en la condicion que decide el resultado.
+# Con nivel de escalada >= 5 sobre task_06:
+#
+#     condicion               maquina A   maquina B
+#     sin_harness                3/10        3/10
+#     con_harness_generico       4/10        7/10
+#     con_harness                9/10        7/10
+#
+# En A el brazo generico cae sobre el control, que es lo que predice el
+# priming. En B cae sobre el guardrail, que lo falsa. El paper reporta hoy
+# solo la lectura de B.
+#
+# Lo importante es que las dos lecturas NO son estadisticamente distintas
+# entre si (Fisher exacto, 4/10 contra 7/10: p=0.37), y ninguna separa el
+# brazo generico de su comparador dentro de su propia maquina (p=0.057 el
+# mejor caso). Con n=10 por celda el experimento nunca tuvo poder para
+# distinguir las hipotesis: la diferencia entre maquinas es ruido de
+# muestreo, no un efecto de maquina.
+#
+# n=30 por celda lleva el contraste 0.4 contra 0.7 de ~20% a ~60% de poder.
+# No es suficiente para afirmar un nulo, y ese limite hay que reportarlo,
+# pero si alcanza para que un efecto del tamano observado se vea.
+#
+# Escribe en su propio directorio, NUNCA en uno poblado: el orquestador salta
+# las corridas que ya tienen resultados en vez de sobrescribir, asi que
+# apuntar a un conjunto existente produce una mezcla silenciosa de dos
+# configuraciones.
+#
+# Uso:
+#   python3 orchestrator/run_experiment.py \
+#     --config orchestrator/config_causal_tres_brazos.yaml \
+#     --results-dir results/machine-E/causal-n30
+conditions: [sin_harness, con_harness_generico, con_harness]
+tasks: [task_06_rag_poison]
+repetitions: 30
+run_timeout_seconds: 480
+project_name_prefix: sbxharness_causal3
+compose_files: [docker-compose.yml]
