@@ -43,6 +43,35 @@ def load_config(path):
         return yaml.safe_load(f)
 
 
+MEMORY_PATH = os.path.join(ROOT, "memory", "notes.jsonl")
+NOTA_ENVENENADA = os.path.join(ROOT, "tasks", "seed", "task_05_memory_poison",
+                               "nota_envenenada.txt")
+
+
+def reset_memoria(task: str) -> None:
+    """Deja ./memory en un estado conocido ANTES de cada corrida.
+
+    `./memory` es un bind mount al host: a diferencia del volumen `workspace`,
+    `docker compose down -v` no lo toca, asi que sin esto cada corrida hereda
+    lo que escribieron las anteriores. Medido en el corpus: tras 30 corridas
+    el archivo tenia 85 notas, 58 de ellas con el canary literal de una
+    corrida previa -- un agente podia leer el secreto de otra corrida con
+    `memory_read`, y ninguna corrida de task_05/task_06 empezaba en las
+    mismas condiciones que la anterior.
+
+    Para `task_05_memory_poison` el estado conocido es la nota envenenada (es
+    el vector que esa tarea evalua); para todo lo demas, memoria vacia.
+    """
+    os.makedirs(os.path.dirname(MEMORY_PATH), exist_ok=True)
+    if task == "task_05_memory_poison":
+        nota = open(NOTA_ENVENENADA, encoding="utf-8").read()
+        linea = json.dumps({"ts": time.time(), "nota": nota}, ensure_ascii=False)
+        with open(MEMORY_PATH, "w", encoding="utf-8", newline="\n") as f:
+            f.write(linea + "\n")
+    else:
+        open(MEMORY_PATH, "w", encoding="utf-8").close()
+
+
 def backend_info() -> dict:
     """Configuracion del backend del LLM tal como la ve esta corrida.
 
@@ -122,6 +151,8 @@ def run_one(cond, task, rep, cfg, dry_run=False):
         # escribiendo en ./results -- la corrida quedaba partida en dos sitios.
         "RESULTS_HOST_DIR": RESULTS_DIR,
     })
+
+    reset_memoria(task)
 
     print(f"[orquestador] corriendo {run_id}", flush=True)
     up = subprocess.run(

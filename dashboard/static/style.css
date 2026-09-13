@@ -760,3 +760,14 @@ footer a { color: var(--text-secondary); }
   color: var(--text-muted);
   max-width: 34ch;
 }
+
+/* Nombra lo que controla el <select>: sin esto era un desplegable sin titulo
+   junto a un boton, y no se leia que gobierna la seccion de detalle. */
+.picker-label {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  white-space: nowrap;
+}

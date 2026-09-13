@@ -107,12 +107,37 @@ async function loadRuns() {
     preferido = sorted[0].run_id;
   }
 
+  // El run_id solo (`con_harness_task_06_rag_poison_003`) no dice nada util:
+  // 63 cadenas casi identicas donde lo que importa --que paso en esa corrida--
+  // no se ve. Cada opcion lleva ahora el desenlace, y van agrupadas por
+  // condicion para que el <select> se pueda recorrer por brazo.
+  const porCondicion = new Map();
   for (const r of state.runs) {
-    const opt = document.createElement("option");
-    opt.value = r.run_id;
-    opt.textContent = `${r.run_id}  [nivel ${r.nivel_escalada}]${r.en_curso ? "  ● en curso" : ""}`;
-    if (r.run_id === preferido) opt.selected = true;
-    picker.appendChild(opt);
+    const c = r.condicion || "(sin condicion)";
+    if (!porCondicion.has(c)) porCondicion.set(c, []);
+    porCondicion.get(c).push(r);
+  }
+  for (const [cond, lista] of [...porCondicion.entries()].sort()) {
+    const grupo = document.createElement("optgroup");
+    grupo.label = `${cond}  (${lista.length})`;
+    for (const r of lista) {
+      const opt = document.createElement("option");
+      opt.value = r.run_id;
+      const tarea = (r.tarea || "").replace(/^task_\d+_/, "");
+      const rep = (r.run_id.match(/_(\d{3})$/) || [, "?"])[1];
+      const nivel = `nivel ${r.nivel_escalada} ${r.nivel_label || ""}`.trim();
+      let estado;
+      if (r.en_curso) estado = "● en curso";
+      else if (r.interrumpida) estado = "⚠ interrumpida";
+      else if (!r.intento_de_escape) estado = "sin intento";
+      else if (r.detectado) estado = `detectado ${r.ttd_segundos != null ? r.ttd_segundos.toFixed(2) + "s" : ""}`.trim();
+      else estado = "SIN DETECTAR";
+      opt.textContent = `${tarea} · rep ${rep} — ${nivel} — ${estado}`;
+      opt.title = r.run_id;
+      if (r.run_id === preferido) opt.selected = true;
+      grupo.appendChild(opt);
+    }
+    picker.appendChild(grupo);
   }
   picker.onchange = () => {
     state.userPicked = true;
@@ -403,50 +428,104 @@ async function loadAggregate() {
 }
 
 function drawMiniLineChart({ points, color, xLabelFn, xLog }) {
-  // points: [{x, y}], y === null significa "sin detectar" (timeout del barrido)
-  const W = 320, H = 150, PAD_L = 34, PAD_R = 14, PAD_T = 14, PAD_B = 26;
+  // points: [{x, y}], y === null significa "sin detectar" (timeout del barrido).
+  //
+  // Un barrido corrido N veces deja N mediciones por parametro. La version
+  // anterior dibujaba un punto y una etiqueta por medicion, todas en la misma
+  // x: las etiquetas se apilaban ilegibles y la linea zigzagueaba entre
+  // repeticiones del mismo parametro. Aqui se agrupan por x y se dibuja la
+  // mediana con un bigote min-max, que es lo que una medicion repetida
+  // significa de verdad.
+  const W = 320, H = 150, PAD_L = 40, PAD_R = 14, PAD_T = 18, PAD_B = 26;
   const plotW = W - PAD_L - PAD_R, plotH = H - PAD_T - PAD_B;
 
-  const xs = points.map((p) => p.x);
-  const ys = points.filter((p) => p.y !== null).map((p) => p.y);
-  const maxY = Math.max(...ys, 1) * 1.25;
-  const xScale = xLog
-    ? (x) => PAD_L + (Math.log(x / xs[0]) / Math.log(xs[xs.length - 1] / xs[0])) * plotW
-    : (x) => PAD_L + ((x - xs[0]) / (xs[xs.length - 1] - xs[0])) * plotW;
+  const mediana = (a) => {
+    const s = [...a].sort((m, n) => m - n);
+    const i = Math.floor(s.length / 2);
+    return s.length % 2 ? s[i] : (s[i - 1] + s[i]) / 2;
+  };
+
+  const porX = new Map();
+  for (const p of points) {
+    if (!porX.has(p.x)) porX.set(p.x, []);
+    porX.get(p.x).push(p.y);
+  }
+  const grupos = [...porX.entries()]
+    .map(([x, vals]) => {
+      const ok = vals.filter((v) => v !== null);
+      return {
+        x,
+        n: vals.length,
+        med: ok.length ? mediana(ok) : null,
+        min: ok.length ? Math.min(...ok) : null,
+        max: ok.length ? Math.max(...ok) : null,
+        fallos: vals.length - ok.length,
+      };
+    })
+    .sort((a, b) => a.x - b.x);
+
+  const xs = grupos.map((g) => g.x);
+  const todosY = grupos.filter((g) => g.med !== null).map((g) => g.max);
+  const maxY = Math.max(...todosY, 0.001) * 1.3;
+  // Decimales segun la escala: con TTD sub-segundo, toFixed(0) colapsaba el eje
+  // entero a "1s" y "0s" repetidos.
+  const dec = maxY < 1 ? 2 : maxY < 10 ? 1 : 0;
+
+  const spanX = xs.length > 1;
+  const xScale = !spanX
+    ? () => PAD_L + plotW / 2
+    : xLog
+      ? (x) => PAD_L + (Math.log(x / xs[0]) / Math.log(xs[xs.length - 1] / xs[0])) * plotW
+      : (x) => PAD_L + ((x - xs[0]) / (xs[xs.length - 1] - xs[0])) * plotW;
   const yScale = (y) => PAD_T + plotH - (y / maxY) * plotH;
 
   let gridLines = "";
   const nGrid = 3;
   for (let i = 0; i <= nGrid; i++) {
     const y = PAD_T + (plotH / nGrid) * i;
-    const val = maxY - (maxY / nGrid) * i;
+    // Math.abs evita el "-0.00s" que sale al restar maxY de si mismo en coma
+    // flotante.
+    const val = Math.abs(maxY - (maxY / nGrid) * i);
     gridLines += `<line class="grid-line" x1="${PAD_L}" y1="${y}" x2="${W - PAD_R}" y2="${y}"></line>`;
-    gridLines += `<text class="axis-label" x="${PAD_L - 6}" y="${y + 3}" text-anchor="end">${val.toFixed(0)}s</text>`;
+    gridLines += `<text class="axis-label" x="${PAD_L - 6}" y="${y + 3}" text-anchor="end">${val.toFixed(dec)}s</text>`;
   }
 
-  let path = "";
-  let dots = "";
-  let labels = "";
-  const detectedPts = points.filter((p) => p.y !== null);
-  path = detectedPts.map((p, i) => `${i === 0 ? "M" : "L"}${xScale(p.x).toFixed(1)},${yScale(p.y).toFixed(1)}`).join(" ");
+  const conDato = grupos.filter((g) => g.med !== null);
+  const path = conDato
+    .map((g, i) => `${i === 0 ? "M" : "L"}${xScale(g.x).toFixed(1)},${yScale(g.med).toFixed(1)}`)
+    .join(" ");
 
-  for (const p of points) {
-    const cx = xScale(p.x);
-    if (p.y === null) {
-      dots += `<text x="${cx}" y="${PAD_T + 10}" text-anchor="middle" class="miss-label">✕</text>`;
-      labels += `<text x="${cx}" y="${PAD_T + 22}" text-anchor="middle" class="miss-label" font-size="8">sin detectar</text>`;
+  let marks = "";
+  for (const g of grupos) {
+    const cx = xScale(g.x);
+    if (g.med === null) {
+      marks += `<text x="${cx}" y="${PAD_T + 10}" text-anchor="middle" class="miss-label">&#10005;</text>`;
+      marks += `<text x="${cx}" y="${PAD_T + 22}" text-anchor="middle" class="miss-label" font-size="8">sin detectar</text>`;
     } else {
-      const cy = yScale(p.y);
-      dots += `<circle cx="${cx}" cy="${cy}" r="4.5" fill="${color}" stroke="var(--surface)" stroke-width="2"></circle>`;
-      labels += `<text x="${cx}" y="${cy - 10}" text-anchor="middle" class="value-label">${p.y.toFixed(1)}s</text>`;
+      const cy = yScale(g.med);
+      // Bigote min-max: solo cuando hay dispersion real que mostrar.
+      if (g.n > 1 && g.max - g.min > 0.005) {
+        marks += `<line x1="${cx}" y1="${yScale(g.min).toFixed(1)}" x2="${cx}" y2="${yScale(g.max).toFixed(1)}" stroke="${color}" stroke-width="1" opacity="0.45"></line>`;
+      }
+      marks += `<circle cx="${cx}" cy="${cy}" r="4" fill="${color}" stroke="var(--surface)" stroke-width="2"></circle>`;
+      // Anclar al extremo cuando la etiqueta se saldria del viewBox: con
+      // text-anchor=middle, el ultimo punto perdia el ultimo caracter.
+      const ancla = cx > W - PAD_R - 22 ? "end" : cx < PAD_L + 22 ? "start" : "middle";
+      const lx = ancla === "end" ? W - PAD_R : ancla === "start" ? PAD_L : cx;
+      marks += `<text x="${lx}" y="${(g.n > 1 ? yScale(g.max) : cy) - 9}" text-anchor="${ancla}" class="value-label">${g.med.toFixed(2)}s</text>`;
     }
-    labels += `<text x="${cx}" y="${H - 8}" text-anchor="middle" class="axis-label">${xLabelFn(p.x)}</text>`;
+    marks += `<text x="${cx}" y="${H - 8}" text-anchor="middle" class="axis-label">${xLabelFn(g.x)}</text>`;
   }
+
+  const nMax = Math.max(...grupos.map((g) => g.n));
+  const pie = nMax > 1
+    ? `<text x="${W - PAD_R}" y="${PAD_T - 6}" text-anchor="end" class="axis-label" font-size="8">mediana de ${nMax} mediciones - bigote: min a max</text>`
+    : "";
 
   return `<svg viewBox="0 0 ${W} ${H}" role="img">
     ${gridLines}
     <path d="${path}" fill="none" stroke="${color}" stroke-width="2"></path>
-    ${dots}${labels}
+    ${marks}${pie}
   </svg>`;
 }
 
