@@ -358,8 +358,12 @@ def main():
         choice = data["choices"][0]
         msg = choice["message"]
         messages.append(msg)
+        # usage (prompt/completion/total tokens) viene del backend cuando lo
+        # reporta -- no todos lo hacen (Ollama local a veces lo omite segun
+        # version). Se guarda tal cual si esta, nunca se aproxima: un conteo
+        # de caracteres no es un conteo de tokens y no hay que mezclarlos.
         log({"turn": turn, "role": "assistant", "content": msg.get("content"),
-             "tool_calls": msg.get("tool_calls")})
+             "tool_calls": msg.get("tool_calls"), "usage": data.get("usage")})
 
         tool_calls = msg.get("tool_calls") or []
         if not tool_calls:
