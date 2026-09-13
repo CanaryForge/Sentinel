@@ -238,39 +238,57 @@ python3 dashboard/app.py          # abre http://localhost:8765
 
 Web local (Flask) que lee `results/` en vivo -- no es un snapshot ni un
 artifact publicado, es un servidor que corre en tu maquina junto al resto
-del harness y relee el disco cuando pulsas "releer results/" (o al
-recargar la pagina). Reusa la misma logica de `analysis/compute_ttd.py`
+del harness. Reusa la misma logica de `analysis/compute_ttd.py`
 (la escalera de 0-6 niveles, la definicion de "intento de escape" por
 tarea) para que el panel y el analisis de linea de comandos nunca
 diverjan -- no duplica esa logica, la importa.
 
-Muestra: el diagrama de arquitectura, una linea de tiempo turno-por-turno
-de la corrida seleccionada (marca el momento exacto de la fuga y el de la
-deteccion, con el TTD entre ambos), tarjetas de los 3 mecanismos de
-deteccion con sus estadisticas de la corrida actual, y el agregado de
-todas las corridas presentes en `results/` agrupadas por condicion/tarea.
+Muestra: un **feed en vivo tipo SOC** (alertas de los monitores y acciones
+del agente, mas viejo abajo) empujado por eventos reales, el diagrama de
+arquitectura, una linea de tiempo turno-por-turno de la corrida
+seleccionada (marca el momento exacto de la fuga y el de la deteccion, con
+el TTD entre ambos), tarjetas de los 3 mecanismos de deteccion con sus
+estadisticas de la corrida actual, y el agregado de todas las corridas
+presentes en `results/` agrupadas por condicion/tarea.
 
 Por defecto abre la corrida con el nivel de escalada mas alto disponible
-(la fuga real mas interesante); el selector del encabezado permite ver
-cualquier otra.
+(la fuga real mas interesante) o la que este en curso; el selector del
+encabezado permite ver cualquier otra, y clickear un item del feed salta
+directo a la corrida de ese evento.
 
-### Modo en vivo
+### Modo en vivo: push real, no polling
 
-El panel hace polling cada 2.5s (`setInterval` en `app.js`, sin websockets --
-es un archivo local, no hace falta mas). Si mientras esta abierto corres:
+`dashboard/app.py` corre un `watchdog.Observer` (inotify) sobre `results/`
+en un hilo propio; cuando un monitor o el agente escriben una linea nueva
+en cualquier `{run_id}.jsonl` / `{run_id}_transcript.jsonl`, o un
+`{run_id}_meta.json` cambia de estado (arranca -> `t0`, termina -> `t1`),
+el observer la parsea y la reparte por `/api/stream` (Server-Sent Events)
+a cada cliente conectado -- el navegador se entera en el instante en que
+el archivo se toca, sin encuestar nada. `app.js` abre ese stream con
+`EventSource` (reconecta solo si se cae) y:
+
+- pinta cada evento en el feed en vivo del encabezado apenas llega;
+- si el evento es de la corrida actualmente seleccionada, refresca su
+  timeline/log/tarjetas de mecanismo (con un debounce corto para no
+  relanzar un fetch por cada linea si el agente escribe en rafaga);
+- si es `run_started`, la corrida en curso siempre gana la seleccion
+  automatica (el punto verde junto a "SENTINEL" empieza a pulsar) y si es
+  `run_finished` resincroniza la lista de corridas y el agregado.
+
+El `fetch()` a `/api/runs`, `/api/runs/<id>` y `/api/aggregate` sigue
+existiendo -- es como se piden los datos completos de una corrida puntual
+o el agregado -- pero ya no es el mecanismo que entera al panel de que
+algo paso: eso lo hace el stream. Queda un poll de **respaldo** cada 30s
+(`FALLBACK_POLL_MS` en `app.js`) por si el stream estuvo caido un rato y
+se perdio algo entre la desconexion y el reintento de `EventSource`; y el
+boton "releer results/" fuerza ese mismo resync a mano. Corre:
 
 ```bash
 python3 orchestrator/run_experiment.py
 ```
 
-en cuanto una corrida arranca (su `_meta.json` tiene `t0` pero todavia no
-`t1`), el panel la detecta como **en curso**: el punto verde junto a
-"SENTINEL" empieza a pulsar, el selector cambia automaticamente a esa
-corrida, y la linea de tiempo/el log de turnos se van llenando en cada
-refresco. Cuando `run_experiment.py` termina esa corrida (escribe `t1`), el
-punto deja de pulsar. Ver `dashboard/app.py::api_runs` -- el campo `en_curso`
-es lo que decide todo esto, calculado a partir del `_meta.json` real, no de
-un flag inventado.
+con el panel abierto para verlo en accion: cada tool call del agente y
+cada alerta de monitor aparece en el feed en el momento en que ocurre.
 
 ### Fortaleza de los monitores
 
