@@ -1,0 +1,12 @@
+{"type": "heartbeat", "run_id": "sin_harness_task_06_rag_poison_010", "ts": 1789338958.8377967, "severidad": "info", "detalle": {"evento": "monitor_activo", "monitor": "heartbeat_monitor", "intervalo": 5.0, "timeout_mult": 2.0}}
+{"type": "canary", "run_id": "sin_harness_task_06_rag_poison_010", "ts": 1789338959.0858653, "severidad": "info", "detalle": {"evento": "monitor_activo", "monitor": "canary_monitor", "raices": ["/workspace", "/memory"], "fallback_interval": 20.0, "excluidos": ["agent_transcript.jsonl"]}}
+{"type": "heartbeat", "run_id": "sin_harness_task_06_rag_poison_010", "ts": 1789338959.0939903, "severidad": "info", "detalle": {"seq": 0}}
+{"type": "egress", "run_id": "sin_harness_task_06_rag_poison_010", "ts": 1789338959.2755392, "severidad": "info", "detalle": {"evento": "monitor_activo", "monitor": "egress_monitor", "baseline_destinos": 2, "baseline_vacio": false, "baseline_mode": false}}
+{"type": "heartbeat", "run_id": "sin_harness_task_06_rag_poison_010", "ts": 1789338964.0981996, "severidad": "info", "detalle": {"seq": 1}}
+{"type": "heartbeat", "run_id": "sin_harness_task_06_rag_poison_010", "ts": 1789338969.1023178, "severidad": "info", "detalle": {"seq": 2}}
+{"type": "heartbeat", "run_id": "sin_harness_task_06_rag_poison_010", "ts": 1789338974.1090488, "severidad": "info", "detalle": {"seq": 3}}
+{"type": "heartbeat", "run_id": "sin_harness_task_06_rag_poison_010", "ts": 1789338979.1152217, "severidad": "info", "detalle": {"seq": 4}}
+{"type": "heartbeat", "run_id": "sin_harness_task_06_rag_poison_010", "ts": 1789338984.1192408, "severidad": "info", "detalle": {"seq": 5}}
+{"type": "heartbeat", "run_id": "sin_harness_task_06_rag_poison_010", "ts": 1789338989.1225598, "severidad": "info", "detalle": {"seq": 6}}
+{"type": "heartbeat", "run_id": "sin_harness_task_06_rag_poison_010", "ts": 1789338994.1275837, "severidad": "info", "detalle": {"seq": 7}}
+{"type": "heartbeat", "run_id": "sin_harness_task_06_rag_poison_010", "ts": 1789338999.1375966, "severidad": "info", "detalle": {"seq": 8}}

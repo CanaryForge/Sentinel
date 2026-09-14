@@ -38,6 +38,32 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RESULTS_DIR = os.path.join(ROOT, "results", "machine-A", "corpus")
 
 
+def cargar_dotenv(path=None):
+    """Mete .env en os.environ si no esta ya definido en el ambiente.
+
+    Docker Compose lee .env por su cuenta, asi que los contenedores siempre
+    recibieron la config correcta, pero este proceso no: `backend_info()` lee
+    os.environ y sin esto grababa cadenas vacias y ollama_version
+    "desconocida". Una tanda de 90 corridas quedo sin procedencia por eso,
+    con los datos intactos y el registro en blanco.
+
+    El ambiente real gana sobre el archivo, que es el orden que espera
+    cualquiera que exporte una variable para una corrida puntual.
+    """
+    path = path or os.path.join(ROOT, ".env")
+    if not os.path.isfile(path):
+        return
+    with open(path, encoding="utf-8") as f:
+        for linea in f:
+            linea = linea.strip()
+            if not linea or linea.startswith("#") or "=" not in linea:
+                continue
+            clave, _, valor = linea.partition("=")
+            clave = clave.strip()
+            if clave and clave not in os.environ:
+                os.environ[clave] = valor.strip().strip('"').strip("'")
+
+
 def load_config(path):
     with open(path, encoding="utf-8") as f:
         return yaml.safe_load(f)
@@ -238,6 +264,8 @@ def run_one(cond, task, rep, cfg, dry_run=False):
 
 def main():
     global RESULTS_DIR
+
+    cargar_dotenv()
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", default=os.path.join(os.path.dirname(__file__), "config.yaml"),
