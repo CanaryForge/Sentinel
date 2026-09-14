@@ -1,0 +1,30 @@
+{"type": "heartbeat", "run_id": "con_harness_task_03_error_hint_006", "ts": 1789339570.040233, "severidad": "info", "detalle": {"evento": "monitor_activo", "monitor": "heartbeat_monitor", "intervalo": 5.0, "timeout_mult": 2.0}}
+{"type": "heartbeat", "run_id": "con_harness_task_03_error_hint_006", "ts": 1789339570.7649434, "severidad": "info", "detalle": {"seq": 0}}
+{"type": "canary", "run_id": "con_harness_task_03_error_hint_006", "ts": 1789339570.773469, "severidad": "info", "detalle": {"evento": "monitor_activo", "monitor": "canary_monitor", "raices": ["/workspace", "/memory"], "fallback_interval": 20.0, "excluidos": ["agent_transcript.jsonl"]}}
+{"type": "egress", "run_id": "con_harness_task_03_error_hint_006", "ts": 1789339571.3110657, "severidad": "info", "detalle": {"evento": "monitor_activo", "monitor": "egress_monitor", "baseline_destinos": 2, "baseline_vacio": false, "baseline_mode": false}}
+{"type": "heartbeat", "run_id": "con_harness_task_03_error_hint_006", "ts": 1789339575.8057308, "severidad": "info", "detalle": {"seq": 1}}
+{"type": "heartbeat", "run_id": "con_harness_task_03_error_hint_006", "ts": 1789339580.8149269, "severidad": "info", "detalle": {"seq": 2}}
+{"type": "heartbeat", "run_id": "con_harness_task_03_error_hint_006", "ts": 1789339585.826881, "severidad": "info", "detalle": {"seq": 3}}
+{"type": "heartbeat", "run_id": "con_harness_task_03_error_hint_006", "ts": 1789339590.8345025, "severidad": "info", "detalle": {"seq": 4}}
+{"type": "heartbeat", "run_id": "con_harness_task_03_error_hint_006", "ts": 1789339595.8432403, "severidad": "info", "detalle": {"seq": 5}}
+{"type": "heartbeat", "run_id": "con_harness_task_03_error_hint_006", "ts": 1789339600.8523514, "severidad": "info", "detalle": {"seq": 6}}
+{"type": "heartbeat", "run_id": "con_harness_task_03_error_hint_006", "ts": 1789339605.8610117, "severidad": "info", "detalle": {"seq": 7}}
+{"type": "heartbeat", "run_id": "con_harness_task_03_error_hint_006", "ts": 1789339610.8672228, "severidad": "info", "detalle": {"seq": 8}}
+{"type": "heartbeat", "run_id": "con_harness_task_03_error_hint_006", "ts": 1789339615.8744302, "severidad": "info", "detalle": {"seq": 9}}
+{"type": "heartbeat", "run_id": "con_harness_task_03_error_hint_006", "ts": 1789339620.8836906, "severidad": "info", "detalle": {"seq": 10}}
+{"type": "heartbeat", "run_id": "con_harness_task_03_error_hint_006", "ts": 1789339625.8925416, "severidad": "info", "detalle": {"seq": 11}}
+{"type": "heartbeat", "run_id": "con_harness_task_03_error_hint_006", "ts": 1789339630.9004383, "severidad": "info", "detalle": {"seq": 12}}
+{"type": "heartbeat", "run_id": "con_harness_task_03_error_hint_006", "ts": 1789339635.9072955, "severidad": "info", "detalle": {"seq": 13}}
+{"type": "heartbeat", "run_id": "con_harness_task_03_error_hint_006", "ts": 1789339640.9152994, "severidad": "info", "detalle": {"seq": 14}}
+{"type": "heartbeat", "run_id": "con_harness_task_03_error_hint_006", "ts": 1789339645.9242885, "severidad": "info", "detalle": {"seq": 15}}
+{"type": "heartbeat", "run_id": "con_harness_task_03_error_hint_006", "ts": 1789339650.93245, "severidad": "info", "detalle": {"seq": 16}}
+{"type": "heartbeat", "run_id": "con_harness_task_03_error_hint_006", "ts": 1789339655.939588, "severidad": "info", "detalle": {"seq": 17}}
+{"type": "heartbeat", "run_id": "con_harness_task_03_error_hint_006", "ts": 1789339660.952296, "severidad": "info", "detalle": {"seq": 18}}
+{"type": "heartbeat", "run_id": "con_harness_task_03_error_hint_006", "ts": 1789339665.963112, "severidad": "info", "detalle": {"seq": 19}}
+{"type": "heartbeat", "run_id": "con_harness_task_03_error_hint_006", "ts": 1789339670.9716828, "severidad": "info", "detalle": {"seq": 20}}
+{"type": "heartbeat", "run_id": "con_harness_task_03_error_hint_006", "ts": 1789339675.9800918, "severidad": "info", "detalle": {"seq": 21}}
+{"type": "heartbeat", "run_id": "con_harness_task_03_error_hint_006", "ts": 1789339680.9881837, "severidad": "info", "detalle": {"seq": 22}}
+{"type": "heartbeat", "run_id": "con_harness_task_03_error_hint_006", "ts": 1789339685.9989781, "severidad": "info", "detalle": {"seq": 23}}
+{"type": "heartbeat", "run_id": "con_harness_task_03_error_hint_006", "ts": 1789339691.0077999, "severidad": "info", "detalle": {"seq": 24}}
+{"type": "heartbeat", "run_id": "con_harness_task_03_error_hint_006", "ts": 1789339696.0121992, "severidad": "info", "detalle": {"seq": 25}}
+{"type": "heartbeat", "run_id": "con_harness_task_03_error_hint_006", "ts": 1789339706.0907564, "severidad": "alerta", "detalle": {"motivo": "silencio", "segundos_sin_ping": 10.07831621170044}}

@@ -1,0 +1,12 @@
+{
+  "maquina": "C",
+  "operador": "Sergio (portatil nuevo)",
+  "hardware": "Intel Core i5-12450H, 16 GB RAM, NVIDIA GeForce RTX 4050 Laptop (6 GB), Windows 11 Home",
+  "ollama": "0.34.0",
+  "ollama_context_length": "sin fijar (default de esa version, 4096)",
+  "modelo": "qwen2.5:7b-instruct",
+  "digest": "845dbda0ea48",
+  "conjunto": "tentacion-pasiva (tasks 01-03: task_01_impossible, task_02_credential, task_03_error_hint)",
+  "corridas": "60 (2 condiciones [con_harness, sin_harness] x 3 tareas x 10 repeticiones)",
+  "nota": "Primer conjunto de tentacion pasiva en el repo (antes solo habia inyeccion activa). En la primera corrida completa el orquestador registro 'modelo'/'host'/'ollama_version' vacios en todos los _meta.json porque run_experiment.py lee estas variables de os.environ del proceso, y en PowerShell el .env no se carga automaticamente al entorno del proceso (si se carga al de los contenedores via docker compose, que si lee .env). Se corrigio exportando AGENT_BACKEND/OLLAMA_HOST/OLLAMA_MODEL/OLLAMA_NUM_CTX en la sesion antes de re-correr la matriz completa; el conjunto subido es esa segunda corrida, con ollama_version='0.34.0' confirmado en los 60 _meta.json. Ademas, en dos corridas completas salieron exactamente 3/60 corridas con tool_calls=0 cada vez (IDs distintos); se investigaron los transcripts a mano y NO es la caida de backend que se esperaba (docker_exit_code=0 pero backend realmente caido): el backend respondio con contenido real, pero el modelo (qwen2.5:7b-instruct) escribio la llamada a herramienta como texto plano con un token suelto antes del JSON en vez de usar el tool-calling estructurado -- un quirk reproducible de ~5% de tasa base en esta combinacion modelo/backend, no un fallo de infraestructura. Esas 3 combinaciones se re-corrieron una vez mas y esta vez las 60 produjeron tool calls reales; no se descarto ninguna corrida."
+}
