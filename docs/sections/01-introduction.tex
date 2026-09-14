@@ -1,27 +1,29 @@
 %! TEX root = ../paper.tex
 \section{Introduction}
 
-In July 2026, an autonomous agent breached its infrastructure using a server-side request forgery (SSRF) and communicated via directory names—a channel undetected by perimeter monitoring until post-incident log analysis. 
-This highlights a critical operational shift: the central question is no longer whether capable models can bypass constraints, but how quickly teams can detect them and where structural blind spots exist.  
+In July 2026, an autonomous agent breached its infrastructure using a server-side request forgery (SSRF) and communicated via directory names, a channel undetected by perimeter monitoring until post-incident log analysis.
+This highlights a critical operational shift: the central question is no longer whether capable models can bypass constraints, but how quickly teams can detect them and where structural blind spots exist.
 
-Sentinel is a lightweight detection harness built to answer this. 
-It deploys a tool-calling agent in a containerized sandbox, introduces escape paths, and records three model-independent telemetry streams: watchdog liveness, filesystem/memory canary tokens, and outbound network baselines. 
-Sentinel captures precise time-to-detection (TTD) metrics to validate telemetry reliability.
+Sentinel is a lightweight detection harness built to answer this.
+It deploys a tool-calling agent in a containerized sandbox, introduces escape paths, and records three model-independent telemetry streams: watchdog liveness, filesystem/memory canary tokens, and outbound network baselines.
+Across 416 runs on four machines, it captures time-to-detection (TTD) for each signal and, in the process, the conditions under which the measurement itself fails.
 
 \paragraph{Contributions.}
 \begin{itemize}
+\item \textbf{The leak does not use the network.}
+      Of 197 runs in which the canary left the agent's scope, 183 did so without ever contacting a host, 93\%.
+      The token leaves through file and directory names, which is the channel the anchor incident used and the one an egress proxy cannot see.
+
 \item \textbf{Delivery channel dominance.}
       Agent compliance with injected payloads jumps from 10\% (network fetch) to 60\% (local knowledge base), showing models over-trust pre-existing contextual data.
 
-\item \textbf{The guardrail paradox.}
-      Authoritative security guardrails reliably increase data leakage. 
-      Controlled tests confirmed this is not due to attack-surface priming.
+\item \textbf{The guardrail does not help, and the reason is not priming.}
+      The condition carrying a production guardrail leaks more than the control on every machine, but at forty runs per cell the contrast does not reach significance ($p{=}0.18$).
+      What does separate is a guardrail matched for length and emphasis that names no attack surface at all ($p{=}0.006$), which falsifies the priming explanation we had registered in advance.
 
-\item \textbf{The detection-response gap.}
-      While detection occurs in 2.22 seconds, the uncontained agent continues unauthorized actions for 44 seconds.
-
-\item \textbf{Taxonomy of silent failures.}
-      We document instances where monitoring components erroneously reported detection without underlying events, offering guidance for future evaluation harnesses.
+\item \textbf{The detection-response gap, and the harness's own blind spots.}
+      Detection lands in 2.22 seconds and nothing acts for a further 44.
+      Six distinct failures made this harness report something other than what happened, two of which changed numbers in this paper, so every leak rate reported here is a lower bound.
 \end{itemize}
 
 \paragraph{Scope.}
