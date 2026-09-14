@@ -1,0 +1,7 @@
+{"type": "heartbeat", "run_id": "sin_harness_task_04_prompt_injection_006", "ts": 1789320440.184627, "severidad": "info", "detalle": {"seq": 0}}
+{"type": "heartbeat", "run_id": "sin_harness_task_04_prompt_injection_006", "ts": 1789320446.5218465, "severidad": "info", "detalle": {"seq": 1}}
+{"type": "heartbeat", "run_id": "sin_harness_task_04_prompt_injection_006", "ts": 1789320461.0868554, "severidad": "alerta", "detalle": {"motivo": "silencio", "segundos_sin_ping": 12.390721321105957}}
+{"type": "heartbeat", "run_id": "sin_harness_task_04_prompt_injection_006", "ts": 1789320509.6187603, "severidad": "info", "detalle": {"seq": 2}}
+{"type": "heartbeat", "run_id": "sin_harness_task_04_prompt_injection_006", "ts": 1789320536.2713192, "severidad": "alerta", "detalle": {"motivo": "silencio", "segundos_sin_ping": 20.13345503807068}}
+{"type": "heartbeat", "run_id": "sin_harness_task_04_prompt_injection_006", "ts": 1789320567.4993038, "severidad": "info", "detalle": {"seq": 3}}
+{"type": "heartbeat", "run_id": "sin_harness_task_04_prompt_injection_006", "ts": 1789320568.4696157, "severidad": "info", "detalle": {"seq": 4}}

@@ -16,6 +16,10 @@ python3 analysis/compute_ttd.py --results-dir \
         results/machine-B/causal-ollama0.34.0     # causal, 30 runs
 python3 analysis/compute_ttd.py --results-dir \
         results/machine-B/redteam-ollama0.6.8     # task_04, 20 runs
+python3 analysis/compute_ttd.py --results-dir \
+        results/machine-D/corpus                  # tasks 04-06, 33 of 60 runs
+python3 analysis/compute_ttd.py --results-dir \
+        results/machine-D/memory-rag-run2         # tasks 05-06 repeat, 32 of 40 runs
 \end{lstlisting}
 
 \subsection{Running the harness}
@@ -73,6 +77,7 @@ does not pay for them again.
 A & \texttt{machine-A/corpus} (70) & Apple Silicon M5 Pro, 24\,GB & Ollama 0.32.5, context unset \\
 B & \texttt{machine-B/*} (80) & i7-14700K, RTX 3060, 32\,GB & Ollama 0.6.8, then 0.34.0 \\
 C & 20 runs, not yet versioned & Ryzen 3 3250U, 5.7\,GB & no Ollama; cloud backend \\
+D & \texttt{machine-D/*} (65 of 100) & Snapdragon X Plus (ARM64), 15.6\,GB, no GPU & Ollama 0.34.0, context unset \\
 \bottomrule
 \end{tabular}
 \caption{Ollama numbers releases as \texttt{0.MINOR.PATCH} and its minor
@@ -85,7 +90,22 @@ has no Ollama installation, so its 20 runs went through the same
 OpenAI-compatible backend path but reached a cloud endpoint (a
 reasoning-capable model) rather than a local one; those runs are reported in
 Section~\ref{sec:results} as a preliminary observation, not as part of the
-versioned corpus above.}
+versioned corpus above. Machine D is the first Windows-on-ARM host in the
+project and, unlike C, ran the local model: 35 of its 100 runs (task\_04
+through 06, same runtime as B's valid batch) came back with
+\texttt{docker\_exit\_code=0} and zero tool calls, because
+\texttt{sandbox/agent.py}'s fixed 120\,s client timeout is shorter than the
+prompt-evaluation time this CPU needs for the harness's own system prompt.
+Replaying that exact first-turn payload against the local server measured
+109.0\,s of prompt evaluation plus 3.9\,s of generation, five seconds under
+the timeout, with the model already resident (load time 15\,ms): not a cold
+start, just a CPU too slow for a client timeout tuned on faster hardware.
+Three of the affected runs were individually re-launched as a check and
+failed identically each time, so this is a standing property of the
+machine, not a one-off stall. Those 35 runs were moved to sibling
+\texttt{*-invalidas-timeout} directories with their own manifest rather than
+deleted, and are excluded from every count in this paper; the 65 that remain
+are reported in Sections~\ref{sec:results} and~\ref{sec:suspected-compromise}.}
 \end{table}
 
 \pending{Los 20 runs de la maquina C (task\_06\_rag\_poison, con\_harness y

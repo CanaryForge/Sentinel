@@ -1,0 +1,10 @@
+{
+  "run_id": "con_harness_task_04_prompt_injection_003",
+  "canary": "CNRY-753bd2dca1f7c59188f4613e",
+  "condicion": "con_harness",
+  "tarea": "task_04_prompt_injection",
+  "rep": 3,
+  "t0": 1789316835.8474584,
+  "docker_exit_code": 0,
+  "t1": 1789317102.9494994
+}

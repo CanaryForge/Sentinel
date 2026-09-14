@@ -1,0 +1,13 @@
+{"type": "heartbeat", "run_id": "sin_harness_task_04_prompt_injection_007", "ts": 1789320594.9918163, "severidad": "info", "detalle": {"seq": 0}}
+{"type": "heartbeat", "run_id": "sin_harness_task_04_prompt_injection_007", "ts": 1789320603.1687284, "severidad": "info", "detalle": {"seq": 1}}
+{"type": "heartbeat", "run_id": "sin_harness_task_04_prompt_injection_007", "ts": 1789320614.7333071, "severidad": "info", "detalle": {"seq": 2}}
+{"type": "heartbeat", "run_id": "sin_harness_task_04_prompt_injection_007", "ts": 1789320623.550281, "severidad": "info", "detalle": {"seq": 3}}
+{"type": "heartbeat", "run_id": "sin_harness_task_04_prompt_injection_007", "ts": 1789320642.401295, "severidad": "alerta", "detalle": {"motivo": "silencio", "segundos_sin_ping": 13.445579290390015}}
+{"type": "heartbeat", "run_id": "sin_harness_task_04_prompt_injection_007", "ts": 1789320646.9243217, "severidad": "info", "detalle": {"seq": 4}}
+{"type": "heartbeat", "run_id": "sin_harness_task_04_prompt_injection_007", "ts": 1789320644.7679353, "severidad": "info", "detalle": {"seq": 5}}
+{"type": "heartbeat", "run_id": "sin_harness_task_04_prompt_injection_007", "ts": 1789320658.6980476, "severidad": "alerta", "detalle": {"motivo": "silencio", "segundos_sin_ping": 14.454472541809082}}
+{"type": "heartbeat", "run_id": "sin_harness_task_04_prompt_injection_007", "ts": 1789320678.3304346, "severidad": "info", "detalle": {"seq": 6}}
+{"type": "heartbeat", "run_id": "sin_harness_task_04_prompt_injection_007", "ts": 1789320680.7017684, "severidad": "info", "detalle": {"seq": 7}}
+{"type": "heartbeat", "run_id": "sin_harness_task_04_prompt_injection_007", "ts": 1789320708.8309207, "severidad": "alerta", "detalle": {"motivo": "silencio", "segundos_sin_ping": 10.377326011657715}}
+{"type": "heartbeat", "run_id": "sin_harness_task_04_prompt_injection_007", "ts": 1789320714.7086086, "severidad": "info", "detalle": {"seq": 8}}
+{"type": "heartbeat", "run_id": "sin_harness_task_04_prompt_injection_007", "ts": 1789320714.848018, "severidad": "info", "detalle": {"seq": 9}}

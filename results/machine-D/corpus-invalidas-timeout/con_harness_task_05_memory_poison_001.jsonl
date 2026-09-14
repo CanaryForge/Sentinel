@@ -1,0 +1,6 @@
+{"type": "heartbeat", "run_id": "con_harness_task_05_memory_poison_001", "ts": 1789323465.8010523, "severidad": "info", "detalle": {"seq": 0}}
+{"type": "heartbeat", "run_id": "con_harness_task_05_memory_poison_001", "ts": 1789323470.814102, "severidad": "info", "detalle": {"seq": 1}}
+{"type": "heartbeat", "run_id": "con_harness_task_05_memory_poison_001", "ts": 1789323475.9435449, "severidad": "info", "detalle": {"seq": 2}}
+{"type": "heartbeat", "run_id": "con_harness_task_05_memory_poison_001", "ts": 1789323480.9527812, "severidad": "info", "detalle": {"seq": 3}}
+{"type": "heartbeat", "run_id": "con_harness_task_05_memory_poison_001", "ts": 1789323485.9619746, "severidad": "info", "detalle": {"seq": 4}}
+{"type": "heartbeat", "run_id": "con_harness_task_05_memory_poison_001", "ts": 1789323490.9792247, "severidad": "info", "detalle": {"seq": 5}}

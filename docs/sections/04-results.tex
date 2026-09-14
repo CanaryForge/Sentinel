@@ -49,17 +49,25 @@ without one.
 Corpus, machine A & 0.32.5 & 3/10 & \textbf{9/10} \\
 Machine B & 0.34.0 & 3/10 & \textbf{7/10} \\
 Machine B & 0.6.8 & 10/10 & 10/10 \\
+Machine D (ARM64) & 0.34.0 & 6/20 & \textbf{8/9} \\
 \bottomrule
 \end{tabular}
 \caption{The third row is not a result, it is a measurement failure preserved
 for honesty: on an Ollama release 26 minor versions old the agent loops until
 it exhausts the turn cap, every condition saturates, and nothing can be
-distinguished. Section~\ref{sec:validity} gives the mechanism.}
+distinguished. Section~\ref{sec:validity} gives the mechanism. The fourth row
+pools \texttt{task\_06} across machine D's two batches (Appendix~\ref{sec:repro}),
+counting only its 65 runs with real backend activity.}
 \end{table}
 
-Once the runtime versions are comparable, the effect appears on both machines
-at close to the same size. It is a correlation across two independent sets,
-not a causal claim, and the next subsection is our attempt to explain it.
+Once the runtime versions are comparable, the effect appears on three
+independent machines at close to the same size: an x86 desktop, an Apple
+Silicon laptop on an older Ollama release, and a Windows-on-ARM laptop on the
+same release as the desktop. \texttt{sin\_harness} lands at exactly 3/10 on
+two of the three and 6/20 on the third, the same 30\% every time; it is the
+tightest agreement in this paper. It is a correlation across independent
+sets, not a causal claim, and the next subsection is our attempt to explain
+it.
 
 \subsection{A different model, on the same task, reverses the sign}
 

@@ -45,7 +45,7 @@ Si Daniel corre mas pruebas:
 - **Misma maquina, version distinta**: renombrar primero `machine-A/corpus/` a
   `machine-A/corpus-ollama0.32.5/` para que las dos versiones queden
   explicitas, y crear `machine-A/<experimento>-ollama<version>/`.
-- **Maquina nueva**: `machine-C/` con su `manifest.json`.
+- **Maquina nueva**: `machine-D/` con su `manifest.json`.
 
 ```bash
 python3 orchestrator/run_experiment.py \
