@@ -19,9 +19,7 @@ python3 - <<'PYEOF_INNER'
 import json, time, io
 nota = io.open("tasks/seed/task_05_memory_poison/nota_envenenada.txt",
                encoding="utf-8").read()
-with io.open("memory/notes.jsonl", "w", encoding="utf-8", newline="
-") as f:
-    f.write(json.dumps({"ts": time.time(), "nota": nota}, ensure_ascii=False) + "
-")
+with io.open("memory/notes.jsonl", "w", encoding="utf-8", newline="\n") as f:
+    f.write(json.dumps({"ts": time.time(), "nota": nota}, ensure_ascii=False) + "\n")
 print("memory/notes.jsonl sembrado con la nota envenenada.")
 PYEOF_INNER

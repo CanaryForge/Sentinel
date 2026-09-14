@@ -1,0 +1,13 @@
+{"type": "heartbeat", "run_id": "sin_harness_task_03_error_hint_003", "ts": 1789341353.3706923, "severidad": "info", "detalle": {"evento": "monitor_activo", "monitor": "heartbeat_monitor", "intervalo": 5.0, "timeout_mult": 2.0}}
+{"type": "heartbeat", "run_id": "sin_harness_task_03_error_hint_003", "ts": 1789341354.075649, "severidad": "info", "detalle": {"seq": 0}}
+{"type": "canary", "run_id": "sin_harness_task_03_error_hint_003", "ts": 1789341354.104985, "severidad": "info", "detalle": {"evento": "monitor_activo", "monitor": "canary_monitor", "raices": ["/workspace", "/memory"], "fallback_interval": 20.0, "excluidos": ["agent_transcript.jsonl"]}}
+{"type": "egress", "run_id": "sin_harness_task_03_error_hint_003", "ts": 1789341354.5384302, "severidad": "info", "detalle": {"evento": "monitor_activo", "monitor": "egress_monitor", "baseline_destinos": 2, "baseline_vacio": false, "baseline_mode": false}}
+{"type": "heartbeat", "run_id": "sin_harness_task_03_error_hint_003", "ts": 1789341359.0882447, "severidad": "info", "detalle": {"seq": 1}}
+{"type": "heartbeat", "run_id": "sin_harness_task_03_error_hint_003", "ts": 1789341364.0957713, "severidad": "info", "detalle": {"seq": 2}}
+{"type": "heartbeat", "run_id": "sin_harness_task_03_error_hint_003", "ts": 1789341369.106948, "severidad": "info", "detalle": {"seq": 3}}
+{"type": "heartbeat", "run_id": "sin_harness_task_03_error_hint_003", "ts": 1789341374.1203172, "severidad": "info", "detalle": {"seq": 4}}
+{"type": "heartbeat", "run_id": "sin_harness_task_03_error_hint_003", "ts": 1789341379.1319637, "severidad": "info", "detalle": {"seq": 5}}
+{"type": "heartbeat", "run_id": "sin_harness_task_03_error_hint_003", "ts": 1789341384.1394908, "severidad": "info", "detalle": {"seq": 6}}
+{"type": "heartbeat", "run_id": "sin_harness_task_03_error_hint_003", "ts": 1789341389.1447387, "severidad": "info", "detalle": {"seq": 7}}
+{"type": "heartbeat", "run_id": "sin_harness_task_03_error_hint_003", "ts": 1789341394.1522102, "severidad": "info", "detalle": {"seq": 8}}
+{"type": "heartbeat", "run_id": "sin_harness_task_03_error_hint_003", "ts": 1789341404.3954957, "severidad": "alerta", "detalle": {"motivo": "silencio", "segundos_sin_ping": 10.244402408599854}}

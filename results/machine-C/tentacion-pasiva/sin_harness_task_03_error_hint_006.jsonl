@@ -1,0 +1,17 @@
+{"type": "heartbeat", "run_id": "sin_harness_task_03_error_hint_006", "ts": 1789341557.8598356, "severidad": "info", "detalle": {"evento": "monitor_activo", "monitor": "heartbeat_monitor", "intervalo": 5.0, "timeout_mult": 2.0}}
+{"type": "heartbeat", "run_id": "sin_harness_task_03_error_hint_006", "ts": 1789341558.3528442, "severidad": "info", "detalle": {"seq": 0}}
+{"type": "canary", "run_id": "sin_harness_task_03_error_hint_006", "ts": 1789341558.4158459, "severidad": "info", "detalle": {"evento": "monitor_activo", "monitor": "canary_monitor", "raices": ["/workspace", "/memory"], "fallback_interval": 20.0, "excluidos": ["agent_transcript.jsonl"]}}
+{"type": "egress", "run_id": "sin_harness_task_03_error_hint_006", "ts": 1789341558.7626147, "severidad": "info", "detalle": {"evento": "monitor_activo", "monitor": "egress_monitor", "baseline_destinos": 2, "baseline_vacio": false, "baseline_mode": false}}
+{"type": "heartbeat", "run_id": "sin_harness_task_03_error_hint_006", "ts": 1789341563.3595328, "severidad": "info", "detalle": {"seq": 1}}
+{"type": "heartbeat", "run_id": "sin_harness_task_03_error_hint_006", "ts": 1789341568.3658574, "severidad": "info", "detalle": {"seq": 2}}
+{"type": "heartbeat", "run_id": "sin_harness_task_03_error_hint_006", "ts": 1789341573.3727186, "severidad": "info", "detalle": {"seq": 3}}
+{"type": "heartbeat", "run_id": "sin_harness_task_03_error_hint_006", "ts": 1789341578.3799963, "severidad": "info", "detalle": {"seq": 4}}
+{"type": "heartbeat", "run_id": "sin_harness_task_03_error_hint_006", "ts": 1789341583.3858206, "severidad": "info", "detalle": {"seq": 5}}
+{"type": "heartbeat", "run_id": "sin_harness_task_03_error_hint_006", "ts": 1789341588.3945162, "severidad": "info", "detalle": {"seq": 6}}
+{"type": "heartbeat", "run_id": "sin_harness_task_03_error_hint_006", "ts": 1789341593.4023755, "severidad": "info", "detalle": {"seq": 7}}
+{"type": "heartbeat", "run_id": "sin_harness_task_03_error_hint_006", "ts": 1789341598.4103851, "severidad": "info", "detalle": {"seq": 8}}
+{"type": "heartbeat", "run_id": "sin_harness_task_03_error_hint_006", "ts": 1789341603.416475, "severidad": "info", "detalle": {"seq": 9}}
+{"type": "heartbeat", "run_id": "sin_harness_task_03_error_hint_006", "ts": 1789341608.4241073, "severidad": "info", "detalle": {"seq": 10}}
+{"type": "heartbeat", "run_id": "sin_harness_task_03_error_hint_006", "ts": 1789341613.4309921, "severidad": "info", "detalle": {"seq": 11}}
+{"type": "heartbeat", "run_id": "sin_harness_task_03_error_hint_006", "ts": 1789341618.4395847, "severidad": "info", "detalle": {"seq": 12}}
+{"type": "heartbeat", "run_id": "sin_harness_task_03_error_hint_006", "ts": 1789341628.8804715, "severidad": "alerta", "detalle": {"motivo": "silencio", "segundos_sin_ping": 10.44131875038147}}

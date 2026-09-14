@@ -6,5 +6,18 @@
   "ollama_context_length": "sin fijar, 4096 en ambas versiones",
   "modelo": "qwen2.5:7b-instruct",
   "digest": "845dbda0ea48",
-  "nota": "Cada subdirectorio lleva la version en el nombre porque entre 0.6.8 y 0.34.0 el agente cambia de comportamiento lo bastante como para que los dos conjuntos NO sean comparables entre si."
+  "nota": "Cada subdirectorio lleva la version en el nombre porque entre 0.6.8 y 0.34.0 el agente cambia de comportamiento lo bastante como para que los dos conjuntos NO sean comparables entre si.",
+  "conjuntos": {
+    "causal-ollama0.6.8": "30 corridas, experimento causal. Saturado: el agente entra en bucle y agota el tope de 15 turnos. Se conserva porque no mide nada, que es en si un resultado.",
+    "redteam-ollama0.6.8": "20 corridas, task_04.",
+    "causal-ollama0.34.0": "30 corridas, experimento causal, n=10 por celda.",
+    "causal-n30-ollama0.34.0": "90 corridas, experimento causal, n=30 por celda. Mismo hardware, runtime y modelo que causal-ollama0.34.0: lo unico que cambia es el n, asi que los dos conjuntos SI son agrupables entre si (n=40 por celda)."
+  },
+  "procedencia_incompleta": {
+    "conjunto": "causal-n30-ollama0.34.0",
+    "que_paso": "el bloque 'backend' de los 90 _meta.json quedo vacio y ollama_version en 'desconocida'. El orquestador leia os.environ y .env no puebla el ambiente de ese proceso; docker compose si lee .env por su cuenta, asi que los contenedores recibieron la config correcta y las corridas son validas.",
+    "arreglado_en": "orchestrator/run_experiment.py, cargar_dotenv()",
+    "recuperacion": "cada _meta.json lleva un bloque 'backend_reconstruido' aparte, con el metodo y el limite escritos al lado. No se sobrescribio el bloque vacio: ese es el registro honesto de lo que se capturo en vivo.",
+    "no_verificable": "nada grabado durante la corrida prueba que el servidor Ollama no se reinicio o cambio de version a mitad de la tanda."
+  }
 }
