@@ -119,10 +119,15 @@ listo, sin ejecutar todavia; `[ ]` = pendiente.
       romper comparabilidad con el resto del proyecto (timeout=120 en
       todas las maquinas). `corpus/` y `memory-rag-run2/` quedan con 33 y
       32 corridas validas respectivamente
-- [ ] Reescribir "Machine-D" y "Run 2 en machine-D" en
-      `report/findings.md` con las cifras limpias (33+32 validas) despues
-      de traer los cambios de `main` al branch -- ver nota de PENDIENTE DE
-      REDACCION al inicio de esa seccion
+- [x] Reescrito "Machine-D" en `report/findings.md` con las cifras limpias
+      (33+32 validas, 2026-09-14), despues de traer `main`. task_06 replica
+      Hallazgo 2 con fuerza (con_harness 89%, sin_harness 30% -- coincide
+      exacto con machine-A y machine-B). Los 5 unicos eventos de nivel 6 de
+      todo el proyecto (416 corridas, 4 maquinas) son de machine-D,
+      verificados uno por uno como agente-en-loop + kill por timeout, no
+      compromiso. Ambos hallazgos incorporados tambien al paper del sprint
+      (`docs/sections/04-results.tex`, `07b-suspected-compromise.tex`,
+      `06-silent-failures.tex`, `A1-reproducibility.tex`)
 
 ## Documentacion
 

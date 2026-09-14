@@ -54,7 +54,14 @@ pinger it kills. It was caught because the suite was quietly spending paid API
 quota on agent runs it was documented not to need. And when the model backend
 went down mid-session, the agent caught the error, wrote it to the transcript
 and ended its loop, so thirty runs reported success with zero tool calls
-between them.
+between them. The same signature reappeared independently on machine D, with a
+different mechanism: the backend never went down, but \texttt{sandbox/agent.py}'s
+fixed 120\,s client timeout is shorter than this CPU's prompt-evaluation time
+for the harness's own first-turn payload (measured at 109\,s, model already
+resident), so 35 of 100 runs there read as complete and empty for a reason no
+outage would explain. One signature, two independent causes on two machines,
+is the strongest argument in this paper for treating the class rather than
+patching the instance.
 
 The sixth reached the published numbers. The attacker logs each delivery of
 its payload, and counting those against runs shows eight of twenty were never
@@ -79,7 +86,9 @@ defences all make components prove they were alive.
       confused with ``a control failed''.
 \item The orchestrator inspects each finished run, records the diagnosis in
       that run's metadata, and prints how many produced no data. It caught an
-      empty run on its first outing.
+      empty run on its first outing, and machine D's independent occurrence
+      of the same failure, on hardware none of this was written against, on
+      its first outing there too.
 \item The analysis tolerates a torn log line and names the file and line
       rather than dying, because the three monitors append to one file from
       separate containers and that append is not atomic over a bind mount.

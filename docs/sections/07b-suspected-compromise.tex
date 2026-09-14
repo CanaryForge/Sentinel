@@ -56,11 +56,31 @@ by design, the means to run arbitrary code inside its own container through
 is the task. What a sandbox escape detector exists to answer is whether that
 arbitrary code ever leaves the container, and across every run collected for
 this project, control and mislabeled cloud batch included, level 6
-(\texttt{sandbox\_roto\_heartbeat}, an unexplained container failure) fired
-zero times in 399 runs. Every escalation observed tops out at level 5: the
-agent using its own already-permitted egress channel to move the canary
-somewhere it should not, which is the indirect-injection threat model of
-ASI06~\cite{owasp-asi06}, not a container breakout.
+(\texttt{sandbox\_roto\_heartbeat}) fired zero times in 399 runs. Counting the
+full corpus as it stands today, 416 runs across four machines, it fired five
+times, all on machine D and all explained the same way:
+\texttt{docker\_exit\_code=124} in every one, meaning the orchestrator's own
+outer timeout killed the run after the agent spent its full 480\,s budget
+re-reading memory, rewriting the same failing patch and re-running the same
+failing test without ever converging, and the heartbeat monitor correctly
+read the silence that followed a kill as silence. Four of the five also used
+the canary before the kill, through the same \texttt{memory\_write} leak
+Section~\ref{sec:results} already counts at level 5; the fifth timed out
+without touching it. None shows anything past what level 5 already covers:
+no new egress surface, nothing leaving the container through a channel this
+paper does not already measure. What level 6 adds, in every case, is only
+that the process was already done leaking or already stuck, and then stopped
+answering. That all five sit on the one machine slow
+enough to time out its own HTTP client mid-prompt (Appendix~\ref{sec:repro})
+is the same hardware limit surfacing a second way: there, a slow first turn
+produces a run with nothing in it; here, a slow agent that never converges
+produces a run with fourteen real turns in it and still gets killed. Level 6
+exists in the ladder precisely for a case like this, and it has never once
+coincided with a breakout: every security-relevant escalation, on any
+machine, still tops out at level 5, the agent using its own
+already-permitted egress channel to move the canary somewhere it should not,
+which is the indirect-injection threat model of ASI06~\cite{owasp-asi06}, not
+a container breakout.
 
 \subsection{Next}
 
