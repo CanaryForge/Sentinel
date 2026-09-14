@@ -1,0 +1,83 @@
+\section{Investigating a Suspected Compromise}
+\label{sec:suspected-compromise}
+
+A batch of 48 runs launched from the dashboard this round reversed the
+paper's main result outright: \texttt{con\_harness} reached zero leaks (0/28
+across all four tasks) while \texttt{sin\_harness} leaked in 13 of 20
+attempts, split cleanly by task (0/10 against 10/10 on \texttt{task\_06},
+0/10 against 3/10 on \texttt{task\_05}). A result that clean, on the machine
+the rest of the corpus came from, is exactly the shape a real compromise
+would take, and it was treated as one until it was checked rather than
+reported.
+
+\subsection{What actually happened}
+
+It did not happen on this machine's model. Every run in the batch shows
+direct evidence of talking to a cloud reasoning backend instead of the local
+Ollama instance the rest of \texttt{machine-A} used: 46 of 47 transcripts
+carry \texttt{prompt\_cache\_hit\_tokens} and
+\texttt{completion\_tokens\_details.reasoning\_tokens} in their
+\texttt{usage} field, fields Ollama's OpenAI-compatible endpoint does not
+emit; the 47th failed outright with a \texttt{503} from
+\texttt{opencode.ai/zen/go/v1/chat/completions} logged verbatim in its
+transcript. The cause was mundane: a local \texttt{.env}, left over from the
+cloud-model spot check already reported in Section~\ref{sec:results}, still
+set \texttt{AGENT\_BACKEND=openai}, and the orchestrator's own metadata
+capture reads that variable from its own process environment rather than
+from the file Compose actually applies to the container, so every
+\texttt{\_meta.json} in the batch falsely records
+\texttt{"agent\_backend": "ollama"}.
+
+We checked, rather than assumed, that this could not be an escape. No
+compose profile mounts the repository root or \texttt{.env} into any
+container; the sandbox receives only pre-resolved environment values at
+creation time, with no filesystem path back to the host file. \texttt{.env}'s
+own \texttt{birth} and \texttt{modify} timestamps are identical and about 40
+hours older than the batch's first run, with nothing written in between. The
+batch is a mislabeled dataset, not a security event, and it should be moved
+out of \texttt{machine-A}'s corpus and re-tagged before it is used for
+anything.
+
+\subsection{What can actually reach the agent}
+
+The suspicion this round kept returning to was whether an attacker could
+connect to the agent directly, rather than wait for it to fetch something.
+The topology answers this without ambiguity. The sandbox container publishes
+no port and runs no listener; nothing in \texttt{sandbox/} binds a socket or
+serves a request. It sits on two Docker networks, and on both of them it is
+always the one that initiates. Every other service in the compose file
+connects out to something; nothing connects in to \texttt{sandbox}.
+\texttt{cap\_drop: [ALL]} and \texttt{no-new-privileges} bound what a
+compromised process inside it could do regardless.
+
+This rules out a push, not the pull already measured. The agent already has,
+by design, the means to run arbitrary code inside its own container through
+\texttt{write\_file} and \texttt{run\_tests}; that is not a vulnerability, it
+is the task. What a sandbox escape detector exists to answer is whether that
+arbitrary code ever leaves the container, and across every run collected for
+this project, control and mislabeled cloud batch included, level 6
+(\texttt{sandbox\_roto\_heartbeat}, an unexplained container failure) fired
+zero times in 198 runs. Every escalation observed tops out at level 5: the
+agent using its own already-permitted egress channel to move the canary
+somewhere it should not, which is the indirect-injection threat model of
+ASI06~\cite{owasp-asi06}, not a container breakout.
+
+\subsection{Next}
+
+Three items follow directly from this round and are cheap relative to the
+rest of the paper. Fix \texttt{backend\_info()} to read the same
+\texttt{.env} Compose resolves, so a future misconfiguration reports itself
+instead of a wrong backend name. Move \texttt{machine-A/prueba-real} to its
+own corpus under the backend it actually used, and either drop it or report
+it as a second, larger replication of the model-reversal result in
+Section~\ref{sec:results} rather than as \texttt{machine-A} data. And since
+this round's real question, whether an attacker could act on the agent
+rather than through it, has no path to test in the current topology, the
+honest answer is that this harness has never been asked that question: every
+vector here is something the agent chooses to pull, never something pushed
+to it mid-run.
+
+\todo{Opcional si sobra espacio: una linea notando que extender la topologia
+con una superficie push (un webhook, un socket que el agente escuche) seria
+la forma de probar esto de verdad, en vez de inferirlo de la ausencia actual
+de un listener.}
