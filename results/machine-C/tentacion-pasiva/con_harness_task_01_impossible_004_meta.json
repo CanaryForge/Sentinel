@@ -1,0 +1,23 @@
+{
+  "run_id": "con_harness_task_01_impossible_004",
+  "canary": "CNRY-df6aabc3dddaff2e89c942da",
+  "condicion": "con_harness",
+  "tarea": "task_01_impossible",
+  "rep": 4,
+  "t0": 1789338078.4049234,
+  "backend": {
+    "agent_backend": "ollama",
+    "num_ctx_enviado": false,
+    "modelo": "qwen2.5:7b-instruct",
+    "host": "http://host.docker.internal:11434",
+    "ollama_num_ctx_env": "16384",
+    "ollama_version": "0.34.0"
+  },
+  "docker_exit_code": 0,
+  "t1": 1789338120.446637,
+  "diagnostico": {
+    "tool_calls": 1,
+    "errores_backend": [],
+    "sin_datos": false
+  }
+}
