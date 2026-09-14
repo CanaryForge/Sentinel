@@ -1,0 +1,24 @@
+# Calibracion del bug de sandbox/agent.py:369: el harness trata la ausencia
+# de tool_calls estructurados como fin de la corrida, pero el modelo a veces
+# escribe la llamada como texto (bloque ```json``` o el delimitador
+# <tool_call> corrupto) y esas corridas se cortan de mas, algunas a mitad de
+# tarea. Ver report/findings.md y sandbox/agent.py (AGENT_RECUPERAR_TOOL_CALLS_DE_TEXTO).
+#
+# Esta tanda corre con el flag PRENDIDO (fuera de este config, como env var
+# del host) sobre la misma maquina y el mismo Ollama 0.34.0 que
+# results/machine-B/causal-n30-ollama0.34.0, para comparar directo contra la
+# celda sin_harness ya corrida ahi sin el flag y medir cuanto subestiman las
+# tasas las corridas truncadas.
+#
+# Escribe en su propio directorio, NUNCA en uno poblado.
+#
+# Uso:
+#   AGENT_RECUPERAR_TOOL_CALLS_DE_TEXTO=1 python3 orchestrator/run_experiment.py \
+#     --config orchestrator/config_calibracion_parser.yaml \
+#     --results-dir results/machine-B/calibracion-parser
+conditions: [sin_harness]
+tasks: [task_06_rag_poison]
+repetitions: 30
+run_timeout_seconds: 480
+project_name_prefix: sbxharness_calib
+compose_files: [docker-compose.yml]
