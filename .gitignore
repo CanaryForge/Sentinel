@@ -32,3 +32,6 @@ memory/*.jsonl
 # el corpus, y mezclarlas lo alteraria.
 !results_causal/
 !results_redteam/
+
+# logs de corridas, no versionados
+*.log

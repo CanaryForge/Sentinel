@@ -173,14 +173,45 @@ def _refrescar_corpus() -> None:
 _ttd_lock = threading.Lock()
 
 
+# analyze_run() relee y reprocesa los tres artefactos de una corrida en cada
+# llamada, y los endpoints de /api/incidente/ recorren TODOS los lotes: con
+# once lotes descubiertos, la misma corrida se reanaliza una vez por endpoint.
+# La clave del memo incluye el mtime de los tres archivos que analyze_run()
+# lee, asi que una corrida que el arnes acaba de escribir invalida su propia
+# entrada sin TTL ni invalidacion manual: si el disco no cambio, el resultado
+# tampoco. Vive en _analyze_run_at porque es el punto unico por donde pasan
+# analyze_run_in y analyze_run_default.
+_analysis_memo: dict = {}
+
+
+def _huella_de_corrida(dirpath: str, run_id: str) -> tuple:
+    marcas = []
+    for sufijo in ("_meta.json", ".jsonl", "_transcript.jsonl"):
+        try:
+            marcas.append(os.stat(os.path.join(dirpath, run_id + sufijo)).st_mtime_ns)
+        except OSError:
+            marcas.append(None)
+    return tuple(marcas)
+
+
 def _analyze_run_at(dirpath: str, run_id: str) -> dict:
+    clave = (dirpath, run_id)
+    huella = _huella_de_corrida(dirpath, run_id)
     with _ttd_lock:
+        cacheado = _analysis_memo.get(clave)
+        if cacheado is not None and cacheado[0] == huella:
+            # Copia, no la entrada viva: api_runs() le pega "en_curso" e
+            # "interrumpida" encima al dict que recibe, y si eso aterrizara
+            # sobre el memo la corrida quedaria "en curso" para siempre.
+            return dict(cacheado[1])
         prev = ttd.RESULTS_DIR
         ttd.RESULTS_DIR = dirpath
         try:
-            return ttd.analyze_run(run_id)
+            resultado = ttd.analyze_run(run_id)
         finally:
             ttd.RESULTS_DIR = prev
+        _analysis_memo[clave] = (huella, resultado)
+        return dict(resultado)
 
 
 def analyze_run_in(corpus: str, run_id: str) -> dict:
