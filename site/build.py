@@ -45,6 +45,13 @@ NIVEL_FUGA = 5
 # Si PAPER_URL queda vacia, los botones y el enlace del menu que apuntan al
 # paper NO se renderizan, en vez de quedar apuntando a ninguna parte.
 PAPER_URL = os.environ.get("PAPER_URL", "").strip()
+# Si se apunta a un PDF local, se copia junto a la pagina y se enlaza desde
+# ahi, en vez de depender de que el paper este publicado en algun sitio:
+#   PAPER_PDF=docs/paper.pdf python3 site/build.py
+# OJO: eso publica el paper. Vercel lo sirve a cualquiera que tenga el enlace,
+# aunque el repositorio siga siendo privado. Ademas hay que commitear el
+# archivo copiado, o el deploy no lo vera.
+PAPER_PDF = os.environ.get("PAPER_PDF", "").strip()
 REPO_URL = os.environ.get("REPO_URL", "https://github.com/CanaryForge/Sentinel").strip()
 
 SUPERFICIES = {
@@ -314,14 +321,26 @@ def render(datos):
         raise SystemExit("template.html no tiene el marcador de datos")
     html = html.replace("__LOGO__", uri)
     html = html.replace("__REPO_URL__", REPO_URL)
-    if PAPER_URL:
-        html = html.replace("__PAPER_URL__", PAPER_URL)
+
+    paper = PAPER_URL
+    if PAPER_PDF:
+        origen = os.path.abspath(PAPER_PDF)
+        if not os.path.exists(origen):
+            raise SystemExit("PAPER_PDF apunta a %s, que no existe" % origen)
+        destino = os.path.join(ROOT, "site", "paper.pdf")
+        with open(origen, "rb") as f_in, open(destino, "wb") as f_out:
+            f_out.write(f_in.read())
+        print("copiado %s -> site/paper.pdf (%.0f KB). Hay que commitearlo "
+              "para que Vercel lo sirva." % (PAPER_PDF, os.path.getsize(destino) / 1024))
+        paper = paper or "paper.pdf"
+    if paper:
+        html = html.replace("__PAPER_URL__", paper)
     else:
         # Sin URL de paper, se quita el elemento entero en vez de dejar un
         # enlace muerto en la pagina que el paper enlaza.
         html = re.sub(r'\s*<a[^>]*href="__PAPER_URL__"[^>]*>.*?</a>', "", html,
                       flags=re.S)
-        print("  aviso: PAPER_URL vacia, se omiten los enlaces al paper")
+        print("  aviso: sin PAPER_URL ni PAPER_PDF, se omiten los enlaces al paper")
     html = html.replace(
         marcador,
         "window.SENTINEL_DATA = " + json.dumps(datos, ensure_ascii=False) + ";\n" + marcador,
