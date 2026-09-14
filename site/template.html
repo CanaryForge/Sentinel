@@ -74,7 +74,8 @@ section{padding:74px 0;border-top:1px solid var(--border)}
 .shead p{margin-top:15px;max-width:72ch;color:var(--text-muted);font-size:16px}
 
 /* ---------- how it works ---------- */
-.how{display:grid;grid-template-columns:1fr 380px;gap:52px;align-items:start}
+.how{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:52px;align-items:start}
+.how>*{min-width:0}
 .diagram{background:var(--wash),var(--surface);border:1px solid var(--border);
   border-radius:var(--r);padding:26px}
 .diagram svg{width:100%;height:auto;display:block}
@@ -84,6 +85,7 @@ section{padding:74px 0;border-top:1px solid var(--border)}
 .mon h4{font-family:var(--mono);font-size:14.5px;font-weight:700;color:var(--primary-400)}
 .mon p{font-size:14.5px;color:var(--text-muted);margin-top:7px;line-height:1.55}
 .mon .sig{font-family:var(--mono);font-size:12.5px;color:var(--text-faint);margin-top:8px}
+
 
 /* ---------- finding blocks ---------- */
 .finding{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start}
@@ -193,6 +195,29 @@ footer{border-top:1px solid var(--border);padding:36px 0 76px;font-family:var(--
   font-size:13px;color:var(--text-faint);line-height:1.9}
 footer a{color:var(--text-muted)}
 footer .stamp{margin-top:14px;color:var(--neutral-700);color:var(--text-faint);opacity:.75}
+
+/* ---------- narrow screens ----------
+   Every multi-column block collapses to one column and every grid child gets
+   min-width:0, without which a grid item refuses to shrink below its content
+   and pushes the page sideways. Tables keep their width and scroll inside
+   their own box rather than widening the document. */
+@media (max-width:860px){
+  .how{grid-template-columns:1fr;gap:28px}
+  .monitors,.mon{width:auto;max-width:100%}
+  nav{flex-wrap:wrap;row-gap:8px}
+  .counts{grid-template-columns:repeat(2,minmax(0,1fr));gap:26px 20px}
+  .counts b{font-size:38px}
+  .finding{grid-template-columns:1fr}
+  .limits{grid-template-columns:1fr}
+  .next{grid-template-columns:1fr}
+  .rung{grid-template-columns:92px 28px minmax(0,1fr);gap:14px}
+}
+@media (max-width:560px){
+  .wrap{padding-left:16px;padding-right:16px}
+  .diagram{padding:14px}
+}
+.finding,.limits,.limit{min-width:0}
+.finding>div{min-width:0;overflow-x:auto}
 </style>
 </head>
 <body>
@@ -229,8 +254,8 @@ footer .stamp{margin-top:14px;color:var(--neutral-700);color:var(--text-faint);o
   </div>
   <div class="how">
     <div class="diagram">
-      <svg viewBox="0 0 720 300" role="img"
-           aria-label="The agent container reaches the mock network through an egress proxy, while a filesystem monitor watches a shared workspace volume and a heartbeat monitor watches for process silence.">
+      <svg viewBox="0 0 720 370" role="img"
+           aria-label="The agent container reaches the mock network through an egress proxy, while a filesystem monitor watches two roots, the ephemeral workspace volume and a persistent memory bind mount, and a heartbeat monitor watches for process silence. A separate link carries the agent's own model traffic straight to the backend, bypassing the proxy and outside the audited scope.">
         <defs>
           <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
                   orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#817d74"/></marker>
@@ -257,9 +282,10 @@ footer .stamp{margin-top:14px;color:var(--neutral-700);color:var(--text-faint);o
           <text x="611" y="163" fill="#a7a59f" text-anchor="middle" font-size="11">model-hub</text>
           <text x="611" y="180" fill="#918d84" text-anchor="middle" font-size="10">internal: true</text>
 
-          <rect x="8" y="26" width="150" height="52" rx="3" fill="#1b1a18" stroke="#47443e"/>
-          <text x="83" y="47" fill="#f9f9f8" text-anchor="middle" font-size="11">workspace volume</text>
-          <text x="83" y="64" fill="#918d84" text-anchor="middle" font-size="10">shared, read only</text>
+          <rect x="8" y="14" width="150" height="64" rx="3" fill="#1b1a18" stroke="#47443e"/>
+          <text x="83" y="33" fill="#f9f9f8" text-anchor="middle" font-size="11">watched roots</text>
+          <text x="83" y="50" fill="#918d84" text-anchor="middle" font-size="10">workspace, ephemeral</text>
+          <text x="83" y="66" fill="#e1cfa2" text-anchor="middle" font-size="10">./memory, persists</text>
           <line x1="83" y1="112" x2="83" y2="80" stroke="#817d74" marker-end="url(#ar)"/>
           <line x1="158" y1="52" x2="256" y2="52" stroke="#b8860b" marker-end="url(#arg)"/>
           <rect x="258" y="26" width="160" height="52" rx="3" fill="#1b1a18" stroke="#b8860b"/>
@@ -277,10 +303,18 @@ footer .stamp{margin-top:14px;color:var(--neutral-700);color:var(--text-faint);o
           <text x="338" y="255" fill="#e4bd5e" text-anchor="middle" font-weight="700">egress_monitor</text>
           <text x="338" y="272" fill="#a7a59f" text-anchor="middle" font-size="11">baseline + canary</text>
 
-          <rect x="440" y="216" width="264" height="70" rx="3" fill="#1b1a18" stroke="#47443e"/>
-          <text x="572" y="240" fill="#a7a59f" text-anchor="middle" font-size="11">all three append to</text>
-          <text x="572" y="259" fill="#e1cfa2" text-anchor="middle">results/&lt;run_id&gt;.jsonl</text>
-          <text x="572" y="277" fill="#918d84" text-anchor="middle" font-size="10">one format, one clock</text>
+          <path d="M140 178 L140 224 L436 224" fill="none" stroke="#615e56"
+                stroke-dasharray="9 5" marker-end="url(#ar)"/>
+          <text x="288" y="217" fill="#918d84" text-anchor="middle" font-size="10">bypasses the proxy by design</text>
+          <rect x="440" y="198" width="264" height="52" rx="3" fill="#1b1a18" stroke="#47443e"
+                stroke-dasharray="9 5"/>
+          <text x="572" y="219" fill="#a7a59f" text-anchor="middle" font-size="11">model backend</text>
+          <text x="572" y="236" fill="#918d84" text-anchor="middle" font-size="10">not audited, carries no agent payload</text>
+
+          <rect x="440" y="290" width="264" height="70" rx="3" fill="#1b1a18" stroke="#47443e"/>
+          <text x="572" y="314" fill="#a7a59f" text-anchor="middle" font-size="11">all three append to</text>
+          <text x="572" y="333" fill="#e1cfa2" text-anchor="middle">results/&lt;run_id&gt;.jsonl</text>
+          <text x="572" y="351" fill="#918d84" text-anchor="middle" font-size="10">one format, one clock</text>
         </g>
       </svg>
     </div>
@@ -386,7 +420,7 @@ footer .stamp{margin-top:14px;color:var(--neutral-700);color:var(--text-faint);o
        reported as successful runs, and each changed a number that had already been written
        down.</p>
   </div>
-  <div class="limits" style="grid-template-columns:1fr 1fr 1fr">
+  <div class="limits">
     <div class="limit">
       <h4>The monitor detecting its own log</h4>
       <p id="l-self"></p>
