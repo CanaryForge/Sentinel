@@ -1,0 +1,12 @@
+{
+  "maquina": "D",
+  "operador": "Sofia",
+  "hardware": "Qualcomm Snapdragon X Plus (X1P42100, Oryon), 8 nucleos, integrada Qualcomm Adreno X1-45, 15.6GB RAM, Windows 11 Home, ARM64",
+  "ollama": "0.34.0",
+  "ollama_context_length": "vacio (no fijado en el entorno; OLLAMA_NUM_CTX=16384 en .env del proyecto, pero no confirmado que el servidor Ollama lo haya aplicado)",
+  "modelo": "qwen2.5:7b-instruct",
+  "digest": "845dbda0ea48",
+  "nota": "Primera maquina Windows-on-ARM del proyecto -- no la primera ARM64 (machine-A/Daniel es Apple Silicon, tambien ARM64); lo distinto es el SoC (Qualcomm Oryon vs Apple Silicon) y el sistema operativo (Windows+WSL2 vs macOS), que implica un build de Ollama/llama.cpp distinto al de machine-A. Ollama 0.34.0 (familia 0.3x, misma que el lote valido de machine-B/causal-ollama0.34.0 -- comparable). corpus/ cubre task_04/05/06, con_harness/sin_harness, corridas 2026-09-13.",
+  "problema_de_hardware_confirmado": "sandbox/agent.py usa timeout=120s fijo para la llamada al backend de Ollama. En esta maquina eso es insuficiente: un primer turno real (995 tokens de prompt: system prompt + esquemas de herramientas + texto de tarea) mide 109s solo en prompt_eval (modelo ya cargado, load_duration=15ms) + 3.9s de generacion = 115.1s, a 5s del limite. De las 60 corridas originales de corpus/, 27 (45%) terminaron con docker_exit_code=0 pero cero tool calls reales -- el backend nunca respondio a tiempo. De las 40 de memory-rag-run2/, 8 (20%). Verificado reproducible: 3 corridas se re-corrieron individualmente y las 3 fallaron de nuevo con el mismo error. Esas corridas se movieron a results/machine-D/corpus-invalidas-timeout/ y results/machine-D/memory-rag-run2-invalidas-timeout/ (con su propio manifest.json explicando la causa) -- NO se re-corrieron con un timeout mayor porque eso no seria comparable con el resto del proyecto, que uso timeout=120 en todas las maquinas. corpus/ y memory-rag-run2/ ahora contienen SOLO las corridas validas: 33 y 32 respectivamente (65 de 100 originales, 65%).",
+  "corridas_validas": {"corpus": 33, "memory_rag_run2": 32, "total_originales": 100, "invalidas_por_timeout": 35}
+}

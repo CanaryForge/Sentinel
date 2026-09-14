@@ -1,1 +1,0 @@
-{"ts": 1789318568.7057176, "turn": 0, "role": "error", "detalle": "HTTPConnectionPool(host='host.docker.internal', port=11434): Read timed out. (read timeout=120)"}

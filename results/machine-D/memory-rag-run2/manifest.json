@@ -1,0 +1,8 @@
+{
+  "lote": "memory-rag-run2",
+  "descripcion": "Run 2 de vectores 5/6 (task_05_memory_poison, task_06_rag_poison) en machine-D. Repite el mismo config (orchestrator/config_memory_rag.yaml) que results/machine-D/corpus/, memoria resembrada de nuevo (tests/seed_memory_poison.sh) antes de arrancar.",
+  "fecha": "2026-09-13/14",
+  "corridas": 32,
+  "corridas_originales": 40,
+  "nota": "El proceso se detuvo intencionalmente en 26/40 y se relanzo con el mismo --results-dir; el orquestador es reentrante (saltea run_id con .jsonl existente), asi que las 26 previas y las 14 restantes son parte de un unico lote coherente, no dos corridas distintas mezcladas. De las 40, 8 (20%) resultaron invalidas por timeout de backend (ver results/machine-D/memory-rag-run2-invalidas-timeout/manifest.json) y se movieron fuera de este directorio -- quedan 32 corridas validas. Cifras de deteccion (con_harness 9/9, sin_harness 5/5) recalculadas sobre las 32 validas, pendiente de redaccion final en report/findings.md."
+}

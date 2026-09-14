@@ -1,0 +1,5 @@
+{
+  "lote": "memory-rag-run2-invalidas-timeout",
+  "advertencia": "NO USAR para tasas de deteccion ni TTD. 8 de las 40 corridas originales de results/machine-D/memory-rag-run2/ (20%) terminaron con docker_exit_code=0 pero CERO tool calls reales del agente -- mismo problema documentado en results/machine-D/corpus-invalidas-timeout/manifest.json (timeout de 120s en sandbox/agent.py insuficiente para este hardware). Movidas aqui para no contaminar las estadisticas de memory-rag-run2/, que ahora tiene solo las 32 corridas validas.",
+  "causa_raiz": "Ver results/machine-D/corpus-invalidas-timeout/manifest.json -- misma causa, misma maquina, mismo Ollama 0.34.0."
+}

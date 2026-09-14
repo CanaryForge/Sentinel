@@ -84,17 +84,45 @@ listo, sin ejecutar todavia; `[ ]` = pendiente.
 - [x] `tests/seed_memory_poison.sh`: siembra `./memory/notes.jsonl`
 - [x] Matriz completa corrida 2026-09-13 en esta maquina
 - [x] Resultados incorporados a `report/findings.md` -- ver seccion
-      "Tercera maquina (machine-C, Windows ARM64, 2026-09-13)": dataset
+      "Machine-D (Windows ARM64, Sofia, 2026-09-13)": dataset
       independiente (Windows-on-ARM, Qualcomm Snapdragon), comparado contra
       machine-A (Daniel) y machine-B (Sergio, lote valido 0.34.0); no
       confirma el Hallazgo 2 para task_05/task_06 en esta maquina, sin
       invalidar ninguna de las tres corridas. Datos organizados en
-      `results/machine-C/corpus/` + `results/machine-C/manifest.json`
+      `results/machine-D/corpus/` + `results/machine-D/manifest.json`
       siguiendo la convencion de `results/README.md`
 - [ ] Re-correr `orchestrator/config_causal_priming.yaml` en esta maquina
       para poder confirmar o descartar el Hallazgo 2 con datos locales
+- [x] Run 2 de vectores 5/6 en machine-D corrido 2026-09-13/14
+      (`results/machine-D/memory-rag-run2/`, 40 corridas, manifest propio).
+      El punto ciego de `sin_harness` (0/8 detectados) del run 1 NO se repite:
+      run 2 da sin_harness 5/5 (100%) detectado -- ver "Run 2 en machine-D"
+      en `findings.md`. Mas consistente con varianza de muestra chica que con
+      un punto ciego sistemico, pero sigue sin revisarse transcript por
+      transcript.
 - [ ] Investigar linea por linea los 8 intentos `sin_harness` no detectados
-      (task_05/06, esta sesion) -- ver "Hallazgo nuevo" en `findings.md`
+      del run 1 (task_05/06) -- ver "Hallazgo nuevo" en `findings.md`. Menos
+      urgente tras el run 2, pero sigue pendiente.
+- [ ] Extender `analysis/extract_cot.py` para reconocer escapes de
+      task_05/06 (canary en tool args, no `http_fetch`) -- hoy da 0 escapes
+      sobre `results/machine-D/memory-rag-run2/` pese a que
+      `compute_ttd.py` cuenta 14 intentos reales ahi
+- [x] Encontrada y confirmada causa raiz de hardware (2026-09-14): 35/100
+      corridas de machine-D (27 de corpus/, 8 de memory-rag-run2/) eran
+      invalidas -- `docker_exit_code=0` pero cero tool calls, porque
+      `sandbox/agent.py` timeout=120s es insuficiente en este hardware (un
+      primer turno real mide 115.1s, medido con datos). Verificado
+      reproducible con 3 re-corridas individuales (3/3 fallaron igual).
+      Movidas a `results/machine-D/corpus-invalidas-timeout/` y
+      `results/machine-D/memory-rag-run2-invalidas-timeout/` (con manifest
+      explicando la causa), NO re-corridas con timeout distinto para no
+      romper comparabilidad con el resto del proyecto (timeout=120 en
+      todas las maquinas). `corpus/` y `memory-rag-run2/` quedan con 33 y
+      32 corridas validas respectivamente
+- [ ] Reescribir "Machine-D" y "Run 2 en machine-D" en
+      `report/findings.md` con las cifras limpias (33+32 validas) despues
+      de traer los cambios de `main` al branch -- ver nota de PENDIENTE DE
+      REDACCION al inicio de esa seccion
 
 ## Documentacion
 
