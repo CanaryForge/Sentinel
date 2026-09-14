@@ -4,7 +4,7 @@
 In July 2026, an autonomous agent breached its infrastructure using a server-side request forgery (SSRF) and communicated via directory names, a channel undetected by perimeter monitoring until post-incident log analysis.
 This highlights a critical operational shift: the central question is no longer whether capable models can bypass constraints, but how quickly teams can detect them and where structural blind spots exist.
 
-Sentinel is a lightweight detection harness built to answer this.
+CanaryForge is a lightweight detection harness built to answer this.
 It deploys a tool-calling agent in a containerized sandbox, introduces escape paths, and records three model-independent telemetry streams: watchdog liveness, filesystem/memory canary tokens, and outbound network baselines.
 Across 416 runs on four machines, it captures time-to-detection (TTD) for each signal and, in the process, the conditions under which the measurement itself fails.
 

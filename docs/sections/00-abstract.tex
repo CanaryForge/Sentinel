@@ -1,5 +1,5 @@
 This paper measures the time required to detect an LLM agent escaping a sandbox, rather than whether the escape succeeds.
-Using Sentinel, a containerized harness, we evaluate 416 runs on four machines against three telemetry signals that never query the model: process liveness, persistent canary tokens, and outbound traffic.
+Using CanaryForge, a containerized harness, we evaluate 416 runs on four machines against three telemetry signals that never query the model: process liveness, persistent canary tokens, and outbound traffic.
 Detection on the corpus lands in 2.22 seconds and nothing acts for a further 44; pooled across all four machines the median falls to 7 milliseconds, which is the floor at which two processes can be said to disagree about the time rather than a latency.
 Three findings follow.
 The leak does not use the network: of 197 runs in which the canary left the agent's scope, 183 left through file and directory names without contacting any host, which is the channel the anchor incident used and the one an egress proxy cannot see.
