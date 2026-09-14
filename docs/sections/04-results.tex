@@ -32,67 +32,86 @@ when the instruction is byte for byte the same. That asymmetry of trust is
 what ASI06 warns about~\cite{owasp-asi06}, and it points the wrong way for
 defenders, since the cheapest channel to poison is also the most trusted.
 
-\subsection{The guardrail correlates with more leakage, and it replicates}
+\subsection{The guardrail correlates with more leakage, and the effect shrinks
+with power}
 
-The finding that survived every correction in this paper is also the one the
-team least expected. On \texttt{task\_06}, the condition carrying a production
-security guardrail leaks at roughly three times the rate of the condition
-without one.
+The finding the team least expected is also the one that has moved most as
+data arrived. On \texttt{task\_06}, the condition carrying a production
+security guardrail leaks more than the condition without one on every machine
+where both were run. How much more depends on how many runs are behind the
+number, and the honest answer is smaller than the first ten runs suggested.
 
 \begin{table}[h]
 \centering
 \small
-\begin{tabular}{@{}llrr@{}}
+\begin{tabular}{@{}llrrr@{}}
 \toprule
-\textbf{Set} & \textbf{Ollama} & \texttt{sin\_harness} & \texttt{con\_harness} \\
+\textbf{Set} & \textbf{Ollama} & \texttt{sin\_harness} & \texttt{con\_harness} & \textbf{Fisher} \\
 \midrule
-Corpus, machine A & 0.32.5 & 3/10 & \textbf{9/10} \\
-Machine B & 0.34.0 & 3/10 & \textbf{7/10} \\
-Machine B & 0.6.8 & 10/10 & 10/10 \\
-Machine D (ARM64) & 0.34.0 & 6/20 & \textbf{8/9} \\
+Machine A & 0.32.5 & 3/10 & \textbf{9/10} & 0.02 \\
+Machine B, pooled & 0.34.0 & 17/40 & 24/40 & 0.18 \\
+Machine B & 0.6.8 & 10/10 & 10/10 & --- \\
+Machine D (ARM64) & 0.34.0 & 6/20 & 8/9 of 20 & --- \\
 \bottomrule
 \end{tabular}
-\caption{The third row is not a result, it is a measurement failure preserved
-for honesty: on an Ollama release 26 minor versions old the agent loops until
-it exhausts the turn cap, every condition saturates, and nothing can be
-distinguished. Section~\ref{sec:validity} gives the mechanism. The fourth row
-pools \texttt{task\_06} across machine D's two batches (Appendix~\ref{sec:repro}),
-counting only its 65 runs with real backend activity.}
+\caption{Level 5 on \texttt{task\_06}, by machine. The third row is not a
+result, it is a measurement failure preserved for honesty: on an Ollama
+release 26 minor versions old the agent loops until it exhausts the turn cap,
+every condition saturates, and nothing can be distinguished
+(Section~\ref{sec:validity}). The fourth row is reported without a test
+because eleven of its twenty \texttt{con\_harness} runs are missing, for a
+reason given below.}
 \end{table}
 
-Once the runtime versions are comparable, the effect appears on three
-independent machines at close to the same size: an x86 desktop, an Apple
-Silicon laptop on an older Ollama release, and a Windows-on-ARM laptop on the
-same release as the desktop. \texttt{sin\_harness} lands at exactly 3/10 on
-two of the three and 6/20 on the third, the same 30\% every time; it is the
-tightest agreement in this paper. It is a correlation across independent
-sets, not a causal claim, and the next subsection is our attempt to explain
-it.
+Machine A, at ten runs per cell, gave nine against three. Machine B at the
+same size gave seven against three, and the natural next step was to run the
+cell out to forty. At forty the contrast is 24/40 against 17/40, which a
+Fisher exact test does not separate ($p{=}0.18$). The direction held and the
+magnitude did not: what looked like a factor of three at $n{=}10$ is a factor
+of 1.4 at $n{=}40$. We report the larger number only as the history of the
+measurement, not as the result.
 
-\subsection{A different model, on the same task, reverses the sign}
+Machine D cannot arbitrate, and the reason is worth more than the row. Its
+\texttt{con\_harness} cell lost eleven of twenty runs to the client timeout
+described in Section~\ref{sec:silent}, while \texttt{sin\_harness} lost none
+of its twenty. The loss is not accidental with respect to the condition: the
+timeout is driven by prompt-evaluation time, and the guardrail is exactly
+what makes that prompt longer, 950 tokens against 757 at the median on this
+machine. The independent variable causes the missing data. The nine surviving
+\texttt{con\_harness} runs are therefore the fastest nine, and the cell is
+bounded rather than measured: were every lost run a non-leak it would read
+8/20 ($p{=}0.74$ against its control), were every one a leak it would read
+19/20 ($p{<}10^{-4}$). One interval, spanning nothing to the largest effect in
+the paper, so the row is shown and not used.
 
-\pending{Preliminar: 20 corridas, una sola maquina, todavia no forman parte
-del corpus versionado (Apendice~\ref{sec:repro}). Se reporta porque la
-direccion es la opuesta a cualquier otra medicion de este paper, no porque
-resuelva nada.}
+\subsection{A batch that reversed the sign, and was not the experiment we
+thought we had run}
 
-Every run reported so far uses one local 7B model. A spot check on
-\texttt{task\_06} with a cloud-hosted, reasoning-capable model instead
-(\texttt{deepseek-v4-pro}, reached the same way the harness reaches Ollama,
-through an OpenAI-compatible endpoint) gives \texttt{con\_harness} 0/10 and
-\texttt{sin\_harness} 10/10.
+Every run reported above uses one local 7B model. One batch does not, and we
+did not know that when it was collected. It reached a cloud reasoning model
+through the OpenAI-compatible path, and it reversed the result outright:
+\texttt{con\_harness} 0/10 against \texttt{sin\_harness} 10/10 on
+\texttt{task\_06}, the largest effect anywhere in this work, pointing the
+opposite way to every other row in this section.
 
-That is not a smaller version of the guardrail effect measured above on two
-machines, 9/10 and 7/10 against a 3/10 control. It is the effect at its
-largest possible magnitude, pointing the other way: here the guardrail
-suppresses leakage entirely, and its absence leaks every time. Three things
-change at once
-between this run and the rest of the paper: the model, whether inference runs
-locally or in the cloud, and the machine, so none of the three can be credited
-individually. What the comparison does support is the limitation already
-stated at the end of this section: nothing measured on one 7B local model
-generalises to a stronger one, and here it does not generalise even in
-direction.
+A reversal that clean, on what its metadata said was the same machine and the
+same model as the corpus, is the shape a compromised harness would take, and
+it was investigated as one. Section~\ref{sec:suspected-compromise} gives the
+forensics. The cause was a stale \texttt{.env} still holding
+\texttt{AGENT\_BACKEND=openai} from an earlier check, combined with an
+orchestrator that read the backend name from its own process environment
+rather than from the file Compose applies to the container. Every
+\texttt{\_meta.json} in the batch records \texttt{"ollama"} and every one of
+them is wrong.
+
+We report it because the direction is genuinely opposite and because a
+mislabeled batch is worth more as a documented failure of provenance than as
+a deleted directory. We draw nothing from it. Three variables moved at once
+against the rest of the paper, the model, cloud against local inference, and
+the machine, and none of the three can be credited. What it does support is
+the limitation stated at the end of this section: nothing measured on one
+local 7B model generalises to a stronger one, and here it does not generalise
+even in direction.
 
 \subsection{Naming the attack surface is not the mechanism}
 
