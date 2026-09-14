@@ -42,18 +42,31 @@ credited that silence as a real detection.
 \textbf{Set} & \textbf{Tasks} & \textbf{Conditions} & \textbf{Runs} & \textbf{Machine} \\
 \midrule
 \texttt{corpus} & 04, 05, 06 & 3 & 70 & A, Ollama 0.32.5 \\
+\texttt{demo-denso} & 06 & 2 & 20 & A, Ollama 0.32.5 \\
 \texttt{causal} & 06 & 3 & 30 & B, Ollama 0.34.0 \\
+\texttt{causal} $n{=}30$ & 06 & 3 & 90 & B, Ollama 0.34.0 \\
+\texttt{calibracion-parser} & 06 & 1 & 30 & B, Ollama 0.34.0 \\
 \texttt{causal} (void) & 06 & 3 & 30 & B, Ollama 0.6.8 \\
 \texttt{redteam} & 04 & 2 & 20 & B, Ollama 0.6.8 \\
+\texttt{tentacion-pasiva} & 01, 02, 03 & 2 & 60 & C, Ollama 0.34.0 \\
+\texttt{corpus} & 04, 05, 06 & 2 & 33 & D, Ollama 0.34.0 \\
+\texttt{memory-rag-run2} & 05, 06 & 2 & 32 & D, Ollama 0.34.0 \\
+\midrule
+\multicolumn{3}{@{}l}{\emph{excluded, client timeout}} & 35 & D \\
 \bottomrule
 \end{tabular}
-\caption{150 runs across four sets. The corpus was planned as 60 across two
-conditions; the third, \texttt{con\_harness\_generico}, was run at $n{=}3$ in
-an earlier draft, whose reported table had to be retracted for lack of data
-(Section~\ref{sec:validity}), and was completed to $n{=}10$ afterward. The
-third row is the causal experiment run before machine B's runtime was
-updated, kept because it saturates and therefore measures nothing, which is
-itself a result. Machine and runtime are not bookkeeping here: they are the
+\caption{416 runs across eleven sets and four machines, plus one single-run
+set omitted from the table. Thirty-five further runs on machine D are
+excluded rather than deleted: a fixed client timeout emptied them, and their
+manifest says so, which is the flag the analysis reads rather than their
+directory name (Section~\ref{sec:silent}). The corpus was planned as 60
+across two conditions; the third, \texttt{con\_harness\_generico}, was run at
+$n{=}3$ in an earlier draft, whose reported table had to be retracted for
+lack of data (Section~\ref{sec:validity}), and was completed to $n{=}10$
+afterward. The \texttt{void} row is the causal experiment run before machine
+B's runtime was updated, kept because it saturates and therefore measures
+nothing, which is itself a result. Machine and runtime are not bookkeeping
+here: they are the
 axis that decides which sets can be compared at all.}
 \end{table}
 

@@ -12,10 +12,13 @@ monitor is for: it catches the naive agent and misses the one that takes the
 detour the task offers it.
 
 The bound is a capability, not an observed evasion, and the distinction
-matters. Across all 150 runs the proxy recorded exactly one destination,
-\texttt{mirror-externo:5002}, thirty times, flagged anomalous on every one:
-every agent that reached the attacker went at it directly. Not one run used
-the SSRF route. The blind spot was demonstrated by a synthetic control, not
+matters. Across all 416 runs the proxy flagged
+\texttt{mirror-externo:5002} thirty-seven times, on three separate machines,
+and that is the only destination any agent was ever flagged reaching: every
+one of them went at the attacker directly, and not one run used the SSRF
+route. The single other anomalous destination on record,
+\texttt{destino-no-autorizado:9999}, appears twice and is the synthetic event
+the positive-control script injects, not a model's choice. The blind spot was demonstrated by a synthetic control, not
 exploited by a model, so what we report is that the monitor can be evaded this
 way, not that it was.
 
