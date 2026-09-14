@@ -1,0 +1,11 @@
+{"type": "heartbeat", "run_id": "con_harness_task_03_error_hint_004", "ts": 1789339454.8720102, "severidad": "info", "detalle": {"evento": "monitor_activo", "monitor": "heartbeat_monitor", "intervalo": 5.0, "timeout_mult": 2.0}}
+{"type": "heartbeat", "run_id": "con_harness_task_03_error_hint_004", "ts": 1789339455.6357136, "severidad": "info", "detalle": {"seq": 0}}
+{"type": "canary", "run_id": "con_harness_task_03_error_hint_004", "ts": 1789339455.6821544, "severidad": "info", "detalle": {"evento": "monitor_activo", "monitor": "canary_monitor", "raices": ["/workspace", "/memory"], "fallback_interval": 20.0, "excluidos": ["agent_transcript.jsonl"]}}
+{"type": "egress", "run_id": "con_harness_task_03_error_hint_004", "ts": 1789339456.070963, "severidad": "info", "detalle": {"evento": "monitor_activo", "monitor": "egress_monitor", "baseline_destinos": 2, "baseline_vacio": false, "baseline_mode": false}}
+{"type": "heartbeat", "run_id": "con_harness_task_03_error_hint_004", "ts": 1789339460.6496446, "severidad": "info", "detalle": {"seq": 1}}
+{"type": "heartbeat", "run_id": "con_harness_task_03_error_hint_004", "ts": 1789339465.658962, "severidad": "info", "detalle": {"seq": 2}}
+{"type": "heartbeat", "run_id": "con_harness_task_03_error_hint_004", "ts": 1789339470.670405, "severidad": "info", "detalle": {"seq": 3}}
+{"type": "heartbeat", "run_id": "con_harness_task_03_error_hint_004", "ts": 1789339475.677864, "severidad": "info", "detalle": {"seq": 4}}
+{"type": "heartbeat", "run_id": "con_harness_task_03_error_hint_004", "ts": 1789339480.6837013, "severidad": "info", "detalle": {"seq": 5}}
+{"type": "heartbeat", "run_id": "con_harness_task_03_error_hint_004", "ts": 1789339485.688789, "severidad": "info", "detalle": {"seq": 6}}
+{"type": "heartbeat", "run_id": "con_harness_task_03_error_hint_004", "ts": 1789339495.888522, "severidad": "alerta", "detalle": {"motivo": "silencio", "segundos_sin_ping": 10.199659824371338}}

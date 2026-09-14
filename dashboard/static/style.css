@@ -1,12 +1,15 @@
 /* Sentinel (CanaryForge). Interfaz agentica, no panel de monitoreo: fondo
    casi negro, tipografia con jerarquia clara, densidad baja. Un tema unico
-   oscuro a proposito -- ver nota historica de diseno mas abajo en el propio
-   :root. Paleta de marca (dorado canario + neutros calidos) inyectada por
-   quien pidio el rediseño; --mech-*, --nivel-* y los --status-* se
-   conservan intactos (rampa de severidad de 7 pasos ya validada, colores de
-   mecanismo ya memorizados por quien usa el panel seguido). */
+   oscuro a proposito. Sistema de diseño de Sergio (direcciones A "dossier" y
+   B "instrument" en design/mockups/): serif display (Cormorant Garamond)
+   para titulares y numeros grandes, Raleway para cuerpo, Courier Prime para
+   datos, y el "wash" (un gradiente dorado muy sutil superpuesto a la
+   superficie, nunca reemplazandola) en vez de bordes+sombra pesados.
+   --mech-*, --nivel-* y los --status-* se conservan intactos (rampa de
+   severidad de 7 pasos ya validada, colores de mecanismo ya memorizados por
+   quien usa el panel seguido). */
 
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Raleway:wght@300;400;500;600&family=Courier+Prime:wght@400;700&display=swap');
 
 :root {
   color-scheme: dark;
@@ -39,6 +42,8 @@
   --color-success-500: #24bc5c;
   --color-warning-500: #f59f0a;
   --color-error-500: #de2e21;
+  --color-error-400: #d97069;
+  --color-error-900: #440d08;
   --color-info-500: #2c7cdd;
 
   /* tokens estructurales del panel, remapeados a la paleta de arriba */
@@ -51,10 +56,20 @@
 
   --text-primary: #f9f9f8;
   --text-secondary: #d5d4d2;
-  --text-muted: #817d74;
+  /* Correccion de contraste de Sergio: neutral-500 (#817d74) sobre el fondo
+     casi negro apenas pasaba WCAG AA (4.5:1). neutral-400 da mas margen para
+     texto real; --text-faint (mas oscuro que text-muted) cubre el caso
+     terciario que antes usaba muted. */
+  --text-muted: var(--color-neutral-400);
+  --text-faint: #918d84;
 
   --brand-gold: var(--color-primary-500);
   --brand-gold-bright: var(--color-primary-400);
+
+  /* El wash: una capa dorada translucida sobre la superficie, no un
+     reemplazo de color. Se usa como segundo valor de `background` (dos
+     capas) para que tinte en vez de tapar -- ver .panel-wash mas abajo. */
+  --wash: linear-gradient(135deg, #b8860b15, #7a580308);
 
   /* categorico (dataviz/palette.md, orden fijo, pasos dark) -- una hue por
      mecanismo de deteccion, nunca reasignadas. Conservadas tal cual pide el
@@ -82,9 +97,10 @@
   --nivel-5: #d9782f;
   --nivel-6: #e05555;
 
-  --radius: 12px;
-  --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Consolas, monospace;
-  --font-sans: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --radius: 4px;
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-sans: 'Raleway', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'Courier Prime', ui-monospace, 'SF Mono', Consolas, monospace;
 }
 
 * { box-sizing: border-box; }
@@ -94,38 +110,56 @@ html, body {
   background: var(--bg);
   color: var(--text-primary);
   font-family: var(--font-sans);
-  font-size: 15px;
-  line-height: 1.5;
+  font-weight: 300;
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
 }
 
 body {
-  padding-inline: 20px;
-  padding-block: 0 40px;
-  max-width: 1280px;
-  margin-inline: auto;
+  padding: 0;
+  margin: 0;
+  max-width: none;
 }
 
-h1, h2, h3 { text-wrap: balance; font-family: var(--font-mono); font-weight: 600; margin: 0; }
+h1, h2, h3 { text-wrap: balance; font-family: var(--font-display); font-weight: 500; letter-spacing: -0.005em; margin: 0; }
 
 a { color: var(--mech-heartbeat); }
 
 .mono { font-family: var(--font-mono); }
 .tabular { font-variant-numeric: tabular-nums; }
 
-/* ---------- header ---------- */
+/* ================================================================
+   Shell: rail izquierdo fijo + columna de contenido. Reemplaza el
+   header sticky + nav horizontal de antes. La navegacion entre las
+   dos superficies vive en el rail, no arriba del contenido, y la
+   marca queda anclada en vez de scrollear con la pagina.
+   ================================================================ */
 
-header.topbar {
+.shell {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  align-items: start;
+  min-height: 100vh;
+}
+
+.rail {
   position: sticky;
   top: 0;
-  z-index: 10;
+  height: 100vh;
   display: flex;
-  align-items: center;
-  gap: 24px;
-  flex-wrap: wrap;
-  padding-block: 20px;
-  background: linear-gradient(var(--bg) 85%, transparent);
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 36px;
+  flex-direction: column;
+  gap: 26px;
+  padding: 28px 22px;
+  border-right: 1px solid var(--border);
+  background: var(--wash), var(--surface);
+  overflow-y: auto;
+}
+
+.col {
+  min-width: 0;
+  padding: 0 48px 60px;
+  max-width: 980px;
 }
 
 .brand {
@@ -134,56 +168,51 @@ header.topbar {
   gap: 12px;
 }
 
-.brand-text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+.wordmark {
+  width: 34px;
+  height: 34px;
+  align-self: center;
+  flex-shrink: 0;
+  object-fit: contain;
 }
 
-.brand-top {
+.brand-name {
   display: flex;
   align-items: center;
   gap: 8px;
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
 }
 
-.wordmark {
-  width: 20px;
-  height: 20px;
-  align-self: center;
-  flex-shrink: 0;
+.brand-sub {
+  color: var(--text-faint);
+  font-size: 10.5px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-top: 2px;
 }
 
-.wordmark .sweep {
-  transform-origin: 16px 16px;
-  animation: sweep-rotate 4s linear infinite;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .wordmark .sweep { animation: none; }
-}
-
-@keyframes sweep-rotate {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-.brand .dot {
+.dot {
   width: 9px;
   height: 9px;
   border-radius: 50%;
   background: var(--text-muted);
   flex-shrink: 0;
   transition: background 0.3s;
+  display: inline-block;
 }
 
-.brand .dot.live {
+.dot.live {
   background: var(--status-good);
   box-shadow: 0 0 0 3px rgba(12, 163, 12, 0.18);
   animation: pulse 1.4s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .brand .dot.live { animation: none; }
+  .dot.live { animation: none; }
 }
 
 @keyframes pulse {
@@ -191,40 +220,178 @@ header.topbar {
   50% { opacity: 0.35; }
 }
 
-.brand h1 { font-size: 17px; letter-spacing: 0.01em; }
-.brand .sub { color: var(--text-muted); font-size: 12.5px; font-family: var(--font-mono); }
-
 /* Nav segmentado entre las dos superficies: no son pestañas de contenido,
    son dos DESTINOS ("corrida en vivo" / "analisis del incidente"), asi que
-   se leen como un selector de lugar, no como tabs de un mismo dato. */
-.screen-nav {
-  margin-left: auto;
+   se leen como un selector de lugar, no como tabs de un mismo dato.
+   Vertical, dentro del rail. */
+.screen-switch {
   display: flex;
-  gap: 4px;
-  background: var(--surface-2);
-  border: 1px solid var(--border-strong);
-  border-radius: 999px;
-  padding: 3px;
+  flex-direction: column;
+  gap: 2px;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding-block: 14px;
 }
 
-.screen-nav a {
+.screen-switch a {
   font-family: var(--font-mono);
-  font-size: 12.5px;
+  font-size: 12px;
   color: var(--text-secondary);
   text-decoration: none;
-  padding: 7px 16px;
-  border-radius: 999px;
-  white-space: nowrap;
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  border-left: 2px solid transparent;
   transition: background 0.15s, color 0.15s;
 }
 
-.screen-nav a:hover { color: var(--text-primary); }
+.screen-switch a:hover { color: var(--text-primary); }
 
-.screen-nav a.active {
-  background: var(--brand-gold);
-  color: var(--color-neutral-950);
+.screen-switch a.active {
+  color: var(--brand-gold-bright);
+  border-left-color: var(--brand-gold);
+  background: var(--wash), transparent;
   font-weight: 600;
 }
+
+.rail-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.rail-sections[hidden] { display: none; }
+
+.rail-sections a {
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  color: var(--text-muted);
+  text-decoration: none;
+  padding: 6px 10px;
+  border-radius: var(--radius);
+}
+.rail-sections a:hover { color: var(--text-primary); background: var(--surface-2); }
+
+.rail-foot {
+  margin-top: auto;
+  font-size: 10px;
+  line-height: 1.6;
+  color: var(--text-faint);
+  letter-spacing: 0.03em;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+@media (max-width: 860px) {
+  .shell { grid-template-columns: 1fr; }
+  .rail { position: static; height: auto; flex-direction: row; flex-wrap: wrap; align-items: center; }
+  .screen-switch, .rail-sections { flex-direction: row; flex-wrap: wrap; border: none; padding: 0; }
+  .rail-foot { display: none; }
+  .col { padding: 0 18px 40px; max-width: 100%; }
+}
+
+/* ================================================================
+   Masthead: la entrada a cada superficie. Kicker en mono + h1 serif
+   grande con enfasis dorado + wash de fondo que sangra hacia la
+   derecha, en vez del bloque de <h1>/parrafo plano que habia antes.
+   ================================================================ */
+
+.masthead {
+  padding: 44px 0 30px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 34px;
+  background: var(--wash);
+  background-position: right;
+}
+
+.kicker {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--brand-gold);
+  margin-bottom: 12px;
+}
+
+.masthead h1 {
+  font-size: 38px;
+  line-height: 1.15;
+  max-width: 20ch;
+  margin-bottom: 16px;
+}
+.masthead h1 em { font-style: italic; color: var(--brand-gold-bright); }
+
+.masthead > p {
+  font-size: 15px;
+  color: var(--text-secondary);
+  max-width: 68ch;
+  line-height: 1.65;
+}
+
+/* Figuras: fila de cifras grandes en serif separadas por hairlines, en
+   vez de tarjetas cerradas -- ver .stat-tile dentro de .figures mas abajo. */
+.figures {
+  display: flex;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--border-strong);
+  margin-top: 26px;
+}
+.figures .stat-tile {
+  flex: 1 1 170px;
+  background: none;
+  border: none;
+  border-right: 1px solid var(--border);
+  border-radius: 0;
+  padding: 20px 26px 4px 0;
+  margin-right: 26px;
+}
+.figures .stat-tile:last-child { border-right: none; margin-right: 0; }
+.figures .stat-tile .value {
+  font-family: var(--font-display);
+  font-size: 46px;
+  font-weight: 500;
+  color: var(--brand-gold-bright);
+  letter-spacing: -0.01em;
+}
+.figures .stat-tile .label {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+
+/* ---------- encabezado de seccion, serif + hairline ---------- */
+
+.sec-head {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 12px;
+  margin-bottom: 20px;
+}
+.sec-head h2 { font-size: 22px; }
+.sec-head p { font-size: 13.5px; color: var(--text-muted); margin: 6px 0 0; max-width: 74ch; line-height: 1.6; }
+.sec-head p code { color: var(--text-secondary); }
+
+.sec-head-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+.sec-head-row h2, .sec-head-row p { margin: 0; }
+
+@media (max-width: 720px) {
+  .sec-head-row { align-items: flex-start; }
+}
+
+/* ---------- escalera de niveles: filas hairline, sin tarjeta ---------- */
+
+.ladder { display: flex; flex-direction: column; }
+.ladder .agg-row {
+  padding: 11px 0;
+  border-bottom: 1px solid var(--border);
+}
+.ladder .agg-row:first-child { border-top: 1px solid var(--border); }
 
 select, button, input {
   font-family: var(--font-mono);
@@ -254,18 +421,72 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
 .eyebrow {
   font-family: var(--font-mono);
   font-size: 11px;
-  letter-spacing: 0.09em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--text-muted);
-  margin: 0 0 8px;
+  color: var(--brand-gold);
+  margin: 0 0 10px;
 }
+
+/* ---------- sistema de Sergio: wash, finding, readout ---------- */
+
+/* El wash como fondo de dos capas: se pinta ENCIMA de la superficie, nunca
+   la reemplaza (--wash lleva alpha). Aplicar esta clase en vez de
+   `background: var(--surface)` a secas donde se quiera ese tinte dorado
+   sutil. */
+.panel-wash { background: var(--wash), var(--surface); }
+
+/* Hallazgo como cita destacada: un titular en serif mas el cuerpo, con un
+   borde izquierdo fino en vez de una tarjeta cerrada. Para el punto que de
+   verdad importa en una seccion (el punto ciego del SSRF, que un guardrail
+   correlaciona con mas fuga, etc.), no para cualquier nota. */
+.finding {
+  border-left: 2px solid var(--color-primary-600);
+  background: var(--wash), var(--surface);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: 18px 24px;
+  margin: 18px 0;
+}
+.finding .lead {
+  font-family: var(--font-display);
+  font-size: 21px;
+  font-weight: 400;
+  line-height: 1.35;
+  max-width: 46ch;
+  color: var(--text-primary);
+}
+.finding .lead b { font-weight: 600; color: var(--color-primary-300); }
+.finding .body { margin-top: 10px; color: var(--text-secondary); font-size: 14.5px; max-width: 68ch; }
+.finding.finding-danger { border-left-color: var(--status-critical); }
+.finding.finding-danger .lead b { color: var(--color-error-400); }
+
+/* Readout: numero grande en mono, la unidad que si importa se pinta en
+   dorado. Para metricas densas (superficie 2), no para el TTD de una
+   corrida puntual (eso sigue en el banner de incidente). */
+.readout {
+  background: var(--wash), var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+}
+.readout .n {
+  font-family: var(--font-mono);
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+.readout.key { border-color: var(--color-primary-700); }
+.readout.key .n { color: var(--brand-gold-bright); }
+.readout .k { font-size: 12.5px; color: var(--text-secondary); margin-top: 6px; }
+.readout .sub { font-family: var(--font-mono); font-size: 11px; color: var(--text-faint); margin-top: 3px; }
 
 section { margin-bottom: 40px; }
 
 /* ---------- architecture ---------- */
 
 .arch-card {
-  background: var(--surface);
+  background: var(--wash), var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 20px;
@@ -556,10 +777,10 @@ section { margin-bottom: 40px; }
   align-items: center;
   gap: 16px;
   flex-wrap: wrap;
-  background: var(--surface);
+  background: var(--wash), var(--surface);
   border: 1px solid var(--border);
-  border-left: 4px solid var(--border-strong);
-  border-radius: var(--radius);
+  border-left: 3px solid var(--border-strong);
+  border-radius: 0 var(--radius) var(--radius) 0;
   padding: 18px 22px;
   margin-bottom: 28px;
 }
@@ -621,12 +842,12 @@ section { margin-bottom: 40px; }
 }
 
 .stage-body {
-  background: var(--surface);
+  background: var(--wash), var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 16px 20px;
+  padding: 18px 22px;
 }
-.stage-body p { font-size: 13.5px; color: var(--text-secondary); margin: 0 0 8px; line-height: 1.6; }
+.stage-body p { font-size: 14.5px; color: var(--text-secondary); margin: 0 0 8px; line-height: 1.6; }
 .stage-body p:last-child { margin-bottom: 0; }
 .stage-body code {
   font-family: var(--font-mono);
@@ -763,15 +984,25 @@ section { margin-bottom: 40px; }
 .legend .sw { display: inline-flex; align-items: center; gap: 5px; }
 .legend .sw span.chip-dot { width: 9px; height: 9px; border-radius: 2px; display: inline-block; }
 
+/* stat-tile reusa el look de .readout (numero mono grande, wash sutil): son
+   el mismo componente, dos nombres porque uno nacio en la superficie 1 y el
+   otro en la 2 antes de unificar el sistema visual. */
 .stat-tile-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }
 .stat-tile {
-  background: var(--surface);
+  background: var(--wash), var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 14px 16px;
+  padding: 14px 18px;
 }
-.stat-tile .value { font-family: var(--font-mono); font-size: 24px; font-weight: 600; }
-.stat-tile .label { font-size: 11.5px; color: var(--text-muted); margin-top: 3px; }
+.stat-tile .value {
+  font-family: var(--font-mono);
+  font-size: 32px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  color: var(--brand-gold-bright);
+}
+.stat-tile .label { font-size: 12.5px; color: var(--text-secondary); margin-top: 6px; }
 
 footer {
   border-top: 1px solid var(--border);
@@ -830,7 +1061,7 @@ footer a { color: var(--text-secondary); }
 /* ---------- lanzador del experimento (superficie 1) ---------- */
 
 .launcher-card {
-  background: var(--surface);
+  background: var(--wash), var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 20px 22px;
@@ -1037,18 +1268,25 @@ footer a { color: var(--text-secondary); }
 }
 
 .finding-card {
-  background: var(--surface);
+  background: var(--wash), var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 18px 20px;
+  padding: 18px 22px;
 }
-.finding-card h3 { font-size: 13px; margin-bottom: 14px; }
+.finding-card h3 { font-family: var(--font-display); font-size: 18px; font-weight: 500; margin-bottom: 14px; }
 
-.finding-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-.finding-row:last-child { margin-bottom: 0; }
+.finding-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  padding: 9px 0;
+  border-top: 1px solid var(--border);
+}
+.finding-row:first-child { border-top: none; }
 .finding-row .fr-label {
   font-family: var(--font-mono);
-  font-size: 11.5px;
+  font-size: 12px;
   color: var(--text-secondary);
   width: 110px;
   flex-shrink: 0;
@@ -1056,20 +1294,36 @@ footer a { color: var(--text-secondary); }
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* Los renglones de comparacion entre maquinas llevan una etiqueta larga
+   (maquina + lote + condicion, p. ej. "machine-A/corpus_causal_priming ·
+   con_harness_generico"): a 110px fijos se leia solo "machine-A/corp…".
+   Estos no traen un width inline (los de herramientas/canario si), asi
+   que el selector los distingue sin tocar esos otros dos usos. */
+.finding-row .fr-label:not([style*="width"]) {
+  width: 100%;
+  flex-basis: 100%;
+  white-space: normal;
+  line-height: 1.4;
+  margin-bottom: 2px;
+}
 .finding-row .fr-bar-wrap {
-  flex: 1;
-  height: 18px;
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 14px;
   background: var(--surface-2);
   border: 1px solid var(--border);
-  border-radius: 4px;
+  border-radius: 2px;
   overflow: hidden;
 }
-.finding-row .fr-bar { height: 100%; background: var(--nivel-5); transition: width 0.2s; }
+/* <span> es inline por default: sin display:block, width/height no hacen
+   nada y la barra queda invisible aunque el estilo inline diga "width:X%". */
+.finding-row .fr-bar { display: block; height: 100%; background: var(--color-primary-500); transition: width 0.2s; }
 .finding-row .fr-val {
   font-family: var(--font-mono);
-  font-size: 11.5px;
+  font-size: 12.5px;
+  font-weight: 700;
   color: var(--text-primary);
-  width: 54px;
+  width: 46px;
   text-align: right;
   flex-shrink: 0;
 }
@@ -1079,7 +1333,7 @@ footer a { color: var(--text-secondary); }
 /* ---------- grafo de ruteo ---------- */
 
 .routing-card {
-  background: var(--surface);
+  background: var(--wash), var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 16px;
@@ -1094,19 +1348,22 @@ footer a { color: var(--text-secondary); }
   dominant-baseline: middle;
 }
 
+/* Mismo patron que .finding.finding-danger (borde fino a la izquierda, wash
+   rojo en vez de una caja cerrada), aplicado directo aca porque este bloque
+   siempre lleva <code> y <strong> con reglas propias. */
 .ssrf-note {
   margin-top: 14px;
-  padding: 12px 16px;
-  border-radius: var(--radius);
-  border: 1px solid var(--status-critical);
-  background: rgba(222, 46, 33, 0.08);
-  font-family: var(--font-mono);
-  font-size: 12px;
+  padding: 16px 20px;
+  border-radius: 0 var(--radius) var(--radius) 0;
+  border-left: 2px solid var(--status-critical);
+  background: linear-gradient(135deg, #de2e2115, #440d0808), var(--surface);
+  font-family: var(--font-sans);
+  font-size: 14px;
   color: var(--text-secondary);
   line-height: 1.6;
 }
-.ssrf-note strong { color: var(--status-critical); }
-.ssrf-note code { color: var(--text-primary); }
+.ssrf-note strong { color: var(--color-error-400); font-weight: 600; }
+.ssrf-note code { font-family: var(--font-mono); color: var(--text-primary); }
 
 @media (max-width: 720px) {
   .launcher-row { flex-direction: column; align-items: stretch; }

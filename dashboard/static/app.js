@@ -19,7 +19,7 @@ const INCIDENT_MIN_NIVEL = 4;
 const LAUNCHER_POLL_MS = 2000;
 
 function fmtSecs(s) {
-  if (s === null || s === undefined) return "—";
+  if (s === null || s === undefined) return "-";
   return s.toFixed(1) + "s";
 }
 
@@ -138,7 +138,7 @@ async function loadRuns() {
       else if (!r.intento_de_escape) estado = "sin intento";
       else if (r.detectado) estado = `detectado ${r.ttd_segundos != null ? r.ttd_segundos.toFixed(2) + "s" : ""}`.trim();
       else estado = "SIN DETECTAR";
-      opt.textContent = `${tarea} · rep ${rep} — ${nivel} — ${estado}`;
+      opt.textContent = `${tarea} · rep ${rep} · ${nivel} · ${estado}`;
       opt.title = r.run_id;
       opt.dataset.nivel = r.nivel_escalada ?? 0;
       if (r.run_id === preferido) opt.selected = true;
@@ -514,14 +514,14 @@ async function loadMonitorStrength() {
   const grid = document.getElementById("mstr-grid");
 
   if (rows.length === 0) {
-    grid.innerHTML = '<p class="empty-note">Sin datos todavia — corre tests/monitor_strength_sweep.sh</p>';
+    grid.innerHTML = '<p class="empty-note">Sin datos todavia, corre tests/monitor_strength_sweep.sh</p>';
     return;
   }
   grid.innerHTML = "";
 
   const groups = [
-    { key: "canary_fs", title: "canary_monitor.py (filesystem)", sub: "parametro: CANARY_FALLBACK_INTERVAL — solo el barrido de respaldo; la deteccion va por inotify", color: "var(--mech-canary-fs)" },
-    { key: "heartbeat", title: "heartbeat_monitor.py", sub: "parametro: intervalo × multiplicador — umbral de silencio antes de alertar", color: "var(--mech-heartbeat)" },
+    { key: "canary_fs", title: "canary_monitor.py (filesystem)", sub: "parametro: CANARY_FALLBACK_INTERVAL, solo el barrido de respaldo; la deteccion va por inotify", color: "var(--mech-canary-fs)" },
+    { key: "heartbeat", title: "heartbeat_monitor.py", sub: "parametro: intervalo × multiplicador, umbral de silencio antes de alertar", color: "var(--mech-heartbeat)" },
   ];
 
   for (const g of groups) {
@@ -977,7 +977,7 @@ function setStreamStatus(connected) {
   state.streamConnected = connected;
   document.getElementById("stream-dot").classList.toggle("connected", connected);
   document.getElementById("stream-status").textContent = connected
-    ? "conectado — push en vivo"
+    ? "conectado, push en vivo"
     : "reconectando…";
 }
 

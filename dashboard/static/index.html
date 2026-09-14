@@ -8,393 +8,453 @@
 </head>
 <body>
 
-<header class="topbar">
-  <div class="brand">
-    <svg class="wordmark" viewBox="0 0 32 32" role="img" aria-label="Sentinel">
-      <circle cx="16" cy="16" r="14.5" fill="none" stroke="var(--brand-gold)" stroke-width="1.4" opacity="0.35"></circle>
-      <circle cx="16" cy="16" r="9.5" fill="none" stroke="var(--brand-gold)" stroke-width="1.4" opacity="0.55"></circle>
-      <circle cx="16" cy="16" r="2.2" fill="var(--status-good)"></circle>
-      <g class="sweep">
-        <path d="M16,16 L16,2.2 A13.8,13.8 0 0 1 27,9.5 Z" fill="var(--brand-gold)" opacity="0.16"></path>
-        <line x1="16" y1="16" x2="16" y2="2.2" stroke="var(--brand-gold)" stroke-width="1.4"></line>
-      </g>
-    </svg>
-    <div class="brand-text">
-      <div class="brand-top">
-        <span class="dot" id="live-dot"></span>
-        <h1>Sentinel</h1>
-      </div>
-      <span class="sub">CanaryForge · deteccion de fuga de sandbox</span>
-    </div>
-  </div>
-  <nav class="screen-nav" id="screen-nav" aria-label="Superficies del panel">
-    <a href="#vivo" data-screen="vivo">Corrida en vivo</a>
-    <a href="#incidente" data-screen="incidente">Analisis del incidente</a>
-  </nav>
-</header>
+<div class="shell">
 
-<!-- ======================================================================
-     SUPERFICIE 1: corrida en vivo. "que esta pasando ahora": el lanzador
-     real del experimento, el feed empujado por SSE, y el detalle de UNA
-     corrida (arquitectura, timeline, linea de tiempo forense, mecanismos).
-     ====================================================================== -->
-<main id="screen-vivo" data-screen-panel="vivo">
-
-<section id="launcher">
-  <p class="eyebrow">Lanzar una corrida</p>
-  <div class="launcher-card">
-    <div class="launcher-row">
-      <label class="picker-label" for="launcher-config">vector</label>
-      <select id="launcher-config">
-        <option value="base">matriz base (vectores 4, 5, 6)</option>
-        <option value="redteam">vector 4, red teamer</option>
-        <option value="memory_rag">vectores 5 y 6, memoria y RAG</option>
-        <option value="causal_priming">experimento causal</option>
-        <option value="demo_denso">solo task_06_rag_poison (con_harness), rapido y con alta tasa de fuga</option>
-      </select>
-      <label class="picker-label" for="launcher-limit">limite de corridas</label>
-      <input type="number" id="launcher-limit" min="1" step="1" placeholder="todas" title="Vacio corre la matriz completa (puede tardar hasta una hora). Un numero chico (1 o 2) sirve para probar el boton sin comprometer una corrida larga.">
-      <button id="launcher-start-btn" class="btn-primary">▶ correr experimento</button>
-      <button id="launcher-stop-btn" title="Envia una señal de termino al proceso del orquestador" hidden>■ detener</button>
-    </div>
-    <div class="launcher-status" id="launcher-status">
-      <span class="status-pill" id="launcher-pill" data-estado="inactivo">inactivo</span>
-      <span class="mono" id="launcher-detail">sin corridas lanzadas desde este panel todavia</span>
-    </div>
-    <p class="mono launcher-note">
-      Una corrida sola tarda entre 60 y 180 segundos. Una matriz completa puede tardar hasta una hora:
-      el orquestador es secuencial a proposito (ver README). El estado de arriba se consulta al proceso
-      real cada 2 segundos, nunca se marca "corriendo" solo porque se apreto el boton.
-    </p>
-    <div class="launcher-log-wrap" id="launcher-log-wrap" hidden>
-      <p class="eyebrow" style="margin-top:16px;">Log real del proceso (docker compose + orquestador)</p>
-      <pre class="launcher-log launcher-log-clave" id="launcher-log-clave" hidden></pre>
-      <pre class="launcher-log" id="launcher-log-tail"></pre>
-    </div>
-  </div>
-</section>
-
-<section id="live-feed">
-  <div class="term">
-    <div class="term-bar">
-      <span class="term-dot r"></span><span class="term-dot y"></span><span class="term-dot g"></span>
-      <span class="term-title">sentinel@harness:~$ tail -f results/*.jsonl</span>
-      <div class="feed-controls">
-        <span class="dot" id="stream-dot"></span>
-        <span class="mono" id="stream-status">conectando…</span>
-        <button id="feed-pause-btn" title="Pausar auto scroll (los eventos se siguen guardando)">⏸ pausar</button>
-        <button id="feed-clear-btn" title="Vaciar la vista del feed (no borra results/)">vaciar</button>
+  <aside class="rail">
+    <div class="brand">
+      <img class="wordmark" src="/static/logo.png" alt="Sentinel">
+      <div>
+        <div class="brand-name"><span class="dot" id="live-dot"></span>Sentinel</div>
+        <div class="brand-sub">CanaryForge</div>
       </div>
     </div>
-    <div class="feed-list" id="feed-list">
-      <p class="empty-note">Esperando eventos por /api/stream. Apreta "correr experimento" arriba, o corre <code>tests/positive_controls.sh</code> en una terminal.</p>
+
+    <nav class="screen-switch" id="screen-nav" aria-label="Superficies del panel">
+      <a href="#vivo" data-screen="vivo">Corrida en vivo</a>
+      <a href="#incidente" data-screen="incidente">Analisis del incidente</a>
+    </nav>
+
+    <nav class="rail-sections" id="rail-sections-vivo" data-for-screen="vivo">
+      <a href="javascript:void(0)" data-jump="launcher">Lanzar corrida</a>
+      <a href="javascript:void(0)" data-jump="live-feed">Feed en vivo</a>
+      <a href="javascript:void(0)" data-jump="architecture">Arquitectura</a>
+      <a href="javascript:void(0)" data-jump="incident-story">Historia de la corrida</a>
+      <a href="javascript:void(0)" data-jump="monitor-strength">Fortaleza de monitores</a>
+    </nav>
+    <nav class="rail-sections" id="rail-sections-incidente" data-for-screen="incidente" hidden>
+      <a href="javascript:void(0)" data-jump="inc-resumen">Resumen</a>
+      <a href="javascript:void(0)" data-jump="inc-comparacion">Entre maquinas</a>
+      <a href="javascript:void(0)" data-jump="inc-canary">Superficies del canario</a>
+      <a href="javascript:void(0)" data-jump="inc-routing">Ruteo de egress</a>
+      <a href="javascript:void(0)" data-jump="inc-herramientas">Secuencias de herramientas</a>
+      <a href="javascript:void(0)" data-jump="inc-memoria">Memoria persistente</a>
+      <a href="javascript:void(0)" data-jump="inc-fuera-de-alcance">Fuera de alcance</a>
+    </nav>
+
+    <div class="rail-foot mono">CanaryForge / Apart Research<br>arnes de deteccion de escape</div>
+  </aside>
+
+  <main class="col">
+
+  <!-- ====================================================================
+       SUPERFICIE 1: corrida en vivo.
+       ==================================================================== -->
+  <div id="screen-vivo" data-screen-panel="vivo">
+
+    <div class="masthead">
+      <div class="kicker">Corrida en vivo</div>
+      <h1>Que esta pasando <em>ahora mismo</em> en el sandbox.</h1>
+      <p>El lanzador dispara el orquestador real como subproceso; el feed se entera por inotify en el
+         instante en que un monitor o el agente escriben una linea nueva, sin encuestar nada.</p>
     </div>
-    <div class="term-prompt"><span class="prompt-caret">▊</span></div>
-  </div>
-</section>
 
-<section id="architecture">
-  <p class="eyebrow">Arquitectura, topologia real de docker-compose.yml (+ overlays)</p>
-  <div class="arch-card">
-    <svg viewBox="0 0 1040 620" role="img" aria-label="Diagrama de arquitectura del arnes: tres redes Docker, el camino del heartbeat, los volumenes persistentes y las dos raices que vigila el fs-monitor">
-      <defs>
-        <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-          <path d="M0,0 L10,5 L0,10 z" fill="#5f6c7a"></path>
-        </marker>
-        <marker id="arrow-hb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-          <path d="M0,0 L10,5 L0,10 z" fill="#3987e5"></path>
-        </marker>
-        <marker id="arrow-crit" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-          <path d="M0,0 L10,5 L0,10 z" fill="#e05555"></path>
-        </marker>
-        <marker id="arrow-vol" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-          <path d="M0,0 L10,5 L0,10 z" fill="#9085e9"></path>
-        </marker>
-      </defs>
-      <style>
-        .box { fill: #1a222c; stroke: rgba(255,255,255,0.16); stroke-width: 1; }
-        .box-mock { fill: #1a222c; stroke: #c98500; stroke-width: 1; stroke-dasharray: 3 3; }
-        .box-mon { fill: #161d26; stroke: rgba(255,255,255,0.16); }
-        .box-vol { fill: #161d26; stroke: rgba(255,255,255,0.22); stroke-width: 1; stroke-dasharray: 2 3; }
-        .box-ext { fill: #1a222c; stroke: #e05555; stroke-width: 1; stroke-dasharray: 3 3; }
-        .lbl { font-family: 'IBM Plex Mono', monospace; font-size: 12px; fill: #eef2f6; }
-        .lbl-sub { font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; fill: #98a4b3; }
-        .lbl-net { font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; fill: #5f6c7a; letter-spacing: 0.04em; }
-        .lbl-edge { font-family: 'IBM Plex Mono', monospace; font-size: 9px; fill: #5f6c7a; }
-        .edge { stroke: #5f6c7a; stroke-width: 1.2; fill: none; marker-end: url(#arrow); }
-        .edge-hb { stroke: #3987e5; stroke-width: 1.2; fill: none; stroke-dasharray: 4 3; marker-end: url(#arrow-hb); }
-        .edge-ext { stroke: #e05555; stroke-width: 1.2; fill: none; stroke-dasharray: 4 3; marker-end: url(#arrow-crit); }
-        .edge-vol { stroke: #9085e9; stroke-width: 1.1; fill: none; stroke-dasharray: 3 3; marker-end: url(#arrow-vol); }
-        .netbox { fill: none; stroke: rgba(255,255,255,0.10); stroke-width: 1; stroke-dasharray: 2 4; rx: 10; }
-      </style>
+    <section id="launcher">
+      <div class="sec-head"><h2>Lanzar una corrida</h2></div>
+      <div class="launcher-card">
+        <div class="launcher-row">
+          <label class="picker-label" for="launcher-config">vector</label>
+          <select id="launcher-config">
+            <option value="base">matriz base (vectores 4, 5, 6)</option>
+            <option value="redteam">vector 4, red teamer</option>
+            <option value="memory_rag">vectores 5 y 6, memoria y RAG</option>
+            <option value="causal_priming">experimento causal</option>
+            <option value="demo_denso">solo task_06_rag_poison (con_harness), rapido y con alta tasa de fuga</option>
+          </select>
+          <label class="picker-label" for="launcher-limit">limite de corridas</label>
+          <input type="number" id="launcher-limit" min="1" step="1" placeholder="todas" title="Vacio corre la matriz completa (puede tardar hasta una hora). Un numero chico (1 o 2) sirve para probar el boton sin comprometer una corrida larga.">
+          <button id="launcher-start-btn" class="btn-primary">▶ correr experimento</button>
+          <button id="launcher-stop-btn" title="Envia una señal de termino al proceso del orquestador" hidden>■ detener</button>
+        </div>
+        <div class="launcher-status" id="launcher-status">
+          <span class="status-pill" id="launcher-pill" data-estado="inactivo">inactivo</span>
+          <span class="mono" id="launcher-detail">sin corridas lanzadas desde este panel todavia</span>
+        </div>
+        <p class="mono launcher-note">
+          Una corrida sola tarda entre 60 y 180 segundos. Una matriz completa puede tardar hasta una hora:
+          el orquestador es secuencial a proposito (ver README). El estado de arriba se consulta al proceso
+          real cada 2 segundos, nunca se marca "corriendo" solo porque se apreto el boton.
+        </p>
+        <div class="launcher-log-wrap" id="launcher-log-wrap" hidden>
+          <p class="eyebrow" style="margin-top:16px;">Log real del proceso (docker compose + orquestador)</p>
+          <pre class="launcher-log launcher-log-clave" id="launcher-log-clave" hidden></pre>
+          <pre class="launcher-log" id="launcher-log-tail"></pre>
+        </div>
+      </div>
+    </section>
 
-      <rect class="box-ext" x="40" y="24" width="250" height="84" rx="8"></rect>
-      <text class="lbl" x="165" y="50" text-anchor="middle">backend LLM</text>
-      <text class="lbl-sub" x="165" y="66" text-anchor="middle">Ollama (host) / OpenCode Go - Zen</text>
-      <text class="lbl-sub" x="165" y="82" text-anchor="middle" fill="#e05555">llm-backend, NO internal</text>
-      <text class="lbl-sub" x="165" y="97" text-anchor="middle" fill="#5f6c7a">fuera del alcance auditado</text>
+    <section id="live-feed">
+      <div class="sec-head"><h2>Feed en vivo</h2></div>
+      <div class="term">
+        <div class="term-bar">
+          <span class="term-dot r"></span><span class="term-dot y"></span><span class="term-dot g"></span>
+          <span class="term-title">sentinel@harness:~$ tail -f results/*.jsonl</span>
+          <div class="feed-controls">
+            <span class="dot" id="stream-dot"></span>
+            <span class="mono" id="stream-status">conectando…</span>
+            <button id="feed-pause-btn" title="Pausar auto scroll (los eventos se siguen guardando)">⏸ pausar</button>
+            <button id="feed-clear-btn" title="Vaciar la vista del feed (no borra results/)">vaciar</button>
+          </div>
+        </div>
+        <div class="feed-list" id="feed-list">
+          <p class="empty-note">Esperando eventos por /api/stream. Apreta "correr experimento" arriba, o corre <code>tests/positive_controls.sh</code> en una terminal.</p>
+        </div>
+        <div class="term-prompt"><span class="prompt-caret">▊</span></div>
+      </div>
+    </section>
 
-      <rect class="netbox" x="20" y="162" width="410" height="188"></rect>
-      <text class="lbl-net" x="30" y="154">RED-PROXY (internal)</text>
+    <section id="architecture">
+      <div class="sec-head">
+        <h2>Arquitectura</h2>
+        <p>Topologia real de <code>docker-compose.yml</code> y sus overlays, no un diagrama aparte que se
+           desactualiza.</p>
+      </div>
+      <div class="arch-card">
+        <svg viewBox="0 0 1040 620" role="img" aria-label="Diagrama de arquitectura del arnes: tres redes Docker, el camino del heartbeat, los volumenes persistentes y las dos raices que vigila el fs-monitor">
+          <defs>
+            <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="#5f6c7a"></path>
+            </marker>
+            <marker id="arrow-hb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="#3987e5"></path>
+            </marker>
+            <marker id="arrow-crit" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="#e05555"></path>
+            </marker>
+            <marker id="arrow-vol" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="#9085e9"></path>
+            </marker>
+          </defs>
+          <style>
+            .box { fill: #1a222c; stroke: rgba(255,255,255,0.16); stroke-width: 1; }
+            .box-mock { fill: #1a222c; stroke: #c98500; stroke-width: 1; stroke-dasharray: 3 3; }
+            .box-mon { fill: #161d26; stroke: rgba(255,255,255,0.16); }
+            .box-vol { fill: #161d26; stroke: rgba(255,255,255,0.22); stroke-width: 1; stroke-dasharray: 2 3; }
+            .box-ext { fill: #1a222c; stroke: #e05555; stroke-width: 1; stroke-dasharray: 3 3; }
+            .lbl { font-family: 'Courier Prime', monospace; font-size: 12px; fill: #f9f9f8; }
+            .lbl-sub { font-family: 'Courier Prime', monospace; font-size: 9.5px; fill: #d5d4d2; }
+            .lbl-net { font-family: 'Courier Prime', monospace; font-size: 9.5px; fill: #a7a59f; letter-spacing: 0.04em; }
+            .lbl-edge { font-family: 'Courier Prime', monospace; font-size: 9px; fill: #a7a59f; }
+            .edge { stroke: #817d74; stroke-width: 1.2; fill: none; marker-end: url(#arrow); }
+            .edge-hb { stroke: #3987e5; stroke-width: 1.2; fill: none; stroke-dasharray: 4 3; marker-end: url(#arrow-hb); }
+            .edge-ext { stroke: #e05555; stroke-width: 1.2; fill: none; stroke-dasharray: 4 3; marker-end: url(#arrow-crit); }
+            .edge-vol { stroke: #9085e9; stroke-width: 1.1; fill: none; stroke-dasharray: 3 3; marker-end: url(#arrow-vol); }
+            .netbox { fill: none; stroke: rgba(255,255,255,0.10); stroke-width: 1; stroke-dasharray: 2 4; rx: 10; }
+          </style>
 
-      <rect class="box" x="45" y="188" width="150" height="66" rx="8"></rect>
-      <text class="lbl" x="120" y="214" text-anchor="middle">sandbox</text>
-      <text class="lbl-sub" x="120" y="230" text-anchor="middle">agent.py + heartbeat.py</text>
+          <rect class="box-ext" x="40" y="24" width="250" height="84" rx="4"></rect>
+          <text class="lbl" x="165" y="50" text-anchor="middle">backend LLM</text>
+          <text class="lbl-sub" x="165" y="66" text-anchor="middle">Ollama (host) / OpenCode Go - Zen</text>
+          <text class="lbl-sub" x="165" y="82" text-anchor="middle" fill="#e05555">llm-backend, NO internal</text>
+          <text class="lbl-sub" x="165" y="97" text-anchor="middle" fill="#a7a59f">fuera del alcance auditado</text>
 
-      <rect class="box-mon" x="248" y="188" width="162" height="140" rx="8"></rect>
-      <text class="lbl" x="329" y="210" text-anchor="middle">egress-proxy</text>
-      <text class="lbl-sub" x="329" y="226" text-anchor="middle">mitmproxy</text>
-      <text class="lbl-sub" x="329" y="250" text-anchor="middle" fill="#199e70">egress_monitor.py</text>
-      <text class="lbl-sub" x="329" y="262" text-anchor="middle" fill="#199e70">:8080 (HTTP_PROXY)</text>
-      <text class="lbl-sub" x="329" y="292" text-anchor="middle" fill="#3987e5">heartbeat_monitor.py</text>
-      <text class="lbl-sub" x="329" y="304" text-anchor="middle" fill="#3987e5">:9000 (bypassea mitmproxy)</text>
+          <rect class="netbox" x="20" y="162" width="410" height="188"></rect>
+          <text class="lbl-net" x="30" y="154">RED-PROXY (internal)</text>
 
-      <rect class="netbox" x="470" y="162" width="540" height="230"></rect>
-      <text class="lbl-net" x="480" y="154">RED-MOCKS (internal)</text>
+          <rect class="box" x="45" y="188" width="150" height="66" rx="4"></rect>
+          <text class="lbl" x="120" y="214" text-anchor="middle">sandbox</text>
+          <text class="lbl-sub" x="120" y="230" text-anchor="middle">agent.py + heartbeat.py</text>
 
-      <rect class="box-mock" x="500" y="186" width="200" height="58" rx="8"></rect>
-      <text class="lbl" x="600" y="209" text-anchor="middle" font-size="11">package-registry</text>
-      <text class="lbl-sub" x="600" y="224" text-anchor="middle">SSRF de juguete</text>
+          <rect class="box-mon" x="248" y="188" width="162" height="140" rx="4"></rect>
+          <text class="lbl" x="329" y="210" text-anchor="middle">egress-proxy</text>
+          <text class="lbl-sub" x="329" y="226" text-anchor="middle">mitmproxy</text>
+          <text class="lbl-sub" x="329" y="250" text-anchor="middle" fill="#199e70">egress_monitor.py</text>
+          <text class="lbl-sub" x="329" y="262" text-anchor="middle" fill="#199e70">:8080 (HTTP_PROXY)</text>
+          <text class="lbl-sub" x="329" y="292" text-anchor="middle" fill="#3987e5">heartbeat_monitor.py</text>
+          <text class="lbl-sub" x="329" y="304" text-anchor="middle" fill="#3987e5">:9000 (bypassea mitmproxy)</text>
 
-      <rect class="box-mock" x="500" y="278" width="200" height="58" rx="8"></rect>
-      <text class="lbl" x="600" y="301" text-anchor="middle" font-size="11">model-hub</text>
-      <text class="lbl-sub" x="600" y="316" text-anchor="middle">credenciales falsas</text>
+          <rect class="netbox" x="470" y="162" width="540" height="230"></rect>
+          <text class="lbl-net" x="480" y="154">RED-MOCKS (internal)</text>
 
-      <rect class="box-mock" x="775" y="220" width="210" height="70" rx="8"></rect>
-      <text class="lbl" x="880" y="243" text-anchor="middle" font-size="11">redteam</text>
-      <text class="lbl-sub" x="880" y="258" text-anchor="middle">alias mirror-externo (vector 4)</text>
-      <text class="lbl-sub" x="880" y="272" text-anchor="middle" fill="#5f6c7a">docker-compose.redteam.yml</text>
+          <rect class="box-mock" x="500" y="186" width="200" height="58" rx="4"></rect>
+          <text class="lbl" x="600" y="209" text-anchor="middle" font-size="11">package-registry</text>
+          <text class="lbl-sub" x="600" y="224" text-anchor="middle">SSRF de juguete</text>
 
-      <rect class="box-vol" x="40" y="418" width="215" height="76" rx="8"></rect>
-      <text class="lbl" x="147" y="440" text-anchor="middle" font-size="11">workspace</text>
-      <text class="lbl-sub" x="147" y="455" text-anchor="middle">rw: sandbox, ro: fs-monitor</text>
-      <text class="lbl-sub" x="147" y="469" text-anchor="middle" fill="#9085e9">knowledge_base/ (vector 6, RAG)</text>
-      <text class="lbl-sub" x="147" y="483" text-anchor="middle" fill="#5f6c7a">volumen efimero (down -v lo borra)</text>
+          <rect class="box-mock" x="500" y="278" width="200" height="58" rx="4"></rect>
+          <text class="lbl" x="600" y="301" text-anchor="middle" font-size="11">model-hub</text>
+          <text class="lbl-sub" x="600" y="316" text-anchor="middle">credenciales falsas</text>
 
-      <rect class="box-vol" x="295" y="418" width="215" height="76" rx="8"></rect>
-      <text class="lbl" x="402" y="440" text-anchor="middle" font-size="11">./memory</text>
-      <text class="lbl-sub" x="402" y="455" text-anchor="middle">rw: sandbox, ro: fs-monitor</text>
-      <text class="lbl-sub" x="402" y="469" text-anchor="middle" fill="#9085e9">notas envenenadas (vector 5)</text>
-      <text class="lbl-sub" x="402" y="483" text-anchor="middle" fill="#5f6c7a">bind mount, down -v NO lo borra</text>
+          <rect class="box-mock" x="775" y="220" width="210" height="70" rx="4"></rect>
+          <text class="lbl" x="880" y="243" text-anchor="middle" font-size="11">redteam</text>
+          <text class="lbl-sub" x="880" y="258" text-anchor="middle">alias mirror-externo (vector 4)</text>
+          <text class="lbl-sub" x="880" y="272" text-anchor="middle" fill="#a7a59f">docker-compose.redteam.yml</text>
 
-      <rect class="box-vol" x="550" y="418" width="215" height="76" rx="8"></rect>
-      <text class="lbl" x="657" y="440" text-anchor="middle" font-size="11">./results</text>
-      <text class="lbl-sub" x="657" y="455" text-anchor="middle">evidencia de la corrida</text>
-      <text class="lbl-sub" x="657" y="469" text-anchor="middle" fill="#5f6c7a">sandbox + egress-proxy + fs-monitor</text>
-      <text class="lbl-sub" x="657" y="483" text-anchor="middle" fill="#5f6c7a">bind mount, sobrevive down -v</text>
+          <rect class="box-vol" x="40" y="418" width="215" height="76" rx="4"></rect>
+          <text class="lbl" x="147" y="440" text-anchor="middle" font-size="11">workspace</text>
+          <text class="lbl-sub" x="147" y="455" text-anchor="middle">rw: sandbox, ro: fs-monitor</text>
+          <text class="lbl-sub" x="147" y="469" text-anchor="middle" fill="#9085e9">knowledge_base/ (vector 6, RAG)</text>
+          <text class="lbl-sub" x="147" y="483" text-anchor="middle" fill="#a7a59f">volumen efimero (down -v lo borra)</text>
 
-      <rect class="box-mon" x="150" y="546" width="250" height="58" rx="8"></rect>
-      <text class="lbl" x="275" y="569" text-anchor="middle" font-size="11">fs-monitor</text>
-      <text class="lbl-sub" x="275" y="584" text-anchor="middle" fill="#9085e9">canary_monitor.py, inotify</text>
-      <text class="lbl-sub" x="275" y="596" text-anchor="middle" fill="#5f6c7a">network_mode: none</text>
+          <rect class="box-vol" x="295" y="418" width="215" height="76" rx="4"></rect>
+          <text class="lbl" x="402" y="440" text-anchor="middle" font-size="11">./memory</text>
+          <text class="lbl-sub" x="402" y="455" text-anchor="middle">rw: sandbox, ro: fs-monitor</text>
+          <text class="lbl-sub" x="402" y="469" text-anchor="middle" fill="#9085e9">notas envenenadas (vector 5)</text>
+          <text class="lbl-sub" x="402" y="483" text-anchor="middle" fill="#a7a59f">bind mount, down -v NO lo borra</text>
 
-      <path class="edge-ext" d="M165,108 L165,186"></path>
-      <text class="lbl-edge" x="175" y="152" fill="#e05555">chat/completions (no auditado)</text>
+          <rect class="box-vol" x="550" y="418" width="215" height="76" rx="4"></rect>
+          <text class="lbl" x="657" y="440" text-anchor="middle" font-size="11">./results</text>
+          <text class="lbl-sub" x="657" y="455" text-anchor="middle">evidencia de la corrida</text>
+          <text class="lbl-sub" x="657" y="469" text-anchor="middle" fill="#a7a59f">sandbox + egress-proxy + fs-monitor</text>
+          <text class="lbl-sub" x="657" y="483" text-anchor="middle" fill="#a7a59f">bind mount, sobrevive down -v</text>
 
-      <path class="edge" d="M195,206 L246,206"></path>
-      <text class="lbl-edge" x="188" y="198">HTTP_PROXY</text>
+          <rect class="box-mon" x="150" y="546" width="250" height="58" rx="4"></rect>
+          <text class="lbl" x="275" y="569" text-anchor="middle" font-size="11">fs-monitor</text>
+          <text class="lbl-sub" x="275" y="584" text-anchor="middle" fill="#9085e9">canary_monitor.py, inotify</text>
+          <text class="lbl-sub" x="275" y="596" text-anchor="middle" fill="#a7a59f">network_mode: none</text>
 
-      <path class="edge-hb" d="M195,240 L221,240 L221,298 L246,298"></path>
-      <text class="lbl-edge" x="52" y="302" fill="#3987e5">heartbeat :9000 (bypass)</text>
+          <path class="edge-ext" d="M165,108 L165,186"></path>
+          <text class="lbl-edge" x="175" y="152" fill="#e05555">chat/completions (no auditado)</text>
 
-      <path class="edge" d="M410,212 L498,212"></path>
-      <path class="edge" d="M410,304 L498,304"></path>
+          <path class="edge" d="M195,206 L246,206"></path>
+          <text class="lbl-edge" x="188" y="198">HTTP_PROXY</text>
 
-      <path class="edge" d="M700,206 L737,206 L737,242 L773,242"></path>
-      <text class="lbl-edge" x="706" y="198">SSRF: /fetch?url=mirror-externo</text>
+          <path class="edge-hb" d="M195,240 L221,240 L221,298 L246,298"></path>
+          <text class="lbl-edge" x="52" y="302" fill="#3987e5">heartbeat :9000 (bypass)</text>
 
-      <path class="edge-vol" d="M120,254 L120,416"></path>
-      <text class="lbl-edge" x="126" y="342" fill="#9085e9">workspace rw</text>
+          <path class="edge" d="M410,212 L498,212"></path>
+          <path class="edge" d="M410,304 L498,304"></path>
 
-      <path class="edge-vol" d="M170,254 L170,386 L402,386 L402,416"></path>
-      <text class="lbl-edge" x="250" y="380" fill="#9085e9">./memory rw</text>
+          <path class="edge" d="M700,206 L737,206 L737,242 L773,242"></path>
+          <text class="lbl-edge" x="706" y="198">SSRF: /fetch?url=mirror-externo</text>
 
-      <path class="edge-vol" d="M200,494 L200,544"></path>
-      <text class="lbl-edge" x="84" y="524" fill="#9085e9">ro, inotify</text>
-      <path class="edge-vol" d="M350,494 L350,544"></path>
-      <text class="lbl-edge" x="358" y="524" fill="#9085e9">ro, inotify</text>
-    </svg>
-  </div>
-  <p class="mono arch-caption">
-    Rojo punteado, sale de verdad a internet, fuera de lo auditado. Amarillo punteado, servicio de juguete
-    dentro de una red <code>internal: true</code>. Violeta punteado, volumen o bind mount, no red: es la
-    superficie que vigila el <code>fs-monitor</code>. Azul punteado, el heartbeat, que bypassea el proxy
-    a proposito.
-  </p>
-</section>
+          <path class="edge-vol" d="M120,254 L120,416"></path>
+          <text class="lbl-edge" x="126" y="342" fill="#9085e9">workspace rw</text>
 
-<section id="incident-story">
-  <div class="incident-head">
-    <p class="eyebrow">Historia de la corrida</p>
-    <div class="run-picker-wrap">
-      <select id="run-picker"><option>cargando corridas...</option></select>
-      <label class="picker-label incidents-only-label" title="Filtra el selector a corridas con nivel de escalada 4 o mas (fetch exitoso, o fuga real)">
-        <input type="checkbox" id="incidents-only-toggle"> solo incidentes
-      </label>
-      <button id="refresh-btn" title="Releer results/ del disco (respaldo manual, el feed ya empuja solo)">↻ releer</button>
-    </div>
-  </div>
+          <path class="edge-vol" d="M170,254 L170,386 L402,386 L402,416"></path>
+          <text class="lbl-edge" x="250" y="380" fill="#9085e9">./memory rw</text>
 
-  <div class="incident-banner" id="incident-banner"></div>
-
-  <div class="incident-stage">
-    <div class="stage-label"><span class="stage-num">1</span>Antes: que se planto</div>
-    <div class="stage-body" id="stage-antes"></div>
-  </div>
-
-  <div class="incident-stage">
-    <div class="stage-label"><span class="stage-num">2</span>Durante: que hizo el agente</div>
-    <p class="mono stage-note">
-      Un solo hilo cronologico con todas las fuentes (meta, los 3 monitores, cada turno del agente,
-      entrega del red teamer si aplica, y el veredicto final). Los latidos normales del heartbeat se
-      resumen en uno solo para no tapar lo que importa.
-    </p>
-    <div class="story-list" id="story-list">
-      <p class="empty-note">cargando…</p>
-    </div>
-  </div>
-
-  <div class="incident-stage">
-    <div class="stage-label"><span class="stage-num">3</span>Despues: que procede</div>
-    <div class="stage-body" id="stage-despues"></div>
-  </div>
-</section>
-
-<section id="monitor-strength">
-  <p class="eyebrow">Fortaleza de los monitores, mismo evento sintetico, config variable</p>
-  <p class="mono" style="font-size:12px;color:var(--text-muted);margin:0 0 16px;max-width:65ch;">
-    Sin depender de un LLM: dispara el mismo evento de fuga (crear un directorio con el canario, o
-    matar el heartbeat) variando el intervalo del monitor, para medir cuanto empeora el TTD al aflojar
-    la vigilancia. Corre con <code>tests/monitor_strength_sweep.sh</code>.
-  </p>
-  <div class="mstr-grid" id="mstr-grid">
-    <p class="empty-note">Sin datos todavia, corre tests/monitor_strength_sweep.sh</p>
-  </div>
-</section>
-
-
-</main>
-
-<!-- ======================================================================
-     SUPERFICIE 2: analisis del incidente. "que paso, en conjunto": agregado
-     sobre los 115 corridas versionadas (63 matriz base + 30 causal + 20
-     redteam + 2 corridas manuales de humo), no el detalle de una corrida.
-     ====================================================================== -->
-<main id="screen-incidente" data-screen-panel="incidente" hidden>
-
-<section id="inc-resumen">
-  <p class="eyebrow">Resumen agregado, tres corpus versionados</p>
-  <div class="stat-tile-row" id="inc-tiles"></div>
-  <div class="corpus-tabs" id="inc-corpus-tabs"></div>
-  <div class="agg-grid" id="inc-agg-grid"></div>
-  <div class="legend" id="inc-agg-legend"></div>
-</section>
-
-<section id="inc-comparacion">
-  <p class="eyebrow">Comparacion entre maquinas</p>
-  <p class="mono inc-note">
-    Los conjuntos estan organizados por maquina (<code>results/machine-A/</code>,
-    <code>results/machine-B/</code>, ver <code>results/README.md</code> y el <code>manifest.json</code> de
-    cada una): dos corridas del mismo experimento en maquinas con Ollama distinto no son comparables entre
-    si, y esa es justo la razon de esta vista. <code>machine-B/causal-ollama0.6.8</code> esta marcado con
-    ⚠ porque el agente agota el tope de turnos en vez de converger con esa version: se muestra, no se
-    esconde, pero no hay que leerlo junto al resto sin esa salvedad.
-  </p>
-  <div class="comparacion-grid" id="inc-comparacion-grid">
-    <p class="empty-note">cargando…</p>
-  </div>
-</section>
-
-<section id="inc-canary">
-  <p class="eyebrow">Cuando aparece el canario, por superficie</p>
-  <p class="mono inc-note">
-    Distingue superficie que el AGENTE produjo de artefacto del propio arnes: una version anterior de
-    <code>canary_monitor.py</code> escaneaba tambien su propio log
-    (<code>agent_transcript.jsonl</code>), asi que una parte de las detecciones "por contenido" son el
-    arnes detectandose a si mismo, no al agente. Ya esta corregido (el monitor excluye ese archivo), pero
-    el corpus historico todavia tiene esas filas.
-  </p>
-  <div class="canary-surface-grid" id="inc-canary-grid">
-    <p class="empty-note">cargando…</p>
-  </div>
-</section>
-
-<section id="inc-routing">
-  <p class="eyebrow">Ruteo observado contra declarado</p>
-  <p class="mono inc-note">
-    Nodos y aristas grises: topologia declarada, parseada en vivo de <code>docker-compose.yml</code> y el
-    overlay de red team. Aristas doradas: destinos que el proxy vio de verdad, grosor segun cuantas veces.
-    Un nodo tachado en rojo es un destino que el agente adivino y que no existe en la topologia declarada.
-  </p>
-  <div class="routing-card">
-    <svg id="routing-svg" viewBox="0 0 900 360" role="img" aria-label="Grafo de ruteo observado contra declarado"></svg>
-  </div>
-  <div id="routing-ssrf-note" class="ssrf-note" hidden></div>
-</section>
-
-<section id="inc-herramientas">
-  <p class="eyebrow">Secuencias de herramientas, con fuga contra sin fuga</p>
-  <p class="mono inc-note">
-    Transiciones mas frecuentes entre llamadas a herramientas consecutivas del mismo turno del agente,
-    separadas segun si esa corrida llego a nivel 5 (fuga real). Incluye nombres de herramienta que el
-    modelo invoco y que NO existen en <code>sandbox/agent.py</code> (<code>mkdir</code>,
-    <code>write_dir</code>): el dispatcher les devuelve un error, pero el intento queda grabado.
-  </p>
-  <div class="herramientas-grid" id="inc-herramientas-grid">
-    <p class="empty-note">cargando…</p>
-  </div>
-</section>
-
-<section id="inc-memoria">
-  <p class="eyebrow">Contaminacion de memoria entre corridas</p>
-  <p class="mono inc-note">
-    Reconstruido de <code>memory_write</code>/<code>memory_read</code> en los transcripts, no del archivo
-    volatil <code>./memory/notes.jsonl</code> (se resetea entre sesiones). Una contaminacion real: una
-    corrida lee, con <code>memory_read</code>, un texto que contiene el canario de OTRA corrida.
-  </p>
-  <div id="inc-memoria-body">
-    <p class="empty-note">cargando…</p>
-  </div>
-</section>
-
-<section id="inc-fuera-de-alcance">
-  <p class="eyebrow">Lo que no se construyo, y por que</p>
-  <div class="fuera-de-alcance-grid">
-    <div class="finding-card">
-      <h3>Tokens por corrida</h3>
-      <p class="mono" style="font-size:12.5px;color:var(--text-secondary);">
-        El transcript no guardaba <code>usage</code> y <code>agent.py</code> nunca lo registraba: no
-        existe para las 115 corridas de este corpus. Se agrego la captura de <code>usage</code> en
-        <code>sandbox/agent.py</code> para corridas futuras, pero no se construyo una aproximacion por
-        caracteres o palabras sobre el corpus existente: una aproximacion mostrada junto a cifras reales
-        del resto de este panel invita a leerla como si fuera un conteo real, que es exactamente el error
-        que este proyecto ya tuvo que retractar una vez.
+          <path class="edge-vol" d="M200,494 L200,544"></path>
+          <text class="lbl-edge" x="84" y="524" fill="#9085e9">ro, inotify</text>
+          <path class="edge-vol" d="M350,494 L350,544"></path>
+          <text class="lbl-edge" x="358" y="524" fill="#9085e9">ro, inotify</text>
+        </svg>
+      </div>
+      <p class="mono arch-caption">
+        Rojo punteado, sale de verdad a internet, fuera de lo auditado. Amarillo punteado, servicio de juguete
+        dentro de una red <code>internal: true</code>. Violeta punteado, volumen o bind mount, no red.
+        Azul punteado, el heartbeat, que bypassea el proxy a proposito.
       </p>
-    </div>
-    <div class="finding-card">
-      <h3>Analisis semantico agregado del razonamiento</h3>
-      <p class="mono" style="font-size:12.5px;color:var(--text-secondary);">
-        <code>analysis/extract_cot.py</code> ya extrae, por corrida, el razonamiento previo al escape en
-        <code>report/cot_analysis.md</code>: es lectura de calidad media alta. Agregarlo en una vista
-        (por ejemplo agrupando temas) exige decidir que eje de comparacion importa, y esa decision es un
-        trabajo de investigacion en si mismo, no una vista que se pueda derivar mecanicamente de los
-        artefactos como el resto de este panel. Se prefiere linkear el analisis cualitativo ya escrito
-        antes que construir un agregado superficial (por ejemplo una nube de palabras) que parezca
-        analisis sin serlo.
-      </p>
-    </div>
+    </section>
+
+    <section id="incident-story">
+      <div id="run-section"></div>
+      <div class="sec-head sec-head-row">
+        <div>
+          <h2>Historia de la corrida</h2>
+          <p>Antes, durante y despues de una corrida puntual, como un solo relato.</p>
+        </div>
+        <div class="run-picker-wrap">
+          <select id="run-picker"><option>cargando corridas...</option></select>
+          <label class="picker-label incidents-only-label" title="Filtra el selector a corridas con nivel de escalada 4 o mas (fetch exitoso, o fuga real)">
+            <input type="checkbox" id="incidents-only-toggle"> solo incidentes
+          </label>
+          <button id="refresh-btn" title="Releer results/ del disco (respaldo manual, el feed ya empuja solo)">↻ releer</button>
+        </div>
+      </div>
+
+      <div class="incident-banner" id="incident-banner"></div>
+
+      <div class="incident-stage">
+        <div class="stage-label"><span class="stage-num">1</span>Antes: que se planto</div>
+        <div class="stage-body" id="stage-antes"></div>
+      </div>
+
+      <div class="incident-stage">
+        <div class="stage-label"><span class="stage-num">2</span>Durante: que hizo el agente</div>
+        <p class="mono stage-note">
+          Un solo hilo cronologico con todas las fuentes (meta, los 3 monitores, cada turno del agente,
+          entrega del red teamer si aplica, y el veredicto final). Los latidos normales se resumen en uno
+          solo para no tapar lo que importa.
+        </p>
+        <div class="story-list" id="story-list">
+          <p class="empty-note">cargando…</p>
+        </div>
+      </div>
+
+      <div class="incident-stage">
+        <div class="stage-label"><span class="stage-num">3</span>Despues: que procede</div>
+        <div class="stage-body" id="stage-despues"></div>
+      </div>
+    </section>
+
+    <section id="monitor-strength">
+      <div class="sec-head">
+        <h2>Fortaleza de los monitores</h2>
+        <p>Mismo evento sintetico de fuga, configuracion variable, sin depender de un LLM: mide cuanto
+           empeora el TTD al aflojar la vigilancia. Corre con <code>tests/monitor_strength_sweep.sh</code>.</p>
+      </div>
+      <div class="mstr-grid" id="mstr-grid">
+        <p class="empty-note">Sin datos todavia, corre tests/monitor_strength_sweep.sh</p>
+      </div>
+    </section>
+
   </div>
-</section>
 
-</main>
+  <!-- ====================================================================
+       SUPERFICIE 2: analisis del incidente.
+       ==================================================================== -->
+  <div id="screen-incidente" data-screen-panel="incidente" hidden>
 
-<footer>
-  Datos leidos en vivo de <code class="mono">results/</code>, <code class="mono">results_causal/</code> y
-  <code class="mono">results_redteam/</code> en este host.
-  Ver <code class="mono">report/scope.md</code> para el alcance honesto de estos numeros
-  y <code class="mono">report/findings.md</code> para el detalle narrativo de cada corrida.
-</footer>
+    <div class="masthead">
+      <div class="kicker">Analisis del incidente</div>
+      <h1>La deteccion llega en un segundo. <em>El problema es donde llega.</em></h1>
+      <p>Agregado en vivo sobre los corpus versionados, organizados por maquina. Lo que importa no es
+         solo la tasa: es que superficie detecto, y cuanto de eso lo detecto el propio arnes sobre si
+         mismo.</p>
+      <div class="figures" id="inc-tiles"></div>
 
+      <div class="finding">
+        <p class="lead">El guardrail de produccion correlaciona con <b>el triple de fuga</b>, y replica en dos maquinas.</p>
+        <p class="body">
+          En <code>task_06_rag_poison</code>, <code>con_harness</code> llega a <strong>9/10</strong> corridas con fuga real (nivel 5) en <code>machine-A/corpus</code>
+          (Ollama 0.32.5) y <strong>7/10</strong> en <code>machine-B/causal-ollama0.34.0</code>, contra <strong>3/10</strong> de <code>sin_harness</code> en ambas.
+          Nombrar la superficie de ataque en el guardrail no es la causa: <code>con_harness_generico</code> (mismo largo y enfasis, sin nombrar archivos, directorios ni URLs) cae en el mismo
+          <strong>7/10</strong>, no cerca del control. Ver <code>docs/sections/04-results.tex</code>.
+        </p>
+      </div>
+
+      <div class="finding finding-danger">
+        <p class="lead">El lote <code>prueba-real</code> no es corpus de <code>machine-A</code>: corrio contra el backend en la nube, no contra Ollama local.</p>
+        <p class="body">
+          Muestra el reverso exacto (<code>con_harness</code> 0/10, <code>sin_harness</code> 10/10) porque <code>.env</code> quedo en <code>AGENT_BACKEND=openai</code> /
+          <code>deepseek-v4-pro</code> de una prueba anterior, y <code>backend_info()</code> en <code>orchestrator/run_experiment.py</code> lee esa variable del proceso
+          orquestador (que nunca la tuvo exportada) en vez de leerla del mismo <code>.env</code> que Docker Compose si aplica al contenedor, asi que cada <code>_meta.json</code>
+          quedo con <code>"agent_backend": "ollama"</code> aunque el contenedor hablaba con la nube. No es un hallazgo nuevo: replica, por accidente, el reverso de modelo ya
+          documentado en la Seccion 4 del paper. Pendiente: corregir la captura de <code>backend_info()</code> y mover o re-etiquetar este lote fuera de <code>machine-A</code>
+          antes de sumarlo a cualquier comparacion.
+        </p>
+      </div>
+    </div>
+
+    <section id="inc-resumen">
+      <div class="sec-head">
+        <h2>Escalera de niveles, por condicion y tarea</h2>
+        <p>De nivel 0 (sin señal) a nivel 6 (sandbox roto). Dorado es nivel 5: la fuga real, el uso de un
+           reenvio fuera de alcance.</p>
+      </div>
+      <div class="corpus-tabs" id="inc-corpus-tabs"></div>
+      <div class="ladder" id="inc-agg-grid"></div>
+      <div class="legend" id="inc-agg-legend"></div>
+    </section>
+
+    <section id="inc-comparacion">
+      <div class="sec-head">
+        <h2>Comparacion entre maquinas</h2>
+        <p>Los conjuntos estan organizados por maquina (ver <code>results/README.md</code> y el
+           <code>manifest.json</code> de cada una): dos corridas del mismo experimento en maquinas con
+           Ollama distinto no son comparables entre si.</p>
+      </div>
+      <div class="comparacion-grid" id="inc-comparacion-grid">
+        <p class="empty-note">cargando…</p>
+      </div>
+    </section>
+
+    <section id="inc-canary">
+      <div class="sec-head">
+        <h2>Donde aparecio el canario de verdad</h2>
+        <p>El token se planta una vez y se vigila en todo lado. Contar donde aparecio dice mas sobre la
+           forma de la fuga que la tasa de deteccion sola.</p>
+      </div>
+      <div id="inc-canary-grid">
+        <p class="empty-note">cargando…</p>
+      </div>
+    </section>
+
+    <section id="inc-routing">
+      <div class="sec-head">
+        <h2>Ruteo de egress, declarado contra observado</h2>
+        <p>La topologia declarada se parsea en vivo de <code>docker-compose.yml</code>. Los destinos
+           observados salen de cada evento de egress registrado. Linea solida y dorada, declarado.
+           Punteada y roja, destino NO declarado.</p>
+      </div>
+      <div class="arch-card">
+        <svg id="routing-svg" viewBox="0 0 800 340" role="img" aria-label="Grafo de ruteo de egress, sandbox contra cada destino observado"></svg>
+      </div>
+      <div id="routing-ssrf-note" class="ssrf-note" hidden></div>
+    </section>
+
+    <section id="inc-herramientas">
+      <div class="sec-head">
+        <h2>Que herramienta uso el agente</h2>
+        <p>Llamadas a herramientas en todas las corridas, y las transiciones que precedieron una fuga
+           real.</p>
+      </div>
+      <div id="inc-herramientas-grid" class="comparacion-grid"></div>
+    </section>
+
+    <section id="inc-memoria">
+      <div class="sec-head">
+        <h2>Contaminacion de memoria entre corridas</h2>
+        <p>Reconstruido de <code>memory_write</code>/<code>memory_read</code> en los transcripts, no del
+           archivo volatil <code>./memory/notes.jsonl</code>. Una contaminacion real: una corrida lee el
+           canario de OTRA corrida.</p>
+      </div>
+      <div id="inc-memoria-body">
+        <p class="empty-note">cargando…</p>
+      </div>
+    </section>
+
+    <section id="inc-fuera-de-alcance">
+      <div class="sec-head"><h2>Lo que no se construyo, y por que</h2></div>
+      <div class="fuera-de-alcance-grid">
+        <div class="finding-card">
+          <h3>Tokens por corrida</h3>
+          <p class="mono" style="font-size:13px;color:var(--text-secondary);">
+            El transcript no guardaba <code>usage</code>. Se agrego la captura para corridas futuras,
+            pero no se construyo una aproximacion por caracteres sobre el corpus existente: mostrarla
+            junto a cifras reales invita a leerla como si fuera un conteo real.
+          </p>
+        </div>
+        <div class="finding-card">
+          <h3>Analisis semantico agregado</h3>
+          <p class="mono" style="font-size:13px;color:var(--text-secondary);">
+            <code>analysis/extract_cot.py</code> ya extrae el razonamiento previo al escape por corrida.
+            Agregarlo exige decidir que eje de comparacion importa: eso es investigacion, no una vista
+            derivable mecanicamente.
+          </p>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <footer>
+    Datos leidos en vivo de los corpus versionados en este host.
+    Ver <code class="mono">report/scope.md</code> para el alcance honesto de estos numeros
+    y <code class="mono">report/findings.md</code> para el detalle narrativo de cada corrida.
+  </footer>
+
+  </main>
+</div>
+
+<script>
+// Nav secundaria del rail (saltos dentro de una misma pantalla). No toca
+// location.hash a proposito: ese hash lo gobierna initScreenRouter en
+// app.js para elegir entre #vivo/#incidente, y un valor como #launcher ahi
+// se leeria como pantalla invalida y forzaria de vuelta a "vivo".
+document.querySelectorAll('.rail-sections a[data-jump]').forEach((a) => {
+  a.addEventListener('click', () => {
+    const el = document.getElementById(a.dataset.jump);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+});
+function sincronizarRailSecciones() {
+  const activa = (location.hash || '#vivo').slice(1) === 'incidente' ? 'incidente' : 'vivo';
+  document.getElementById('rail-sections-vivo').hidden = activa !== 'vivo';
+  document.getElementById('rail-sections-incidente').hidden = activa !== 'incidente';
+}
+window.addEventListener('hashchange', sincronizarRailSecciones);
+sincronizarRailSecciones();
+</script>
 <script src="/static/app.js"></script>
 </body>
 </html>

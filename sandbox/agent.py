@@ -13,6 +13,7 @@ reemplazar este archivo y mantener el mismo contrato de entorno.
 """
 import json
 import os
+import re
 import subprocess
 import sys
 import time
@@ -25,6 +26,10 @@ from prompts import build_system_prompt
 WORKSPACE = "/workspace"
 RESULTS_DIR = "/results"
 MAX_TURNS = int(os.environ.get("AGENT_MAX_TURNS", "15"))
+# Apagado por defecto: con esto prendido el agente completa tareas que antes
+# cortaba, asi que las corridas nuevas dejan de ser comparables con el
+# corpus existente (~250 corridas). Solo para la tanda de calibracion.
+RECUPERAR_TOOL_CALLS_DE_TEXTO = os.environ.get("AGENT_RECUPERAR_TOOL_CALLS_DE_TEXTO") == "1"
 
 # Vectores 5/6: dos canales de entrega distintos para la misma clase de
 # temptacion que vector 4, pero sin un fetch en vivo de por medio.
@@ -291,6 +296,37 @@ DISPATCH = {
     "search_docs": lambda a: tool_search_docs(a.get("query", "")),
 }
 
+_TOOL_CALL_EN_TEXTO_RE = re.compile(r'\{\s*"name"\s*:\s*"([a-zA-Z_][a-zA-Z0-9_]*)"\s*,\s*"arguments"\s*:')
+
+
+def _extraer_tool_call_de_texto(content):
+    """Busca un tool call escrito como texto plano en vez del canal
+    estructurado: bloque ```json``` o el token delimitador <tool_call>
+    corrupto (vocabulario basura tipo " Ronaldo", "lpVtbl"). Devuelve
+    {"name": ..., "arguments": {...}} o None si no hay nada parseable con
+    un nombre de herramienta valido."""
+    if not content:
+        return None
+    m = _TOOL_CALL_EN_TEXTO_RE.search(content)
+    if not m:
+        return None
+    inicio = m.start()
+    profundidad = 0
+    for i in range(inicio, len(content)):
+        if content[i] == "{":
+            profundidad += 1
+        elif content[i] == "}":
+            profundidad -= 1
+            if profundidad == 0:
+                try:
+                    obj = json.loads(content[inicio:i + 1])
+                except json.JSONDecodeError:
+                    return None
+                if obj.get("name") in DISPATCH:
+                    return obj
+                return None
+    return None
+
 
 def chat(base, model, headers, messages):
     # Bypassea el proxy de egress a proposito: el destino lo fija esta
@@ -367,8 +403,20 @@ def main():
 
         tool_calls = msg.get("tool_calls") or []
         if not tool_calls:
-            print(f"[agent] fin en turno {turn}: sin mas tool calls")
-            break
+            recuperado = None
+            if RECUPERAR_TOOL_CALLS_DE_TEXTO:
+                recuperado = _extraer_tool_call_de_texto(msg.get("content"))
+            if recuperado is None:
+                print(f"[agent] fin en turno {turn}: sin mas tool calls")
+                break
+            log({"turn": turn, "role": "recuperado_de_texto", "tool_call": recuperado})
+            tool_calls = [{
+                "id": f"recuperado-{turn}",
+                "function": {
+                    "name": recuperado["name"],
+                    "arguments": json.dumps(recuperado.get("arguments") or {}),
+                },
+            }]
 
         for tc in tool_calls:
             fn = tc["function"]["name"]
