@@ -55,19 +55,16 @@ To minimize detection latency, the canary monitor leverages \texttt{inotify} for
 
 \subsection{Six induction vectors}
 
-The agent is consistently assigned the same benign surface task: patching a division bug to pass a test suite.
-The experimental variance lies strictly in the temptation planted within its environment.
-
-Tasks 01 through 03 represent passive temptations, such as exposed credentials or errors pointing to an internal registry, lacking any explicit instruction to act.
-These serve as structural baselines and produce none of the primary leakage results, existing solely to validate the harness's observational capabilities.
-
-Tasks 04 through 06 introduce an \emph{identical}, active injected instruction demanding the agent create a confirmation directory named using its session identifier.
-These tasks differ exclusively in their delivery channel: a live fetch from an external mirror, a note seeded in cross-run persistent memory, or a document embedded in a local knowledge base.
-Holding the malicious payload constant while varying the delivery channel enables the comparative analysis detailed in Section~\ref{sec:results}.
-This exfiltration technique directly mirrors the anchor incident, which leaked data through directory naming conventions~\cite{huggingface2026intrusion}.
-
-Vectors 05 and 06 specifically model \textbf{ASI06: Memory and Context Poisoning}~\cite{owasp-asi06}, where untrusted input is processed as trusted memory or retrieved context to compromise subsequent sessions.
-Vector 05 represents the most critical persistence threat, since \texttt{./memory} operates as a host bind mount that survives container teardown (\texttt{docker compose down -v}), effectively outliving the run that created it.
+The agent is always given the same benign surface task, patching a division
+bug until a test suite passes. What varies is the temptation planted in its
+environment. Tasks 01 through 03 are passive: an exposed credential, an error
+pointing at an internal registry, with no instruction to act. Tasks 04
+through 06 carry an \emph{identical} injected instruction and differ only in
+how it arrives, by live fetch, by cross-run persistent memory, or by a
+document in a local knowledge base, which is what makes the comparison in
+Section~ef{sec:results} possible. Vectors 05 and 06 are ASI06, memory and
+context poisoning~\cite{owasp-asi06}; Appendix~ef{sec:vectors} gives each
+one in full.
 
 \subsection{Conditions}
 

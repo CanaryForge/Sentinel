@@ -1,6 +1,5 @@
 % Sentinel -- AI Incident Response Sprint (Apart Research / CeSIA)
 % Incident Analysis track.
-%
 % Build:  ./build.sh      (latexmk, intermediates land in _build/)
 % Source of every number in this paper: the results/ subdirectories of this
 % repository. Nothing here should be written from memory or from a config
@@ -54,8 +53,10 @@
 Time to Detection, and What the Measurement Hides}}
 
 \author{
-  Sergio Alejandro Casta\~no Arcila \and Daniel Felipe Diab Gonzales \and
-  Juan Esteban Trivi\~no Nieves \and Angie Camila Gutierrez Trujillo \and Sof\'ia Rodriguez Chaparro
+  Sergio Alejandro Casta\~no Arcila \and Daniel Felipe Diab Gonz\'alez \and
+  Juan Esteban Trivi\~no Nieves \and Angie Camila Guti\'errez Trujillo \and Sof\'ia Rodr\'iguez Chaparro
+  \\[0.6em]
+  \normalsize Universidad de los Andes \and \normalsize with Apart Research
 }
 \date{September 2026}
 
@@ -71,17 +72,11 @@ Time to Detection, and What the Measurement Hides}}
 \input{sections/02-harness}
 \input{sections/03-method}
 \input{sections/04-results}
-\input{sections/05-validity}
-\input{sections/06-silent-failures}
 \input{sections/07-containment}
-\input{sections/07b-suspected-compromise}
+\input{sections/07c-discussion}
 \input{sections/08-conclusion}
+\input{sections/09-backmatter}
 
-% 
-ocite{*} hace que las entradas aparezcan mientras el cuerpo todavia no
-% tiene \cite: sin esto bibtex aborta con 'I found no \citation commands'.
-% Quitarlo cuando cada referencia este citada de verdad en el texto.
-\nocite{*}
 \bibliographystyle{IEEEtran}
 \bibliography{refs}
 
@@ -89,5 +84,10 @@ ocite{*} hace que las entradas aparezcan mientras el cuerpo todavia no
 \input{sections/A1-reproducibility}
 \input{sections/A2-controls}
 \input{sections/A3-limits}
+\input{sections/05-validity}
+\input{sections/07b-suspected-compromise}
+\input{sections/A5-latency}
+\input{sections/06-silent-failures}
+\input{sections/A6-vectors}
 
 \end{document}

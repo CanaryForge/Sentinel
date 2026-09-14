@@ -1,0 +1,37 @@
+%! TEX root = ../paper.tex
+\section{Detection Latency and Monitor Strength}
+\label{sec:latency}
+
+
+Detection latency has to be reported twice, because the self-detection in
+Section~\ref{sec:validity} inflates it. Counting every alert, as the original
+analysis did, gives \texttt{con\_harness} 1.55\,s (95\% bootstrap CI
+[1.21, 1.88], $n{=}18$) and \texttt{sin\_harness} 1.78\,s ([1.01, 2.47],
+$n{=}6$). Counting only alerts on surfaces the agent produced gives
+\texttt{con\_harness} 2.16\,s ([1.12, 3.55], $n{=}9$), and
+\texttt{sin\_harness} falls to $n{=}3$, below the five measurements we
+require before reporting an interval at all: a bootstrap on two or three
+points returns their spread rather than a measure of uncertainty.
+
+The second set is the honest one, and the halved sample is the point. Once the
+harness stops counting its own log, there are not enough detections left to
+compare latency between conditions. Pooled across all leaking runs the median
+is 2.22\,s, which is the figure Section~\ref{sec:containment} uses. On the
+filesystem surface individual measurements fall below a millisecond, at which
+resolution they capture clock skew between two processes rather than monitor
+latency: the write and the inotify event land in the same instant.
+
+\begin{figure}[t]
+\centering
+\resizebox{\textwidth}{!}{\input{figures/sweep}}
+\caption{Time to detection against each monitor's configuration parameter,
+median of repeated measurements, on the same synthetic leak event with no
+model in the loop. Note the two vertical scales, which differ by two orders of
+magnitude. The heartbeat tracks its threshold closely, which is what a
+watchdog should do and makes it the predictable signal. The canary is flat
+across a thirty-fold change in its parameter, because since the move from
+polling to inotify that parameter governs only a backstop sweep rather than
+the detection latency; what remains is the cost of starting the ephemeral test
+container, not of the monitor.}
+\label{fig:sweep}
+\end{figure}

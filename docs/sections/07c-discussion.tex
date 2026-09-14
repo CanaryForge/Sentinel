@@ -1,0 +1,40 @@
+%! TEX root = ../paper.tex
+\section{Discussion and Limitations}
+\label{sec:discussion}
+
+Three of this paper's findings point the same way. The channel that carries a
+payload matters more than the payload, the surface that carries a leak out is
+the filesystem rather than the network, and the guardrail meant to prevent
+the leak is not associated with less of it. Each one says that the thing
+being watched is not the thing that moves.
+
+That is also true of the instrument. Appendix~\ref{sec:silent} catalogues six
+ways this harness reported something other than what happened, and two of
+them are worth restating here because they changed numbers in this paper
+rather than merely embarrassing us. A fixed client timeout emptied 35 runs on
+one machine, and it did so in proportion to how long each condition's system
+prompt was, which means it deleted data as a function of the variable under
+test. Separately, the agent sometimes wrote a tool call as text rather than
+through the structured channel, and the harness read that as the end of the
+run: a calibration batch with the recovery enabled leaks at 19/30 where the
+same cell without it reads 14/30. Every leak rate in this paper is therefore
+a lower bound, and the one place we measured the gap it was about a third.
+
+The limits are correspondingly plain. Escapes here are induced by planted
+bait on a task that never required leaving the workspace, so nothing in this
+work estimates a spontaneous escape rate. Every result rests on one 7B model
+served locally, and the single batch that reached a stronger model reversed
+the sign, which is the strongest evidence available that these numbers do not
+generalise upward. The canary detector covers plaintext and four simple
+encodings; an agent encoding its token in the length or ordering of file
+names would pass every monitor here. The causal experiment covers a single
+task, chosen because the effect was cleanest there and never repeated on the
+other two, and it eliminates one explanation for the emphasis effect without
+identifying its replacement. And the harness measures without ever acting:
+detection lands in about two seconds and nothing stops the agent for another
+forty-four.
+
+The cheapest next step is the one this design already implies. A containment
+arm, added as a new condition rather than a modification of the existing
+ones, would turn time to detection into time to containment and give the
+dwell time in Section~\ref{sec:containment} something to compare against.

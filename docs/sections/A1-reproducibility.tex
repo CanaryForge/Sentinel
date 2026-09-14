@@ -12,15 +12,16 @@ table in this paper can therefore be recomputed by a reader without a model
 backend and without spending anything:
 
 \begin{lstlisting}[language=bash]
-python3 analysis/compute_ttd.py                    # corpus, 70 runs
+python3 analysis/compute_ttd.py                    # machine A corpus, 70 runs
 python3 analysis/compute_ttd.py --results-dir \
-        results/machine-B/causal-ollama0.34.0     # causal, 30 runs
+    results/machine-B/causal-n30-ollama0.34.0     # causal at n=30, 90 runs
 python3 analysis/compute_ttd.py --results-dir \
-        results/machine-B/redteam-ollama0.6.8     # task_04, 20 runs
+    results/machine-B/calibracion-parser          # parser recovery, 30 runs
 python3 analysis/compute_ttd.py --results-dir \
-        results/machine-D/corpus                  # tasks 04-06, 33 of 60 runs
+    results/machine-C/tentacion-pasiva            # passive bait, 60 runs
 python3 analysis/compute_ttd.py --results-dir \
-        results/machine-D/memory-rag-run2         # tasks 05-06 repeat, 32 of 40 runs
+    results/machine-D/corpus                      # tasks 04-06, 33 of 60 runs
+python3 site/build.py                             # every figure, all 416 runs
 \end{lstlisting}
 
 \subsection{Running the harness}
@@ -77,7 +78,7 @@ does not pay for them again.
 \midrule
 A & \texttt{machine-A/corpus} (70) & Apple Silicon M5 Pro, 24\,GB & Ollama 0.32.5, context unset \\
 B & \texttt{machine-B/*} (80) & i7-14700K, RTX 3060, 32\,GB & Ollama 0.6.8, then 0.34.0 \\
-C & 20 runs, not yet versioned & Ryzen 3 3250U, 5.7\,GB & no Ollama; cloud backend \\
+C & \texttt{machine-C/*} (60) & i5-12450H, RTX 4050 (6\,GB), 16\,GB & Ollama 0.34.0, context unset \\
 D & \texttt{machine-D/*} (65 of 100) & Snapdragon X Plus (ARM64), 15.6\,GB, no GPU & Ollama 0.34.0, context unset \\
 \bottomrule
 \end{tabular}
@@ -87,11 +88,13 @@ of 0.6.8, not behind it: machine B ran the old one. Neither machine set a
 context length, so each used its version's default. Machine A's configuration
 was recorded nowhere in the artifacts and had to be recovered by asking; the
 orchestrator now writes a backend block into every run's metadata. Machine C
-has no Ollama installation, so its 20 runs went through the same
-OpenAI-compatible backend path but reached a cloud endpoint (a
-reasoning-capable model) rather than a local one; those runs are reported in
-Section~\ref{sec:results} as a preliminary observation, not as part of the
-versioned corpus above. Machine D is the first Windows-on-ARM host in the
+contributes the passive-temptation set, tasks 01 through 03, the only batch
+in the corpus where the bait carries no instruction to act; it is the
+negative control the rest of the paper is measured against. The mislabeled
+cloud batch discussed in Sections~\ref{sec:results}
+and~\ref{sec:suspected-compromise} belongs to none of these four machines'
+versioned sets and is not counted in this table. Machine D is the first
+Windows-on-ARM host in the
 project and, unlike C, ran the local model: 35 of its 100 runs (task\_04
 through 06, same runtime as B's valid batch) came back with
 \texttt{docker\_exit\_code=0} and zero tool calls, because
@@ -108,15 +111,3 @@ machine, not a one-off stall. Those 35 runs were moved to sibling
 deleted, and are excluded from every count in this paper; the 65 that remain
 are reported in Sections~\ref{sec:results} and~\ref{sec:suspected-compromise}.}
 \end{table}
-
-\pending{Los 20 runs de la maquina C (task\_06\_rag\_poison, con\_harness y
-sin\_harness, n=10 cada una) viven en resultados/machine-A/prueba-real/ en esa
-maquina, sin commitear. Si el equipo decide que el hallazgo (con\_harness
-0/10, sin\_harness 10/10, direccion opuesta a la Seccion 4) entra al paper de
-verdad, hay que versionarlos primero (resultados/machine-C/ o el nombre que
-se acuerde) y citarlos desde aca como se cita el resto.}
-
-\todo{La diferencia de version de Ollama entre maquinas (0.32.5 contra 0.6.8)
-es la hipotesis principal para la no replicacion de la Seccion 5. El test que la
-cierra: actualizar la maquina B y repetir task\_06. Si no se corre a tiempo,
-reportarla como hipotesis con mecanismo, no como causa demostrada.}

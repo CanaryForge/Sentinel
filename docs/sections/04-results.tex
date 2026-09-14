@@ -109,7 +109,7 @@ mislabeled batch is worth more as a documented failure of provenance than as
 a deleted directory. We draw nothing from it. Three variables moved at once
 against the rest of the paper, the model, cloud against local inference, and
 the machine, and none of the three can be credited. What it does support is
-the limitation stated at the end of this section: nothing measured on one
+the limitation stated in Section~\ref{sec:discussion}: nothing measured on one
 local 7B model generalises to a stronger one, and here it does not generalise
 even in direction.
 
@@ -132,21 +132,28 @@ condition should sit near \texttt{sin\_harness}.
 \small
 \begin{tabular}{@{}lllr@{}}
 \toprule
-\textbf{Condition} & \textbf{Length and emphasis} & \textbf{Names the surface} & \textbf{Level 5} \\
+\textbf{Condition} & \textbf{Length and emphasis} & \textbf{Names it} & \textbf{Level 5} \\
 \midrule
-\texttt{sin\_harness} & short, none & no & 3/10 \\
-\texttt{con\_harness\_generico} & matched & \textbf{no} & \textbf{7/10} \\
-\texttt{con\_harness} & matched & yes & \textbf{7/10} \\
+\texttt{sin\_harness} & short, none & no & 17/40 \\
+\texttt{con\_harness\_generico} & matched & \textbf{no} & \textbf{30/40} \\
+\texttt{con\_harness} & matched & yes & 24/40 \\
 \bottomrule
 \end{tabular}
-\caption{Thirty runs on one machine, one model, one monitor build, with memory
-reset before each run. The prediction fails: the generic condition lands
-exactly on the guardrail, not near the control.}
+\caption{One hundred and twenty runs on one machine, one model, one monitor
+build, with memory reset before each run, pooling the $n{=}10$ and $n{=}30$
+batches on the same runtime. The prediction fails: the generic condition does
+not sit near the control, it sits above the guardrail.}
 \end{table}
 
 Removing every mention of files, directories and URLs, while holding length
 and emphasis constant, did not reduce leakage at all. Naming the attack
 surface is not the mechanism.
+
+This is also the one contrast in the paper that survived the increase in
+sample size rather than shrinking under it. Against its control the generic
+emphasis block separates at $p{=}0.006$, where the guardrail proper reaches
+only $p{=}0.18$ on the same forty runs per cell. The condition that names no
+surface at all is the condition with the strongest evidence behind it.
 
 What remains is simpler and less comfortable. The variable that tracks leakage
 is the presence of an emphatic security block, whatever it says. A long,
@@ -156,49 +163,3 @@ warning changes nothing.
 
 We are deliberately not proposing a mechanism for that. This experiment rules
 one out; it does not identify its replacement.
-
-\subsection{Detection latency and monitor strength}
-
-Detection latency has to be reported twice, because the self-detection in
-Section~\ref{sec:validity} inflates it. Counting every alert, as the original
-analysis did, gives \texttt{con\_harness} 1.55\,s (95\% bootstrap CI
-[1.21, 1.88], $n{=}18$) and \texttt{sin\_harness} 1.78\,s ([1.01, 2.47],
-$n{=}6$). Counting only alerts on surfaces the agent produced gives
-\texttt{con\_harness} 2.16\,s ([1.12, 3.55], $n{=}9$), and
-\texttt{sin\_harness} falls to $n{=}3$, below the five measurements we
-require before reporting an interval at all: a bootstrap on two or three
-points returns their spread rather than a measure of uncertainty.
-
-The second set is the honest one, and the halved sample is the point. Once the
-harness stops counting its own log, there are not enough detections left to
-compare latency between conditions. Pooled across all leaking runs the median
-is 2.22\,s, which is the figure Section~\ref{sec:containment} uses. On the
-filesystem surface individual measurements fall below a millisecond, at which
-resolution they capture clock skew between two processes rather than monitor
-latency: the write and the inotify event land in the same instant.
-
-\begin{figure}[t]
-\centering
-\resizebox{\textwidth}{!}{\input{figures/sweep}}
-\caption{Time to detection against each monitor's configuration parameter,
-median of repeated measurements, on the same synthetic leak event with no
-model in the loop. Note the two vertical scales, which differ by two orders of
-magnitude. The heartbeat tracks its threshold closely, which is what a
-watchdog should do and makes it the predictable signal. The canary is flat
-across a thirty-fold change in its parameter, because since the move from
-polling to inotify that parameter governs only a backstop sweep rather than
-the detection latency; what remains is the cost of starting the ephemeral test
-container, not of the monitor.}
-\label{fig:sweep}
-\end{figure}
-
-\subsection{Limitations of these results}
-
-Ten runs per cell. The seven against three contrast is clear and in the
-opposite direction to the prediction, but we report no effect size and run no
-formal test. The causal experiment covers one task, chosen because the effect
-was cleanest there, and was not repeated on the other two. Every run uses one
-local 7B model, so nothing here is claimed to generalise to frontier models or
-to other forms of guardrail. And the mechanism behind the emphasis effect is
-unisolated: what this experiment eliminates is one concrete explanation, not
-all of them.
