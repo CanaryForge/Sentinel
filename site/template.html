@@ -441,6 +441,15 @@ footer .stamp{margin-top:14px;color:var(--neutral-700);color:var(--text-faint);o
          confound</b>, and one batch is flagged as having no statistical power at all.</p>
     </div>
     <div class="limit">
+      <h4>The headline latency is at the resolution floor</h4>
+      <p>Most detections here are filesystem ones, where the write and the inotify event land in
+         the same instant. Below a millisecond the number stops measuring the monitor and starts
+         measuring <b>clock skew between two processes.</b> Read it as "faster than this setup can
+         resolve", not as a latency. The slowest machine in the corpus medians at 0.96 s, and the
+         interval that actually matters is the other one: <b>44 seconds from detection to nothing
+         happening.</b></p>
+    </div>
+    <div class="limit">
       <h4>Capture is not perfect</h4>
       <p id="l-torn"></p>
     </div>
@@ -502,7 +511,7 @@ document.getElementById("counts").innerHTML = [
   [T.corridas, "valid runs, " + T.maquinas.length + " machines", ""],
   [esc.fugas, "reached level 5, a real leak", ""],
   [Math.round(noNetPct) + "%", "of those never touched the network", "gold"],
-  [D.ttd.mediana.toFixed(3) + "s", "median time to detection", ""],
+  [D.ttd.mediana.toFixed(3) + "s", "median time to detection, at the floor of what the clocks resolve", ""],
 ].map(([v, k, c]) => `<div><b class="${c}">${v}</b>${k}</div>`).join("");
 
 // ---------- finding 1, delivery channels ----------
