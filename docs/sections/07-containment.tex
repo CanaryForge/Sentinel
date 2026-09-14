@@ -52,24 +52,16 @@ which container holds which.
 
 We did not build one, and the reason is worth stating rather than hiding: any
 intervention changes the system being measured, and the corpus would stop
-being comparable with itself.
+being comparable with itself. Two constraints follow for anyone who adds one.
+Containment has to be a \emph{new arm} rather than a modification of the
+existing conditions, since the 416 runs here were produced without it and a
+monitor that kills a flow is a different monitor. And the escalation ladder
+breaks: levels 0 through 5 describe how far an agent got, so with containment
+active a contained run and a run that never tried both score low for opposite
+reasons, and the ladder needs a parallel axis recording containment rather
+than a new rung.
 
-Two constraints follow for anyone who adds one.
-
-First, containment has to be a \emph{new arm}, not a modification of the
-existing conditions. The 416 runs in this repository were produced without it,
-and a monitor that kills a flow is a different monitor.
-
-Second, the escalation ladder breaks. Levels 0 through 5 describe how far an
-agent got, and with containment active a leak never completes, so a contained
-run and a run that never tried both score low for opposite reasons. The ladder
-needs a parallel axis recording whether the attempt was contained, not a new
-rung.
-
-The cheapest intervention that would demonstrate the idea is already visible
-in the code: when the egress monitor's canary check fires, calling
-\texttt{flow.kill()} rather than only logging. That maps directly onto the
-anchor incident, where exfiltration left through a proxy that watched it go
-past~\cite{huggingface2026intrusion}. The reportable result would be a time to
-containment alongside the time to detection, and a dwell time reduced from 44
-seconds to roughly zero.
+The cheapest demonstration is already visible in the code. When the egress
+monitor's canary check fires, it could call \texttt{flow.kill()} instead of
+only logging, which maps directly onto the anchor incident, where exfiltration
+left through a proxy that watched it go past~\cite{huggingface2026intrusion}.

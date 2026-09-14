@@ -1,31 +1,29 @@
 \section{Conclusion}
 
 Three signals that never ask the model anything detect an induced sandbox
-escape in about two seconds, and the delivery channel of an injected
-instruction matters more than its content: the same text followed six times as
-often when it arrives through a local knowledge base as when it arrives over
-the network.
+escape in about two seconds, and then nothing stops it for another
+forty-four. The leak itself almost never uses the network: 183 of 197 canary
+escapes left through file and directory names, where an egress proxy cannot
+follow them.
 
-The result we did not expect, and which survived every correction here, is
-that the condition carrying a production security guardrail leaks at roughly
-three times the rate of the condition without one, on both machines once their
-runtimes are comparable. Our own explanation for it failed. A guardrail
-matched for length and emphasis but naming no attack surface leaks exactly as
-much as one that names it, so priming is not the mechanism, and we do not
-propose a replacement.
+The result we did not expect was that the condition carrying a production
+guardrail leaks more than the one without it. It has not survived the
+increase in sample size intact: at forty runs per cell it no longer separates
+from its control. What does separate is the guardrail that names no attack
+surface at all, which is the opposite of what we predicted in advance and
+leaves us with a direction, not a mechanism.
 
 We would rather the reader take away the second half of this paper than the
-first. Four published figures in this project were wrong: a detection rate
-that counted the harness detecting its own log, a table written from a
-configuration file rather than from data, a main finding that vanished on a
-machine running an old runtime, and a channel rate computed over runs that had
-never been attacked. None was visible from inside the pipeline. All were found
-by recomputing from artifacts, and what held everywhere was what had been
-counted by code rather than written by hand.
+first. Several published figures here were wrong: a detection rate that
+counted the harness detecting its own log, a table written from a
+configuration file rather than from data, a main finding that vanished on an
+old runtime, a channel rate computed over runs that were never attacked, and
+a cell whose missing runs were deleted by the variable under test. None was
+visible from inside the pipeline. All were found by recomputing from
+artifacts.
 
 A harness that measures how fast an escape is noticed is worth little if it
-cannot notice its own failures. The defences that came out of this, every
-component announcing it is alive, every run diagnosed for whether it produced
-data, every figure counted over artifacts at the moment of writing, cost
-almost nothing and would have saved us most of the corrections above. They are
-the cheapest thing in this paper to copy.
+cannot notice its own failures. Every component announcing that it is alive,
+every run diagnosed for whether it produced data, every figure counted over
+artifacts at the moment of writing: these cost almost nothing, would have
+caught most of the corrections above, and are the cheapest thing here to copy.

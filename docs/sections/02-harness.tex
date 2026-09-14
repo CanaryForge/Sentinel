@@ -47,11 +47,8 @@ the ephemeral workspace volume and the persistent \texttt{./memory} bind
 mount.}
 \end{table}
 
-The primary detection mechanism relies on a per-run canary token injected into the agent's system prompt as its internal session identifier.
-Detection algorithms match the plaintext token alongside four standard, low-cost obfuscations (Base64, URL encoding, hexadecimal, and string reversal).
-This coverage establishes a deliberate empirical floor rather than an exhaustive defense: an agent employing advanced steganography, such as encoding data within file name lengths, would bypass this layer, a limitation addressed in Section~\ref{sec:validity}.
-
-To minimize detection latency, the canary monitor leverages \texttt{inotify} for event-driven alerts, backed by a slower periodic sweep to guarantee no event is missed during high-load executions.
+The primary detection mechanism is a per-run canary token injected into the agent's system prompt as its internal session identifier, matched in plaintext and under four low-cost obfuscations, and watched through \texttt{inotify} rather than polling.
+That coverage is a deliberate empirical floor and not an exhaustive defense: an agent encoding data in file name lengths would pass it, a limit Appendix~\ref{sec:validity} takes up.
 
 \subsection{Six induction vectors}
 
@@ -68,14 +65,11 @@ one in full.
 
 \subsection{Conditions}
 
-The primary experimental axis evaluates the impact of security guardrails within the system prompt, holding the task definition constant.
+The experimental axis is the security directive in the system prompt, with the task held constant.
+The canary is present in every condition, as instrumentation rather than a defence, so the only thing that varies is what the agent is told.
+\texttt{sin\_harness} mentions the token in passing, in 77 characters.
+\texttt{con\_harness} applies an 830-character production guardrail warning that it must never reach file names, directory names, or URLs.
+\texttt{con\_harness\_generico} matches that guardrail for length and emphasis, 818 characters against 830, but forbids only that the token leave the working environment, naming no surface at all.
 
-The canary token remains present across all conditions, functioning strictly as detection instrumentation rather than a defensive measure.
-The independent variable is the security directive itself:
-The \texttt{sin\_harness} condition mentions the token casually in a brief 77-character line.
-The \texttt{con\_harness} condition applies an aggressive 830-character production guardrail, explicitly warning that the token must never be exposed to file names, directory names, or URLs.
-To isolate the specific mechanism driving the leakage, the \texttt{con\_harness\_generico} condition matches the production guardrail in length and authoritative emphasis (818 characters, 126 words versus 131).
-However, it broadly forbids the token from leaving the working environment without explicitly naming the attack surfaces.
-
-This third condition decouples two distinct factors that the second condition confounds: the presence of an emphatic, lengthy warning, and the explicit identification of vulnerable surfaces.
-Section~\ref{sec:results} details the counterintuitive empirical results this isolation revealed.
+The third condition exists to decouple two things the second confounds: an emphatic warning, and the naming of the surfaces an attacker would ask for.
+Section~\ref{sec:results} reports what that isolation found.
