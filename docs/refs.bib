@@ -7,7 +7,7 @@
 
 % PENDIENTE: confirmar URL y fecha exacta de publicacion antes de enviar.
 @misc{owasp-asi06,
-  title        = {{OWASP Top 10 for Agentic Applications}: ASI06, Memory and Context Poisoning},
+  title        = {{OWASP Top 10 for Agentic Applications}: {ASI06}, Memory and Context Poisoning},
   author       = {{OWASP GenAI Security Project}},
   year         = {2025},
   month        = dec,
@@ -28,4 +28,160 @@
   author       = {{CanaryForge}},
   year         = {2026},
   howpublished = {\url{https://github.com/CanaryForge/Sentinel}},
+}
+
+% ---------------------------------------------------------------------------
+% Inyeccion indirecta de prompt, envenenamiento de contexto y de RAG
+% ---------------------------------------------------------------------------
+
+@inproceedings{greshake2023indirect,
+  author       = {Greshake, Kai and Abdelnabi, Sahar and Mishra, Shailesh and
+                  Endres, Christoph and Holz, Thorsten and Fritz, Mario},
+  title        = {Not What You've Signed Up For: Compromising Real-World
+                  {LLM}-Integrated Applications with Indirect Prompt Injection},
+  booktitle    = {Proc. 16th ACM Workshop on Artificial Intelligence and
+                  Security (AISec)},
+  year         = {2023},
+  pages        = {79--90},
+  doi          = {10.1145/3605764.3623985},
+}
+
+@inproceedings{zhan2024injecagent,
+  author       = {Zhan, Qiusi and Liang, Zhixiang and Ying, Zifan and Kang, Daniel},
+  title        = {{InjecAgent}: Benchmarking Indirect Prompt Injections in
+                  Tool-Integrated Large Language Model Agents},
+  booktitle    = {Findings of the Association for Computational Linguistics (ACL)},
+  year         = {2024},
+  note         = {arXiv:2403.02691},
+}
+
+@inproceedings{liu2024formalizing,
+  author       = {Liu, Yupei and Jia, Yuqi and Geng, Runpeng and Jia, Jinyuan
+                  and Gong, Neil Zhenqiang},
+  title        = {Formalizing and Benchmarking Prompt Injection Attacks and Defenses},
+  booktitle    = {Proc. 33rd USENIX Security Symposium},
+  year         = {2024},
+  note         = {arXiv:2310.12815},
+}
+
+@inproceedings{zou2025poisonedrag,
+  author       = {Zou, Wei and Geng, Runpeng and Wang, Binghui and Jia, Jinyuan},
+  title        = {{PoisonedRAG}: Knowledge Corruption Attacks to
+                  Retrieval-Augmented Generation of Large Language Models},
+  booktitle    = {Proc. 34th USENIX Security Symposium},
+  year         = {2025},
+  note         = {arXiv:2402.07867},
+}
+
+% ---------------------------------------------------------------------------
+% Evaluaciones y benchmarks de seguridad de agentes
+% ---------------------------------------------------------------------------
+
+% PENDIENTE: aparecio en NeurIPS 2024 (Datasets and Benchmarks), pero el venue
+% no figura en la pagina de arXiv que se abrio. Confirmar antes de enviar o
+% dejarlo citado como preprint.
+@misc{debenedetti2024agentdojo,
+  author       = {Debenedetti, Edoardo and Zhang, Jie and Balunovi\'{c}, Mislav
+                  and Beurer-Kellner, Luca and Fischer, Marc and Tram\`{e}r, Florian},
+  title        = {{AgentDojo}: A Dynamic Environment to Evaluate Prompt Injection
+                  Attacks and Defenses for {LLM} Agents},
+  year         = {2024},
+  howpublished = {arXiv:2406.13352},
+}
+
+% PENDIENTE: publicado en ICLR 2024; el venue no figura en la pagina de arXiv.
+@misc{ruan2024toolemu,
+  author       = {Ruan, Yangjun and Dong, Honghua and Wang, Andrew and Pitis, Silviu
+                  and Zhou, Yongchao and Ba, Jimmy and Dubois, Yann and
+                  Maddison, Chris J. and Hashimoto, Tatsunori},
+  title        = {Identifying the Risks of {LM} Agents with an {LM}-Emulated Sandbox},
+  year         = {2024},
+  howpublished = {arXiv:2309.15817},
+}
+
+@inproceedings{liu2024agentbench,
+  author       = {Liu, Xiao and Yu, Hao and Zhang, Hanchen and Xu, Yifan and
+                  Lei, Xuanyu and Lai, Hanyu and Gu, Yu and others},
+  title        = {{AgentBench}: Evaluating {LLMs} as Agents},
+  booktitle    = {Proc. Int. Conf. on Learning Representations (ICLR)},
+  year         = {2024},
+  note         = {arXiv:2308.03688},
+}
+
+@misc{kinniment2023realistic,
+  author       = {Kinniment, Megan and Sato, Lucas Jun Koba and Du, Haoxing and
+                  Goodrich, Brian and Hasin, Max and others},
+  title        = {Evaluating Language-Model Agents on Realistic Autonomous Tasks},
+  year         = {2023},
+  howpublished = {arXiv:2312.11671},
+}
+
+% ---------------------------------------------------------------------------
+% Control de IA y monitoreo de modelos no confiables
+% ---------------------------------------------------------------------------
+
+@inproceedings{greenblatt2024aicontrol,
+  author       = {Greenblatt, Ryan and Shlegeris, Buck and Sachan, Kshitij and
+                  Roger, Fabien},
+  title        = {{AI} Control: Improving Safety Despite Intentional Subversion},
+  booktitle    = {Proc. 41st Int. Conf. on Machine Learning (ICML)},
+  year         = {2024},
+  note         = {arXiv:2312.06942},
+}
+
+% ---------------------------------------------------------------------------
+% Instrucciones de seguridad que salen por la culata
+% ---------------------------------------------------------------------------
+
+% PENDIENTE: publicado en NeurIPS 2023; el venue no figura en la pagina de arXiv.
+@misc{wei2023jailbroken,
+  author       = {Wei, Alexander and Haghtalab, Nika and Steinhardt, Jacob},
+  title        = {Jailbroken: How Does {LLM} Safety Training Fail?},
+  year         = {2023},
+  howpublished = {arXiv:2307.02483},
+}
+
+@article{mckenzie2023inverse,
+  author       = {McKenzie, Ian R. and Lyzhov, Alexander and Pieler, Michael and
+                  Parrish, Alicia and Mueller, Aaron and Prabhu, Ameya and others},
+  title        = {Inverse Scaling: When Bigger Isn't Better},
+  journal      = {Transactions on Machine Learning Research},
+  year         = {2023},
+  month        = oct,
+  url          = {https://openreview.net/forum?id=DwgRm72GQF},
+}
+
+% PENDIENTE: publicado en ICLR 2024; el venue no figura en la pagina de arXiv.
+@misc{qi2023finetuning,
+  author       = {Qi, Xiangyu and Zeng, Yi and Xie, Tinghao and Chen, Pin-Yu and
+                  Jia, Ruoxi and Mittal, Prateek and Henderson, Peter},
+  title        = {Fine-tuning Aligned Language Models Compromises Safety, Even
+                  When Users Do Not Intend To!},
+  year         = {2023},
+  howpublished = {arXiv:2310.03693},
+}
+
+% ---------------------------------------------------------------------------
+% Canarios, honeytokens y metricas operativas de deteccion
+% ---------------------------------------------------------------------------
+
+% PENDIENTE: el DOI no se pudo abrir; se cita por el numero de documento de
+% IEEE Xplore, que si se verifico. Es 2004, no 2006.
+@inproceedings{yuill2004honeyfiles,
+  author       = {Yuill, Jim and Zappe, Mike and Denning, Dorothy and Feer, Fred},
+  title        = {Honeyfiles: Deceptive Files for Intrusion Detection},
+  booktitle    = {Proc. 5th Annual IEEE Information Assurance Workshop},
+  year         = {2004},
+  pages        = {116--122},
+  url          = {https://ieeexplore.ieee.org/document/1437806/},
+}
+
+@techreport{cichonski2012incident,
+  author       = {Cichonski, Paul and Millar, Tom and Grance, Tim and
+                  Scarfone, Karen},
+  title        = {Computer Security Incident Handling Guide},
+  institution  = {National Institute of Standards and Technology},
+  number       = {NIST SP 800-61 Rev. 2},
+  year         = {2012},
+  doi          = {10.6028/NIST.SP.800-61r2},
 }
