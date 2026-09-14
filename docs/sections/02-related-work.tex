@@ -1,0 +1,24 @@
+%! TEX root = ../paper.tex
+\section{Related Work}
+\label{sec:related}
+
+The failure mode this work induces is indirect prompt injection, where the instruction arrives inside data the agent retrieves rather than from its operator~\cite{greshake2023indirect,liu2024formalizing}.
+Its persistent variants are the closest to our delivery channels: PoisonedRAG corrupts a retrieval corpus so that later queries return attacker text~\cite{zou2025poisonedrag}, and OWASP catalogues the same class as memory and context poisoning~\cite{owasp-asi06}.
+That literature establishes that the attack works.
+It does not vary the channel while holding the payload constant, which is the comparison Section~\ref{sec:results} reports.
+
+Agent benchmarks evaluate the outcome of such attacks.
+AgentDojo scores benign utility, utility under attack, and targeted attack success rate, all computed from the environment state once execution has finished~\cite{debenedetti2024agentdojo}.
+InjecAgent scores the agent's tool-call output~\cite{zhan2024injecagent}, and AgentBench scores task completion~\cite{liu2024agentbench}.
+ToolEmu emulates the tools with a second language model~\cite{ruan2024toolemu}, an approach AgentDojo declines on the grounds that an injection strong enough to capture the agent may also capture the emulator, which is the same reasoning behind our own constraint that no monitor may ask the model anything.
+Where these benchmarks do detect, as with AgentDojo's injection-detector defense, the detector reads the agent's inputs and is scored by how far it lowers the attack success rate.
+The verdict in every case is an end state and a binary one.
+
+Our second finding belongs to a known family in which safety training or safety instructions produce the behaviour they forbid~\cite{wei2023jailbroken,qi2024finetuning}, and inverse scaling has documented prompts whose constraints make outcomes worse~\cite{mckenzie2023inverse}.
+Those results concern refusal and generation.
+Ours concerns a tool-calling agent acting on its environment, where the warning and the exfiltration surface it names are separated by a controlled third condition.
+
+What remains unmeasured is time.
+The AI control literature asks what monitoring can still guarantee when the model is actively subverting it~\cite{greenblatt2024aicontrol}, classical intrusion detection has long raised alarms from bait artifacts the intruder touches~\cite{yuill2004honeyfiles}, and operational practice treats the interval between compromise and detection as a primary measure of a defence~\cite{cichonski2012incident}.
+We did not find that interval reported for an LLM agent escaping a sandbox.
+Sentinel measures it, from signals that never pass through the model.
