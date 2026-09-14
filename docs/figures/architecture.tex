@@ -1,69 +1,52 @@
-% Diagrama de arquitectura, dibujado en TikZ y no exportado del panel.
-%
-% El panel es oscuro, con acentos saturados y radios grandes: correcto en una
-% pantalla, fuera de lugar en un paper impreso. Aqui se redibuja para papel.
-%
-% Reglas que sigue:
-%   - Sin relleno de color. La distincion la llevan el trazo (solido, rayado,
-%     punteado) y la posicion, asi que sobrevive a una impresion en gris.
-%   - Tipografia del documento (Times via newtx).
-%   - Ruteo ortogonal, sin cruces diagonales ambiguos.
-%   - Etiquetas en ingles, como el resto del paper.
 \begin{tikzpicture}[
-  font=\small,
-  box/.style     = {draw, rectangle, minimum height=8mm, inner xsep=3mm,
-                    align=center, line width=0.4pt},
-  mock/.style    = {box, densely dashed},
-  vol/.style     = {box, dotted, line width=0.5pt},
-  net/.style     = {draw, densely dotted, rounded corners=2pt, line width=0.3pt,
-                    inner sep=3.5mm},
-  flow/.style    = {-{Latex[length=1.6mm]}, line width=0.45pt},
-  hb/.style      = {flow, densely dashed},
-  ext/.style     = {flow, dash pattern=on 2.5pt off 1.5pt},
-  volflow/.style = {flow, dotted, line width=0.5pt},
-  lbl/.style     = {font=\scriptsize, inner sep=1.5pt, fill=white},
-  net lbl/.style = {font=\scriptsize\itshape, inner sep=1.5pt, fill=white},
-]
+        font=\small,
+        node distance=1.5cm and 2.5cm,
+        box/.style={draw, rectangle, align=center, minimum width=3.5cm, minimum height=1.2cm, fill=white},
+        dashedbox/.style={box, dashed},
+        dottedbox/.style={box, densely dotted},
+        netbox/.style={draw, densely dotted, inner sep=15pt},
+        >=Stealth,
+        arrow/.style={->, thick},
+        dashedarrow/.style={->, dashed, thick},
+        dottedarrow/.style={->, densely dotted, thick}
+    ]
 
-\node[box, densely dashed] (llm) at (0,3.3)
-  {model backend\\[-1pt]{\scriptsize outside the audited scope}};
+    % Nodes
+    \node[dashedbox] (backend) {model backend \\ \footnotesize outside the audited scope};
+    
+    \node[box, below=1.5cm of backend] (sandbox) {sandbox \\ \footnotesize agent + heartbeat};
+    \node[box, right=2cm of sandbox] (egress) {egress-proxy \\ \footnotesize mitmproxy, :8080 and :9000};
 
-\node[box] (sbx) at (0,1.25) {sandbox\\[-1pt]{\scriptsize agent + heartbeat}};
-\node[box] (prx) at (4.3,1.25) {egress-proxy\\[-1pt]{\scriptsize mitmproxy, :8080 and :9000}};
+    \node[dashedbox, right=2.5cm of egress, yshift=1.2cm] (registry) {package-registry};
+    \node[dashedbox, right=2.5cm of egress, yshift=-1.2cm] (hub) {model-hub};
+    
+    \node[dashedbox, right=1.5cm of registry, yshift=-1.2cm] (redteam) {redteam \\ \footnotesize alias mirror-externo};
 
-\node[net, fit={($(sbx.north west)+(-0.15,0.15)$) ($(prx.south east)+(0.15,-0.55)$)}] (rp) {};
-\node[net lbl, anchor=south east] at ($(rp.north east)+(-0.15,0.02)$) {red-proxy (internal)};
+    \node[dottedbox, below=1.8cm of sandbox] (workspace) {workspace \\ \footnotesize ephemeral volume};
+    \node[dottedbox, right=1cm of workspace] (memory) {./memory \\ \footnotesize bind mount, persists};
 
-\node[mock] (reg) at (9.3,1.95) {package-registry};
-\node[mock] (hub) at (9.3,0.55) {model-hub};
-\node[mock] (rt)  at (13.3,1.25) {redteam\\[-1pt]{\scriptsize alias mirror-externo}};
+    \node[box, below=1.5cm of workspace, xshift=2.5cm] (fsmon) {fs-monitor \\ \footnotesize canary, inotify, no network};
 
-\node[net, fit={($(reg.north west)+(-0.2,0.2)$) ($(hub.south east)+(0.2,-0.2)$) (rt)}] (rm) {};
-\node[net lbl, anchor=west] at ($(rm.north west)+(0.3,0)$) {red-mocks (internal)};
+    % Network boundaries (Background boxes)
+    \begin{scope}[on background layer]
+        \node[netbox, fit=(sandbox) (egress), label={[anchor=south, inner sep=2pt]above:\textit{red-proxy (internal)}}] (netproxy) {};
+        \node[netbox, fit=(registry) (hub), label={[anchor=south, inner sep=2pt]above:\textit{red-mocks (internal)}}] (netmocks) {};
+    \end{scope}
 
-\node[vol] (ws)  at (0,-1.5) {workspace\\[-1pt]{\scriptsize ephemeral volume}};
-\node[vol] (mem) at (4.6,-1.5) {./memory\\[-1pt]{\scriptsize bind mount, persists}};
-\node[box] (fsm) at (2.3,-3.2) {fs-monitor\\[-1pt]{\scriptsize canary, inotify, no network}};
+    % Connections
+    \draw[dashedarrow] (backend) -- node[left, align=right] {\footnotesize not audited} (sandbox);
+    
+    \draw[arrow] (sandbox) -- node[above] {\footnotesize \texttt{HTTP\_PROXY}} (egress);
+    \draw[dashedarrow] (sandbox.south east) to[bend right=15] node[below] {\footnotesize heartbeat, bypasses the proxy} (egress.south west);
 
-% ---------- aristas ----------
-\draw[ext] (llm) -- node[lbl, left, pos=0.22] {not audited} (sbx);
+    \draw[arrow] (egress.east) -- +(0.8,0) |- (registry.west);
+    \draw[arrow] (egress.east) -- +(0.8,0) |- (hub.west);
 
-\draw[flow] (sbx.east) -- node[lbl, above] {\textsc{http\_proxy}} (prx.west);
+    \draw[arrow] (registry.east) -- node[above right] {\footnotesize SSRF} (redteam.west);
 
-% Heartbeat: sale por debajo del sandbox y entra por debajo del proxy, lejos
-% del carril de HTTP_PROXY, para que las dos aristas no se lean como una.
-\draw[hb] ($(sbx.south east)+(-0.3,0)$) -- ++(0,-0.38)
-          -- node[lbl, below, pos=0.5] {heartbeat, bypasses the proxy}
-             ($(prx.south)+(-0.3,-0.38)$) -- ($(prx.south)+(-0.3,0)$);
+    \draw[dottedarrow] (sandbox.south) -- node[left] {\footnotesize rw} (workspace.north);
+    \draw[dottedarrow] (sandbox.south) ++(1cm,0) -- node[above right, near end] {\footnotesize rw} (memory.north west);
 
-\draw[flow] (prx.east) -- ++(0.45,0) |- (reg.west);
-\draw[flow] (prx.east) -- ++(0.45,0) |- (hub.west);
-\draw[flow] (reg.east) -- node[lbl, above, pos=0.45] {SSRF} (rt.west);
-
-\draw[volflow] (ws.north) -- node[lbl, right] {rw} ($(sbx.south)+(0.45,0)$);
-\draw[volflow] ($(sbx.south west)+(0.25,0)$) -- ++(0,-1.35)
-               -| node[lbl, below, pos=0.3] {rw} (mem.north);
-\draw[volflow] (ws.south)  |- node[lbl, above left, pos=0.85] {ro} (fsm.west);
-\draw[volflow] (mem.south) |- node[lbl, above right, pos=0.85] {ro} (fsm.east);
-
+    \draw[dottedarrow] (workspace.south) |- node[above left, near end] {\footnotesize ro} (fsmon.west);
+    \draw[dottedarrow] (memory.south) |- node[above right, near end] {\footnotesize ro} (fsmon.east);
 \end{tikzpicture}

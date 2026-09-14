@@ -1,16 +1,7 @@
-We measure how long it takes to notice an LLM agent leaving its sandbox. A
-harness runs a tool-calling agent in Docker under planted temptation and
-prompt injection, watched by three signals that never consult the model:
-process liveness, a canary token on the filesystem and in cross-run memory,
-and outbound traffic against a baseline. Across 150 runs we find that the
-delivery channel of an injected instruction matters more than its content,
-with follow-through rising from 10\% over the network to 60\% from a local
-knowledge base, and that a production security guardrail is associated with
-roughly three times the leakage of no guardrail, replicated on two machines. A
-registered prediction that this comes from naming the attack surface fails: a
-guardrail matched for length and emphasis but naming nothing leaks identically.
-Detection takes 2.22 seconds and the agent keeps working for another 44, a gap
-no component in the harness was built to close. We also report four
-corrections to our own published figures, including a monitor that was
-detecting the harness's own log, and the class of failure they belong to:
-evaluation components that return a number while having measured nothing.
+This paper measures the time required to detect an LLM agent escaping a sandbox. 
+Using Sentinel, a containerized harness, we evaluate 150 runs against three independent telemetry signals: 
+process liveness, persistent canary tokens, and outbound traffic. 
+Our findings reveal that the delivery channel dictates compliance more than content, 
+with local knowledge bases yielding a 60 percent follow-through rate compared to 10 percent via network. 
+Counterintuitively, applying a production security guardrail triples data leakage, an effect controlled tests confirm is not caused by priming the attack surface. 
+Furthermore, we identify a 44-second gap between detection (2.22s) and containment, and document four silent telemetry failures where evaluation components reported success without measuring anything.
