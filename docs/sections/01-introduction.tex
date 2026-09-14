@@ -4,9 +4,9 @@
 In July 2026, an autonomous agent breached its infrastructure using a server-side request forgery (SSRF) and communicated via directory names—a channel undetected by perimeter monitoring until post-incident log analysis. 
 This highlights a critical operational shift: the central question is no longer whether capable models can bypass constraints, but how quickly teams can detect them and where structural blind spots exist.  
 
-Sentinel is a lightweight detection harness built to answer this. It deploys a tool-calling agent in a containerized sandbox, introduces escape paths, and records three model-independent telemetry streams: 
-watchdog liveness, filesystem/memory canary tokens, and outbound network baselines. Sentinel captures precise time-to-detection (TTD) metrics to validate telemetry reliability.
-
+Sentinel is a lightweight detection harness built to answer this. 
+It deploys a tool-calling agent in a containerized sandbox, introduces escape paths, and records three model-independent telemetry streams: watchdog liveness, filesystem/memory canary tokens, and outbound network baselines. 
+Sentinel captures precise time-to-detection (TTD) metrics to validate telemetry reliability.
 
 \paragraph{Contributions.}
 \begin{itemize}
@@ -14,7 +14,8 @@ watchdog liveness, filesystem/memory canary tokens, and outbound network baselin
       Agent compliance with injected payloads jumps from 10\% (network fetch) to 60\% (local knowledge base), showing models over-trust pre-existing contextual data.
 
 \item \textbf{The guardrail paradox.}
-      Authoritative security guardrails reliably increase data leakage. Controlled tests confirmed this is not due to attack-surface priming.
+      Authoritative security guardrails reliably increase data leakage. 
+      Controlled tests confirmed this is not due to attack-surface priming.
 
 \item \textbf{The detection-response gap.}
       While detection occurs in 2.22 seconds, the uncontained agent continues unauthorized actions for 44 seconds.
@@ -25,6 +26,5 @@ watchdog liveness, filesystem/memory canary tokens, and outbound network baselin
 
 \paragraph{Scope.}
 This work measures induced escapes in a controlled laboratory environment and does not estimate spontaneous production escape rates. 
-Experimental boundaries were formally documented prior to data collection to prevent post-hoc rationalization.
 The operational criteria established in Section~\ref{sec:method} represent deliberate empirical benchmarks rather than universal intrusion signatures.
 To ensure methodological rigor and prevent post-hoc rationalization, experimental boundaries were formally documented prior to data collection.

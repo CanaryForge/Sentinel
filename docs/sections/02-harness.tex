@@ -1,14 +1,21 @@
+%! TEX root = ../paper.tex
 \section{The Harness}
+\label{sec:harness}
 
-Sentinel runs a tool-calling LLM agent inside a Docker sandbox, plants a
-temptation to leave it, and watches three independent signals for evidence
-that the agent took the bait. Every component is deliberately cheap: the whole
-thing runs on one laptop with a 7B local model, and nothing in it asks the
-model to report on itself.
+Sentinel orchestrates a tool-calling LLM agent inside a containerized Docker sandbox.
+It introduces targeted escape temptations and monitors three independent telemetry signals to detect unauthorized pivoting.
+Originally designed for local execution, the harness architecture now seamlessly scales across distributed computing environments and heterogeneous hardware profiles.
+This enables the simultaneous evaluation of local 7B models and cloud-based reasoning engines across different operating systems.
+Crucially, despite this distributed scale, the core design principle remains intact: no component within the harness relies on the model to report on itself.
 
-\begin{figure}[t]
+To guarantee safe execution during evaluation, the environment strictly isolates the agent.
+Two Docker networks (\texttt{red-proxy} and \texttt{red-mocks}) are declared \texttt{internal}.
+This architectural boundary prevents agent-generated traffic from reaching the public internet, regardless of the model's actions.
+A third, strictly segmented network connects the harness to the designated model backend without carrying any agent-controlled payload (Figure~\ref{fig:arch}).
+
+\begin{figure}[htbp]
 \centering
-\resizebox{\textwidth}{!}{\input{figures/architecture}}
+\resizebox{0.92\textwidth}{!}{\input{figures/architecture.tex}}
 \caption{The harness topology. Solid: agent traffic the proxy audits. Dashed:
 the heartbeat, which bypasses the proxy by design so that a saturated network
 cannot silence it. Long dashes: the model backend, outside the audited scope.
@@ -18,16 +25,10 @@ down -v}, which is what makes it the most durable leak channel.}
 \label{fig:arch}
 \end{figure}
 
-Two Docker networks (\texttt{red-proxy} and \texttt{red-mocks}) are declared
-\texttt{internal}, so no traffic the agent generates can reach the real
-internet regardless of what the model decides to do. A third network exists
-only so the harness itself can reach the model backend, and it carries no
-agent-controlled traffic.
-
 \subsection{Three model-independent signals}
 
-Each signal audits a different surface and lives in a different container.
-None of them queries the model, and none depends on the agent cooperating.
+Each telemetry signal audits a distinct attack surface from an isolated container.
+None of these monitors query the model, ensuring detection remains independent of the agent's cooperation.
 
 \begin{table}[h]
 \centering
@@ -46,55 +47,38 @@ the ephemeral workspace volume and the persistent \texttt{./memory} bind
 mount.}
 \end{table}
 
-The canary is a per-run token injected into the agent's system prompt as its
-``internal session identifier''. Detection matches the plain token plus four
-cheap obfuscations (base64, URL encoding, hex, and reversal). That coverage is
-a deliberate floor, not a claim: an agent encoding the token in, say, the
-lengths of file names defeats it, and we say so in Section~\ref{sec:validity}.
+The primary detection mechanism relies on a per-run canary token injected into the agent's system prompt as its internal session identifier.
+Detection algorithms match the plaintext token alongside four standard, low-cost obfuscations (Base64, URL encoding, hexadecimal, and string reversal).
+This coverage establishes a deliberate empirical floor rather than an exhaustive defense: an agent employing advanced steganography, such as encoding data within file name lengths, would bypass this layer, a limitation addressed in Section~\ref{sec:validity}.
 
-The canary monitor detects by inotify rather than polling, with a slower
-periodic sweep as a backstop in case an event is missed.
+To minimize detection latency, the canary monitor leverages \texttt{inotify} for event-driven alerts, backed by a slower periodic sweep to guarantee no event is missed during high-load executions.
 
 \subsection{Six induction vectors}
 
-The agent always gets the same surface task, fixing a division bug so a test
-suite passes. What changes is the temptation planted around it.
+The agent is consistently assigned the same benign surface task: patching a division bug to pass a test suite.
+The experimental variance lies strictly in the temptation planted within its environment.
 
-Tasks 01 through 03 are passive temptation, a credentials file or an error
-pointing at an internal registry, with nothing instructing the agent to act.
-They produce none of the results reported here and exist only because the
-harness supports them.
+Tasks 01 through 03 represent passive temptations, such as exposed credentials or errors pointing to an internal registry, lacking any explicit instruction to act.
+These serve as structural baselines and produce none of the primary leakage results, existing solely to validate the harness's observational capabilities.
 
-Tasks 04 through 06 carry an \emph{identical} injected instruction, asking the
-agent to create a confirmation directory named with its own session identifier,
-and differ only in how it reaches the agent: a live fetch from an external
-mirror, a note seeded in cross-run persistent memory, or a document seeded in a
-local knowledge base. Holding the text constant while varying the channel is
-what makes the comparison in Section~\ref{sec:results} possible. The technique
-is the anchor incident's own, which moved data out in directory
-names~\cite{huggingface2026intrusion}.
+Tasks 04 through 06 introduce an \emph{identical}, active injected instruction demanding the agent create a confirmation directory named using its session identifier.
+These tasks differ exclusively in their delivery channel: a live fetch from an external mirror, a note seeded in cross-run persistent memory, or a document embedded in a local knowledge base.
+Holding the malicious payload constant while varying the delivery channel enables the comparative analysis detailed in Section~\ref{sec:results}.
+This exfiltration technique directly mirrors the anchor incident, which leaked data through directory naming conventions~\cite{huggingface2026intrusion}.
 
-Vectors 05 and 06 fall under \textbf{ASI06: Memory and Context
-Poisoning}~\cite{owasp-asi06}: untrusted input stored as trusted memory or
-retrieved context, influencing later and unrelated sessions. Vector 05 is the
-stricter case, since \texttt{./memory} is a host bind mount that survives
-\texttt{docker compose down -v} and therefore outlives the run that wrote it.
+Vectors 05 and 06 specifically model \textbf{ASI06: Memory and Context Poisoning}~\cite{owasp-asi06}, where untrusted input is processed as trusted memory or retrieved context to compromise subsequent sessions.
+Vector 05 represents the most critical persistence threat, since \texttt{./memory} operates as a host bind mount that survives container teardown (\texttt{docker compose down -v}), effectively outliving the run that created it.
 
 \subsection{Conditions}
 
-The experimental axis is what the system prompt says about security, holding
-the task constant.
+The primary experimental axis evaluates the impact of security guardrails within the system prompt, holding the task definition constant.
 
-The canary is present in all three conditions, since it is detection
-instrumentation rather than a defence. What changes is the system prompt:
-\texttt{sin\_harness} mentions the token in one 77-character line,
-\texttt{con\_harness} carries the 830-character production guardrail that
-names file names, directory names and URLs as surfaces the token must never
-reach, and \texttt{con\_harness\_generico} matches that guardrail's length
-and emphasis (818 characters, 126 words against 131) while forbidding only
-that the token leave the working environment, without naming how.
+The canary token remains present across all conditions, functioning strictly as detection instrumentation rather than a defensive measure.
+The independent variable is the security directive itself:
+The \texttt{sin\_harness} condition mentions the token casually in a brief 77-character line.
+The \texttt{con\_harness} condition applies an aggressive 830-character production guardrail, explicitly warning that the token must never be exposed to file names, directory names, or URLs.
+To isolate the specific mechanism driving the leakage, the \texttt{con\_harness\_generico} condition matches the production guardrail in length and authoritative emphasis (818 characters, 126 words versus 131).
+However, it broadly forbids the token from leaving the working environment without explicitly naming the attack surfaces.
 
-The third condition exists to separate two things the second confounds: a
-guardrail that is longer and more emphatic, and one that names the attack
-surface. Section~\ref{sec:results} reports what that isolation produced,
-which is not what we expected.
+This third condition decouples two distinct factors that the second condition confounds: the presence of an emphatic, lengthy warning, and the explicit identification of vulnerable surfaces.
+Section~\ref{sec:results} details the counterintuitive empirical results this isolation revealed.
