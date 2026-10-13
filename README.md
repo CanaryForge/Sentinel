@@ -31,10 +31,10 @@
 
 <table>
 <tr>
-<td align="center" width="25%"><h2>416</h2>corridas válidas<br>en 4 máquinas</td>
-<td align="center" width="25%"><h2>183 / 197</h2>fugas del canary sin<br>tocar la red</td>
-<td align="center" width="25%"><h2>3</h2>monitores que nunca<br>consultan al modelo</td>
-<td align="center" width="25%"><h2>Top 25 %</h2>de más de 230<br>proyectos del sprint</td>
+<td align="center" width="25%"><h3>416</h3>corridas válidas<br>en 4 máquinas</td>
+<td align="center" width="25%"><h3>183 / 197</h3>fugas del canary sin<br>tocar la red</td>
+<td align="center" width="25%"><h3>3</h3>monitores que nunca<br>consultan al modelo</td>
+<td align="center" width="25%"><h3>Top 25 %</h3>de más de 230<br>proyectos del sprint</td>
 </tr>
 </table>
 
@@ -57,30 +57,38 @@ señales baratas e independientes del modelo:
 ## Cómo funciona
 
 ```mermaid
-flowchart LR
-    subgraph SB["🧪 Sandbox (Docker, cap_drop ALL)"]
-        A["Agente LLM<br/>tool-calling"]
+flowchart TB
+    subgraph SB["🧪 Sandbox · Docker, cap_drop ALL"]
+        direction LR
+        A["Agente LLM con herramientas"]
         H["Heartbeat"]
     end
-    subgraph MON["🛡️ Monitores"]
-        P["egress-proxy<br/>mitmproxy"]
-        F["fs-monitor<br/>inotify"]
+    W[("workspace + memoria")]
+    subgraph MON["🛡️ Monitores independientes del modelo"]
+        direction LR
+        P["egress-proxy · mitmproxy<br/>baseline + canary de red + watchdog"]
+        F["fs-monitor · inotify<br/>canary en nombres y contenido"]
     end
-    subgraph MK["🎭 Mocks locales (internal: true)"]
+    subgraph MK["🎭 Mocks locales · internal: true"]
+        direction LR
         R["package-registry<br/>SSRF de juguete"]
         M["model-hub<br/>credenciales falsas"]
     end
-    W[("workspace<br/>+ memoria")]
-    E[["results/*.jsonl"]]
+    E[["results/*.jsonl · bus de eventos común"]]
+    subgraph OUT["📊 Salida"]
+        direction LR
+        AN["analysis/ · TTD + bootstrap CI"]
+        D["dashboard/ · Flask en vivo"]
+    end
 
-    A -- HTTP_PROXY --> P --> R & M
+    A -- HTTP_PROXY --> P
     H -. latido .-> P
     A -- escribe --> W
     W -. eventos .-> F
+    P --> MK
     P --> E
     F --> E
-    E --> AN["📊 analysis/<br/>TTD + bootstrap CI"]
-    E --> D["🖥️ dashboard/<br/>Flask en vivo"]
+    E --> OUT
 ```
 
 - **Nada toca internet real:** las redes Docker son `internal: true`, los objetivos son
