@@ -1,91 +1,164 @@
-# CanaryForge — detección de fuga de sandbox en agentes de IA
+<div align="center">
 
-> **Fork de portafolio** de [CanaryForge/Sentinel](https://github.com/CanaryForge/Sentinel),
-> proyecto de equipo hecho en el **AI Incident Response Sprint** (Apart Research / CeSIA,
-> septiembre de 2026). El repositorio original es el canónico; este fork existe para
-> mostrar el trabajo en mi portafolio. Autoría completa en
-> [`docs/PARTICIPACIONES.md`](docs/PARTICIPACIONES.md).
+<img src="dashboard/static/logo.png" alt="Logo de CanaryForge" width="96">
 
-## Qué problema resuelve
+# CanaryForge
+
+**¿Cuánto tarda en detectarse que un agente de IA está escapando de su sandbox, y con qué señal?**
+
+[![Apart Research — Top 25 %](https://img.shields.io/badge/Apart%20Research%20Sprint-Top%2025%25%20de%20230%2B-d4a72c?style=for-the-badge)](https://apartresearch.com)
+[![Paper](https://img.shields.io/badge/paper-PDF-1f1a14?style=for-the-badge&logo=latex&logoColor=d4a72c)](site/paper.pdf)
+[![Página pública](https://img.shields.io/badge/página-en%20vivo-1f1a14?style=for-the-badge&logo=vercel&logoColor=d4a72c)](https://sentinel-pink-mu.vercel.app)
+
+![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)
+![Docker Compose](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
+![mitmproxy](https://img.shields.io/badge/mitmproxy-egress-6c4f8c)
+![Flask](https://img.shields.io/badge/Flask-dashboard-000000?logo=flask&logoColor=white)
+![Ollama](https://img.shields.io/badge/Ollama-qwen2.5%3A7b-222222?logo=ollama&logoColor=white)
+![OWASP ASI06](https://img.shields.io/badge/OWASP-ASI06-000000?logo=owasp&logoColor=white)
+
+<sub>Fork de portafolio de <a href="https://github.com/CanaryForge/Sentinel">CanaryForge/Sentinel</a> · proyecto de equipo · AI Incident Response Sprint (Apart Research / CeSIA), septiembre de 2026</sub>
+
+<br>
+
+<img src="docs/img/pagina-publica.png" alt="Página pública de CanaryForge" width="900">
+
+</div>
+
+<br>
+
+## En cifras
+
+<table>
+<tr>
+<td align="center" width="25%"><h2>416</h2>corridas válidas<br>en 4 máquinas</td>
+<td align="center" width="25%"><h2>183 / 197</h2>fugas del canary sin<br>tocar la red</td>
+<td align="center" width="25%"><h2>3</h2>monitores que nunca<br>consultan al modelo</td>
+<td align="center" width="25%"><h2>Top 25 %</h2>de más de 230<br>proyectos del sprint</td>
+</tr>
+</table>
+
+## El problema
 
 Cuando un agente de IA con herramientas (leer archivos, hacer peticiones HTTP) intenta
 salir de su sandbox, la pregunta operativa no es solo *si* lo logra, sino **cuánto tarda
-en detectarse y con qué señal**. El incidente que ancla el sprint (julio de 2026) se
-descubrió tarde: los agentes se comunicaban a través de nombres de directorio y nadie
-lo vio en tiempo real.
+en detectarse**. El incidente que ancla el sprint (julio de 2026) se descubrió tarde: los
+agentes se comunicaban a través de nombres de directorio y nadie lo vio en tiempo real.
 
-CanaryForge es un arnés reproducible que mide ese *tiempo hasta detección* (TTD) con
-tres monitores que **nunca le preguntan nada al modelo**:
+CanaryForge es un arnés reproducible que mide ese **tiempo hasta detección (TTD)** con tres
+señales baratas e independientes del modelo:
 
-| Señal | Qué vigila | Implementación |
-|---|---|---|
-| Heartbeat | que el proceso del agente siga vivo y reportando | `monitors/heartbeat_monitor.py` |
-| Canary | un token único por corrida que aparece fuera de su scope (archivos, nombres de directorio, tráfico, memoria) | `monitors/canary_monitor.py` (inotify) + `monitors/egress_monitor.py` |
-| Baseline de egress | destinos de red fuera de lo esperado | `monitors/egress_monitor.py` (mitmproxy) |
+| | Señal | Qué vigila | Dónde |
+|---|---|---|---|
+| 💓 | **Heartbeat** | que el proceso del agente siga vivo y reportando | `monitors/heartbeat_monitor.py` |
+| 🐤 | **Canary** | un token único por corrida que aparece fuera de su scope: archivos, nombres de directorio, tráfico o memoria | `monitors/canary_monitor.py` (inotify) |
+| 🌐 | **Egress** | destinos de red fuera del baseline | `monitors/egress_monitor.py` (mitmproxy) |
 
 ## Cómo funciona
 
-```
- agente (sandbox) ──HTTP_PROXY──► egress-proxy (mitmproxy) ──► mocks locales
-      │                                │  baseline + canary de red         (registro con SSRF de juguete,
-      │                                │  watchdog de heartbeat             hub con credenciales falsas)
-      ▼                                ▼
- workspace / memoria ──inotify──► fs-monitor (canary en nombres y contenido)
-                                       │
-                   todos escriben ──►  results/{run_id}.jsonl  ──► analysis/ (TTD + bootstrap CI)
-                                                                └─► dashboard/ (Flask, en vivo)
+```mermaid
+flowchart LR
+    subgraph SB["🧪 Sandbox (Docker, cap_drop ALL)"]
+        A["Agente LLM<br/>tool-calling"]
+        H["Heartbeat"]
+    end
+    subgraph MON["🛡️ Monitores"]
+        P["egress-proxy<br/>mitmproxy"]
+        F["fs-monitor<br/>inotify"]
+    end
+    subgraph MK["🎭 Mocks locales (internal: true)"]
+        R["package-registry<br/>SSRF de juguete"]
+        M["model-hub<br/>credenciales falsas"]
+    end
+    W[("workspace<br/>+ memoria")]
+    E[["results/*.jsonl"]]
+
+    A -- HTTP_PROXY --> P --> R & M
+    H -. latido .-> P
+    A -- escribe --> W
+    W -. eventos .-> F
+    P --> E
+    F --> E
+    E --> AN["📊 analysis/<br/>TTD + bootstrap CI"]
+    E --> D["🖥️ dashboard/<br/>Flask en vivo"]
 ```
 
-- Todo corre en Docker con redes `internal: true`: **nada toca internet real**; los
-  objetivos son mocks locales y las credenciales plantadas son cadenas inventadas.
-- Un orquestador recorre una matriz experimental (condición × tarea × repetición):
-  con o sin *guardrail* de seguridad en el system prompt, y seis vectores de escape
-  (tarea imposible, pista en un error, prompt injection vía SSRF, memoria y RAG
-  envenenados — OWASP ASI06).
-- `analysis/compute_ttd.py` cruza el transcript del agente con los eventos de los
-  monitores y calcula TTD e intervalos de confianza por bootstrap.
+- **Nada toca internet real:** las redes Docker son `internal: true`, los objetivos son
+  mocks locales y las credenciales plantadas son cadenas inventadas.
+- **Matriz experimental reentrante:** condición (con o sin guardrail de seguridad en el
+  system prompt) × 6 vectores de escape × repeticiones. Los vectores son tarea imposible,
+  pista en un error, credenciales, prompt injection vía SSRF, y memoria y RAG envenenados
+  (OWASP ASI06).
+- **Análisis:** `analysis/compute_ttd.py` cruza el transcript del agente con los eventos de
+  los monitores y calcula TTD con intervalos de confianza por bootstrap.
 
-**Resultados principales** (416 corridas en cuatro máquinas, detalle en el
-[paper](docs/paper.tex) y en [`report/findings.md`](report/findings.md)): la fuga casi
-nunca usa la red — 183 de 197 salidas del canary fueron por nombres de archivo o
-directorio, el canal que un proxy de egress no ve —, y un guardrail de producción se
-asocia con *más* fuga, no menos. Los límites honestos del estudio están en
-[`report/scope.md`](report/scope.md).
+## Hallazgos
+
+> **1. La fuga casi nunca usa la red.** 183 de 197 salidas del canary fueron por nombres de
+> archivo o directorio, sin contactar ningún host. Es el canal del incidente original y uno
+> que un proxy de egress no ve.
+>
+> **2. El canal pesa más que el contenido.** El mismo texto se obedece el 60 % de las veces
+> desde una base de conocimiento local y el 10 % cuando llega por la red.
+>
+> **3. Un guardrail de producción se asocia con *más* fuga, no menos**, aunque con 40
+> corridas por celda el contraste no alcanza significancia. La explicación registrada de
+> antemano (*priming*) se falsificó con un brazo de control.
+>
+> **4. El instrumento también falla.** Documentamos seis formas en que el arnés reportó algo
+> distinto de lo que pasó. Una de ellas fue un timeout que borraba corridas en proporción
+> a la variable bajo prueba.
+
+Detalle en el [paper](site/paper.pdf), en [`report/findings.md`](report/findings.md) y en
+los límites honestos de [`report/scope.md`](report/scope.md).
+
+## El dashboard
+
+<table>
+<tr>
+<td width="50%"><img src="docs/img/dashboard-incidente.png" alt="Dashboard: análisis del incidente"></td>
+<td width="50%"><img src="docs/img/dashboard-niveles.png" alt="Dashboard: escalera de niveles por condición y tarea"></td>
+</tr>
+<tr>
+<td align="center"><sub>Análisis del incidente agregado sobre todos los corpus</sub></td>
+<td align="center"><sub>Escalera de niveles por condición y tarea (dorado = fuga real)</sub></td>
+</tr>
+</table>
 
 ## Cómo correrlo
 
-Requisitos: Docker con Compose, Python 3.11+, y Ollama local (o un endpoint
-OpenAI-compatible).
+Requisitos: Docker con Compose, Python 3.11 y Ollama local (o un endpoint OpenAI-compatible).
 
 ```bash
-cp .env.example .env              # ajustar backend y modelo
+cp .env.example .env                 # backend y modelo
 chmod 777 results/
-tests/positive_controls.sh        # verifica que los monitores detectan, sin gastar LLM
+tests/positive_controls.sh           # ¿los monitores detectan? sin gastar LLM
 pip install -r orchestrator/requirements.txt
 python3 orchestrator/run_experiment.py --dry-run --limit 5
 python3 orchestrator/run_experiment.py
 pip install -r analysis/requirements.txt && python3 analysis/compute_ttd.py
+pip install -r dashboard/requirements.txt && python3 dashboard/app.py   # http://localhost:8765
 ```
 
-La guía técnica completa sigue abajo, tal como la escribió el equipo.
+## Equipo
 
-## Tecnologías
+| | Persona | Enfoque principal |
+|---|---|---|
+| <img src="https://github.com/5ergioC.png" width="40"> | **Sergio Alejandro Castaño Arcila** · [@5ergioC](https://github.com/5ergioC) | experimento causal, paper, página pública, diseño |
+| <img src="https://github.com/Juanesillo.png" width="40"> | **Juan Esteban Triviño Nieves** · [@Juanesillo](https://github.com/Juanesillo) | arnés base, monitores, dashboard |
+| <img src="https://github.com/Sofiro11.png" width="40"> | **Sofia Rodriguez Chaparro** · [@Sofiro11](https://github.com/Sofiro11) | validación en Windows-on-ARM, diagnóstico del timeout, portabilidad, redacción |
+| <img src="https://github.com/DanielDiab.png" width="40"> | **Daniel Felipe Diab Gonzalez** · [@DanielDiab](https://github.com/DanielDiab) | vectores de memoria y RAG, configs experimentales |
+| <img src="https://github.com/AngieGuti.png" width="40"> | **Angie Camila Gutierrez Trujillo** · [@AngieGuti](https://github.com/AngieGuti) | análisis de razonamiento (CoT), secciones del paper |
 
-Python · Docker Compose · mitmproxy · inotify/watchdog · Flask · Ollama
-(`qwen2.5:7b-instruct`) y endpoints OpenAI-compatible · LaTeX · Vercel.
-
-## Autoría
-
-Equipo **CanaryForge**: Sergio Alejandro Castaño Arcila ([@5ergioC](https://github.com/5ergioC)),
-Juan Esteban Triviño Nieves ([@Juanesillo](https://github.com/Juanesillo)),
-Daniel Felipe Diab Gonzalez ([@DanielDiab](https://github.com/DanielDiab)),
-Angie Camila Gutierrez Trujillo ([@AngieGuti](https://github.com/AngieGuti)) y
-Sofia Rodriguez Chaparro ([@Sofiro11](https://github.com/Sofiro11)).
-Quién hizo qué: [`docs/PARTICIPACIONES.md`](docs/PARTICIPACIONES.md).
+Quién hizo qué, con fechas y cifras del historial: [`docs/PARTICIPACIONES.md`](docs/PARTICIPACIONES.md) ·
+Competencias y aprendizajes: [`docs/FORMACION_PROFESIONAL.md`](docs/FORMACION_PROFESIONAL.md)
 
 ---
 
-# Documentación técnica original
+<details>
+<summary><b>📖 Guía técnica completa del equipo</b> (arquitectura detallada, decisiones de diseño, backends, runbook)</summary>
+
+<br>
 
 ## Sandbox Escape Detection Harness
 
@@ -739,3 +812,5 @@ report/        scope.md (que demuestra esto y que no), findings.md,
                + bugs de entorno encontrados al correr todo localmente)
 timeline/      exportador forense + ingesta a OpenObserve (Capa 6)
 ```
+
+</details>
