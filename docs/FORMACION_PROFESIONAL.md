@@ -5,8 +5,8 @@ en el repositorio. Es un trabajo de equipo (ver [`PARTICIPACIONES.md`](PARTICIPA
 las competencias marcadas **(propia)** corresponden a trabajo hecho por Sofia
 Rodriguez Chaparro (@Sofiro11), y las demás a lo que el proyecto demuestra como conjunto.
 
-> Los campos `[POR COMPLETAR: …]` son espacios para datos que el historial no contiene.
-> No se inventó ninguna métrica de impacto.
+> Las cifras de impacto vienen del correo oficial de resultados de Apart Research
+> (2026-10-12) y del propio repositorio; no se inventó ninguna.
 
 ## Competencias
 
@@ -64,11 +64,19 @@ Rodriguez Chaparro (@Sofiro11), y las demás a lo que el proyecto demuestra como
 | En hardware ARM, un tercio de las corridas "terminaba bien" (exit 0) sin hacer nada | Un exit code limpio no prueba una corrida válida; hay que verificar que hubo tool calls reales |
 | El heartbeat se atribuía detecciones que no hizo (alerta de silencio al apagar) | Separar el apagado limpio de la detección usando `docker_exit_code` |
 | La hipótesis causal registrada no se sostuvo con n=30 | Reportar el resultado nulo es parte del método, no un fracaso |
-| [POR COMPLETAR: otro reto personal] | [POR COMPLETAR] |
+| El timeout no borraba corridas al azar: en la máquina D vació 11 de 20 corridas de `con_harness` y 0 de 20 de `sin_harness`, porque el guardrail alarga el prompt | Un fallo de infraestructura puede correlacionarse con la variable experimental; los datos faltantes también hay que analizarlos |
 
-## Impacto (por completar)
+## Impacto
 
-- Selección o resultado en el sprint: [POR COMPLETAR]
-- Recepción del paper (envío, aceptación, citas): [POR COMPLETAR]
-- Visitas a la página o uso del arnés por terceros: [POR COMPLETAR]
-- Horas dedicadas por mí al proyecto: [POR COMPLETAR]
+- **Resultado en el sprint:** CanaryForge quedó en el **top 25 %** de más de 230
+  proyectos del AI Incident Response Sprint (Apart Research), track *What happened,
+  and what breaks next*.
+- **Recepción del paper por los revisores:** se destacaron los seis fallos
+  silenciosos documentados, la predicción registrada que falló y se reportó como
+  fallida, y el hallazgo de que el timeout del cliente borraba corridas en proporción
+  a la variable bajo prueba (**diagnóstico propio**, ver
+  `docs/sections/09-backmatter.tex`). Como mejora, sugirieron probar más modelos
+  aparte del 7B local y ataques de varias etapas.
+- **Validación independiente:** la máquina D (**propia**) replicó el hallazgo
+  principal en task_06 (8/9 contra 6/20); el 30 % de `sin_harness` coincidió con las
+  máquinas A y B.
