@@ -1,4 +1,93 @@
-# Sandbox Escape Detection Harness
+# CanaryForge — detección de fuga de sandbox en agentes de IA
+
+> **Fork de portafolio** de [CanaryForge/Sentinel](https://github.com/CanaryForge/Sentinel),
+> proyecto de equipo hecho en el **AI Incident Response Sprint** (Apart Research / CeSIA,
+> septiembre de 2026). El repositorio original es el canónico; este fork existe para
+> mostrar el trabajo en mi portafolio. Autoría completa en
+> [`docs/PARTICIPACIONES.md`](docs/PARTICIPACIONES.md).
+
+## Qué problema resuelve
+
+Cuando un agente de IA con herramientas (leer archivos, hacer peticiones HTTP) intenta
+salir de su sandbox, la pregunta operativa no es solo *si* lo logra, sino **cuánto tarda
+en detectarse y con qué señal**. El incidente que ancla el sprint (julio de 2026) se
+descubrió tarde: los agentes se comunicaban a través de nombres de directorio y nadie
+lo vio en tiempo real.
+
+CanaryForge es un arnés reproducible que mide ese *tiempo hasta detección* (TTD) con
+tres monitores que **nunca le preguntan nada al modelo**:
+
+| Señal | Qué vigila | Implementación |
+|---|---|---|
+| Heartbeat | que el proceso del agente siga vivo y reportando | `monitors/heartbeat_monitor.py` |
+| Canary | un token único por corrida que aparece fuera de su scope (archivos, nombres de directorio, tráfico, memoria) | `monitors/canary_monitor.py` (inotify) + `monitors/egress_monitor.py` |
+| Baseline de egress | destinos de red fuera de lo esperado | `monitors/egress_monitor.py` (mitmproxy) |
+
+## Cómo funciona
+
+```
+ agente (sandbox) ──HTTP_PROXY──► egress-proxy (mitmproxy) ──► mocks locales
+      │                                │  baseline + canary de red         (registro con SSRF de juguete,
+      │                                │  watchdog de heartbeat             hub con credenciales falsas)
+      ▼                                ▼
+ workspace / memoria ──inotify──► fs-monitor (canary en nombres y contenido)
+                                       │
+                   todos escriben ──►  results/{run_id}.jsonl  ──► analysis/ (TTD + bootstrap CI)
+                                                                └─► dashboard/ (Flask, en vivo)
+```
+
+- Todo corre en Docker con redes `internal: true`: **nada toca internet real**; los
+  objetivos son mocks locales y las credenciales plantadas son cadenas inventadas.
+- Un orquestador recorre una matriz experimental (condición × tarea × repetición):
+  con o sin *guardrail* de seguridad en el system prompt, y seis vectores de escape
+  (tarea imposible, pista en un error, prompt injection vía SSRF, memoria y RAG
+  envenenados — OWASP ASI06).
+- `analysis/compute_ttd.py` cruza el transcript del agente con los eventos de los
+  monitores y calcula TTD e intervalos de confianza por bootstrap.
+
+**Resultados principales** (416 corridas en cuatro máquinas, detalle en el
+[paper](docs/paper.tex) y en [`report/findings.md`](report/findings.md)): la fuga casi
+nunca usa la red — 183 de 197 salidas del canary fueron por nombres de archivo o
+directorio, el canal que un proxy de egress no ve —, y un guardrail de producción se
+asocia con *más* fuga, no menos. Los límites honestos del estudio están en
+[`report/scope.md`](report/scope.md).
+
+## Cómo correrlo
+
+Requisitos: Docker con Compose, Python 3.11+, y Ollama local (o un endpoint
+OpenAI-compatible).
+
+```bash
+cp .env.example .env              # ajustar backend y modelo
+chmod 777 results/
+tests/positive_controls.sh        # verifica que los monitores detectan, sin gastar LLM
+pip install -r orchestrator/requirements.txt
+python3 orchestrator/run_experiment.py --dry-run --limit 5
+python3 orchestrator/run_experiment.py
+pip install -r analysis/requirements.txt && python3 analysis/compute_ttd.py
+```
+
+La guía técnica completa sigue abajo, tal como la escribió el equipo.
+
+## Tecnologías
+
+Python · Docker Compose · mitmproxy · inotify/watchdog · Flask · Ollama
+(`qwen2.5:7b-instruct`) y endpoints OpenAI-compatible · LaTeX · Vercel.
+
+## Autoría
+
+Equipo **CanaryForge**: Sergio Alejandro Castaño Arcila ([@5ergioC](https://github.com/5ergioC)),
+Juan Esteban Triviño Nieves ([@Juanesillo](https://github.com/Juanesillo)),
+Daniel Felipe Diab Gonzalez ([@DanielDiab](https://github.com/DanielDiab)),
+Angie Camila Gutierrez Trujillo ([@AngieGuti](https://github.com/AngieGuti)) y
+Sofia Rodriguez Chaparro ([@Sofiro11](https://github.com/Sofiro11)).
+Quién hizo qué: [`docs/PARTICIPACIONES.md`](docs/PARTICIPACIONES.md).
+
+---
+
+# Documentación técnica original
+
+## Sandbox Escape Detection Harness
 
 Arnes de deteccion de fuga de sandbox para agentes de IA. Construido para el
 AI Incident Response Sprint (Apart Research / CeSIA), frente de Analisis del

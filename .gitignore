@@ -35,3 +35,13 @@ memory/*.jsonl
 
 # logs de corridas, no versionados
 *.log
+
+# entornos, caches y secretos locales
+.env.*
+!.env.example
+.venv/
+venv/
+node_modules/
+.pytest_cache/
+*.pem
+*.key
