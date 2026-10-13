@@ -32,9 +32,9 @@
 <table>
 <tr>
 <td align="center" width="25%"><h3>416</h3>corridas válidas<br>en 4 máquinas</td>
-<td align="center" width="25%"><h3>183 / 197</h3>fugas del canary sin<br>tocar la red</td>
-<td align="center" width="25%"><h3>3</h3>monitores que nunca<br>consultan al modelo</td>
-<td align="center" width="25%"><h3>Top 25 %</h3>de más de 230<br>proyectos del sprint</td>
+<td align="center" width="25%"><h3>183 / 197</h3>fugas sin<br>tocar la red</td>
+<td align="center" width="25%"><h3>3</h3>monitores que no<br>consultan al LLM</td>
+<td align="center" width="25%"><h3>Top 25 %</h3>entre más de<br>230 proyectos</td>
 </tr>
 </table>
 
